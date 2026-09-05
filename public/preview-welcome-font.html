@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pratonton — Fon SELAMAT DATANG</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@700;800&family=Montserrat:wght@700;800&family=Outfit:wght@600;700&family=Plus+Jakarta+Sans:wght@700;800&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #e8eef5; color: #111; }
+        .bar {
+            position: sticky; top: 0; z-index: 10;
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+            padding: 12px 18px; background: #fff; border-bottom: 1px solid #d5deea;
+        }
+        .bar h1 { margin: 0; font-size: 15px; }
+        .bar p { margin: 2px 0 0; font-size: 12px; color: #6b7280; }
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tabs button {
+            border: 1px solid #c9d4e5; background: #fff; border-radius: 999px;
+            padding: 8px 14px; font-size: 13px; font-weight: 650; cursor: pointer;
+        }
+        .tabs button.active { background: #0b1f4d; color: #fff; border-color: #0b1f4d; }
+        .note {
+            margin: 12px 18px 0; padding: 10px 14px; border-radius: 10px;
+            background: #fff8e8; border: 1px solid #f1e0b0; font-size: 13px; color: #7a5b10;
+        }
+        .grid {
+            margin: 14px 18px 28px;
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+        .card {
+            background: #fff;
+            border: 1px solid #d5deea;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(15,35,70,.08);
+        }
+        .card.featured { border-color: #33509f; box-shadow: 0 8px 24px rgba(51,80,159,.18); }
+        .card-head {
+            padding: 10px 14px;
+            background: #f5f8fc;
+            border-bottom: 1px solid #e5ebf3;
+            font-size: 12px;
+        }
+        .card-head strong { color: #0b1f4d; }
+        .card-head span { color: #6b7280; }
+        .card-body {
+            padding: 28px 22px 32px;
+            max-width: 24rem;
+            margin: 0 auto;
+        }
+        .welcome {
+            margin: 0 0 1.25rem;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #33509f;
+            line-height: 1.25;
+        }
+        .welcome.serif {
+            letter-spacing: 0.06em;
+            font-weight: 700;
+            font-size: 1.55rem;
+        }
+        .welcome.tight { letter-spacing: 0.06em; }
+        .welcome.wide { letter-spacing: 0.16em; }
+        .title {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: #1a2744;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+        .sub {
+            margin: 0.4rem 0 0;
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+        .field { margin-top: 1.4rem; }
+        .field label {
+            display: block; font-size: 12px; font-weight: 650; margin-bottom: 5px; color: #374151;
+            font-family: system-ui, sans-serif;
+        }
+        .field input {
+            width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 12px; font-size: 14px;
+        }
+        .btn {
+            width: 100%; margin-top: 14px; border: 0; border-radius: 10px; padding: 11px;
+            background: #1e2a5a; color: #fff; font-weight: 650; font-size: 14px;
+            font-family: system-ui, sans-serif;
+        }
+        .pick {
+            margin: 0 18px 24px;
+            display: grid; gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+        .pick button {
+            text-align: left; cursor: pointer;
+            border: 1px solid #d5deea; background: #fff; border-radius: 12px;
+            padding: 12px 14px; font-size: 13px;
+        }
+        .pick button:hover { border-color: #33509f; }
+        .pick strong { display: block; margin-bottom: 4px; color: #0b1f4d; }
+        .pick span { color: #6b7280; font-size: 12px; }
+        .f1 { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+        .f2 { font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
+        .f3 { font-family: Outfit, system-ui, sans-serif; }
+        .f4 { font-family: Montserrat, system-ui, sans-serif; }
+        .f5 { font-family: Manrope, system-ui, sans-serif; }
+        .f6 { font-family: Sora, system-ui, sans-serif; }
+        .f7 { font-family: "Cormorant Garamond", Georgia, serif; }
+    </style>
+</head>
+<body>
+    <div class="bar">
+        <div>
+            <h1>Pratonton fon — SELAMAT DATANG</h1>
+            <p>Belum diguna pada login. Pilih nombor, beritahu saya.</p>
+        </div>
+        <a href="login" style="font-size:13px;color:#33509f;font-weight:650;">← Kembali ke login</a>
+    </div>
+
+    <div class="note">
+        Disyorkan: <strong>Cadangan 2 (Plus Jakarta Sans)</strong> — moden, jelas, sesuai portal rasmi DBKL.
+        Tajuk “Log Masuk” kekal fon sistem supaya hierarki jelas.
+    </div>
+
+    <div class="grid">
+        <article class="card" id="c1">
+            <div class="card-head"><strong>1 · Semasa</strong> — <span>System UI (tiada ubah)</span></div>
+            <div class="card-body">
+                <p class="welcome f1">Selamat Datang</p>
+                <h3 class="title">Log Masuk</h3>
+                <p class="sub">Masukkan e-mel dan kata laluan anda.</p>
+                <div class="field"><label>E-mel</label><input type="email" placeholder="nama@domain.com" disabled></div>
+                <button type="button" class="btn" disabled>Log Masuk</button>
+            </div>
+        </article>
+
+        <article class="card featured" id="c2">
+            <div class="card-head"><strong>2 · Plus Jakarta Sans</strong> — <span>disyorkan · portal moden</span></div>
+            <div class="card-body">
+                <p class="welcome f2 tight">Selamat Datang</p>
+                <h3 class="title">Log Masuk</h3>
+                <p class="sub">Masukkan e-mel dan kata laluan anda.</p>
+                <div class="field"><label>E-mel</label><input type="email" placeholder="nama@domain.com" disabled></div>
+                <button type="button" class="btn" disabled>Log Masuk</button>
+            </div>
+        </article>
+
+        <article class="card" id="c3">
+            <div class="card-head"><strong>3 · Outfit</strong> — <span>geometrik, kemas</span></div>
+            <div class="card-body">
+                <p class="welcome f3">Selamat Datang</p>
+                <h3 class="title">Log Masuk</h3>
+                <p class="sub">Masukkan e-mel dan kata laluan anda.</p>
+                <div class="field"><label>E-mel</label><input type="email" placeholder="nama@domain.com" disabled></div>
+                <button type="button" class="btn" disabled>Log Masuk</button>
+            </div>
+        </article>
+
+        <article class="card" id="c4">
+            <div class="card-head"><strong>4 · Montserrat</strong> — <span>klasik uppercase</span></div>
+            <div class="card-body">
+                <p class="welcome f4 wide">Selamat Datang</p>
+                <h3 class="title">Log Masuk</h3>
+                <p class="sub">Masukkan e-mel dan kata laluan anda.</p>
+                <div class="field"><label>E-mel</label><input type="email" placeholder="nama@domain.com" disabled></div>
+                <button type="button" class="btn" disabled>Log Masuk</button>
+            </div>
+        </article>
+
+        <article class="card" id="c5">
+            <div class="card-head"><strong>5 · Manrope</strong> — <span>lembut, mesra</span></div>
+            <div class="card-body">
+                <p class="welcome f5">Selamat Datang</p>
+                <h3 class="title">Log Masuk</h3>
+                <p class="sub">Masukkan e-mel dan kata laluan anda.</p>
+                <div class="field"><label>E-mel</label><input type="email" placeholder="nama@domain.com" disabled></div>
+                <button type="button" class="btn" disabled>Log Masuk</button>
+            </div>
+        </article>
+
+        <article class="card" id="c6">
+            <div class="card-head"><strong>6 · Sora</strong> — <span>kontemporari, berwatak</span></div>
+            <div class="card-body">
+                <p class="welcome f6 tight">Selamat Datang</p>
+                <h3 class="title">Log Masuk</h3>
+                <p class="sub">Masukkan e-mel dan kata laluan anda.</p>
+                <div class="field"><label>E-mel</label><input type="email" placeholder="nama@domain.com" disabled></div>
+                <button type="button" class="btn" disabled>Log Masuk</button>
+            </div>
+        </article>
+
+        <article class="card" id="c7">
+            <div class="card-head"><strong>7 · Cormorant Garamond</strong> — <span>rasmi / formal serif</span></div>
+            <div class="card-body">
+                <p class="welcome serif f7">Selamat Datang</p>
+                <h3 class="title">Log Masuk</h3>
+                <p class="sub">Masukkan e-mel dan kata laluan anda.</p>
+                <div class="field"><label>E-mel</label><input type="email" placeholder="nama@domain.com" disabled></div>
+                <button type="button" class="btn" disabled>Log Masuk</button>
+            </div>
+        </article>
+    </div>
+
+    <div class="pick">
+        <button type="button" data-pick="2"><strong>Pilih 2</strong><span>Plus Jakarta Sans — disyorkan</span></button>
+        <button type="button" data-pick="3"><strong>Pilih 3</strong><span>Outfit</span></button>
+        <button type="button" data-pick="4"><strong>Pilih 4</strong><span>Montserrat</span></button>
+        <button type="button" data-pick="5"><strong>Pilih 5</strong><span>Manrope</span></button>
+        <button type="button" data-pick="6"><strong>Pilih 6</strong><span>Sora</span></button>
+        <button type="button" data-pick="7"><strong>Pilih 7</strong><span>Cormorant Garamond</span></button>
+        <button type="button" data-pick="1"><strong>Pilih 1</strong><span>Kekal semasa</span></button>
+    </div>
+
+    <script>
+        document.querySelectorAll('[data-pick]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var n = btn.getAttribute('data-pick');
+                document.querySelectorAll('.card').forEach(function (c) { c.classList.remove('featured'); });
+                var card = document.getElementById('c' + n);
+                if (card) {
+                    card.classList.add('featured');
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                alert('Pilihan anda: Cadangan ' + n + '.\nBeritahu nombor ini dalam chat supaya saya masukkan ke /login.');
+            });
+        });
+    </script>
+</body>
+</html>

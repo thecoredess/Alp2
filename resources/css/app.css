@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* ── Identiti Visual DBKL ───────────────────────────────── */
+    /* Primary: Deep Navy / DBKL Blue */
+    --color-navy-50: #eef1f8;
+    --color-navy-100: #d5dcef;
+    --color-navy-200: #aab9df;
+    --color-navy-300: #7f95cf;
+    --color-navy-400: #556fbd;
+    --color-navy-500: #33509f;
+    --color-navy-600: #263d7a;
+    --color-navy-700: #1e2a5a; /* utama */
+    --color-navy-800: #172144;
+    --color-navy-900: #10162e;
+
+    /* Secondary: Royal Blue */
+    --color-royal-50: #eaf0ff;
+    --color-royal-100: #d5e0ff;
+    --color-royal-200: #adc2ff;
+    --color-royal-300: #85a3ff;
+    --color-royal-400: #5c84ff;
+    --color-royal-500: #2e5bff; /* utama */
+    --color-royal-600: #1f47db;
+    --color-royal-700: #1737ad;
+    --color-royal-800: #122a85;
+    --color-royal-900: #0d1f63;
+
+    /* Status */
+    --color-success: #16a34a;
+    --color-warning: #f59e0b;
+    --color-danger: #dc2626;
+    --color-info: #2563eb;
+
+    /* Latar */
+    --color-canvas: #f4f6fb;
+}
+
+/* Latar aplikasi lalai */
+body {
+    background-color: var(--color-canvas);
+}
+
+/* Sembunyikan elemen Alpine sebelum ia dimuatkan */
+[x-cloak] {
+    display: none !important;
+}
+
+/* ── Komponen borang & butang boleh guna semula ─────────────── */
+@layer components {
+    .inp {
+        @apply block w-full rounded-lg border-gray-300 text-sm shadow-sm
+               focus:border-royal-500 focus:ring-royal-500;
+    }
+
+    .btn,
+    .btn-primary,
+    .btn-navy,
+    .btn-white,
+    .btn-danger {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
+               text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2;
+    }
+    .btn-primary {
+        @apply bg-royal-500 text-white hover:bg-royal-600 focus:ring-royal-500;
+    }
+    .btn-navy {
+        @apply bg-navy-700 text-white hover:bg-navy-800 focus:ring-navy-700;
+    }
+    .btn-white {
+        @apply border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-royal-500;
+    }
+    .btn-danger {
+        @apply bg-danger text-white hover:bg-red-700 focus:ring-danger;
+    }
+
+    .card {
+        @apply rounded-xl border border-gray-200 bg-white shadow-sm;
+    }
+}

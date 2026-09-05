@@ -1,0 +1,29 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/** Sejarah kemajuan projek — append-only. */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('project_progress_histories', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
+            $table->unsignedTinyInteger('progress_percent');
+            $table->string('status', 20)->nullable();
+            $table->string('remarks')->nullable();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('created_at')->nullable();
+
+            $table->index('project_id');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('project_progress_histories');
+    }
+};

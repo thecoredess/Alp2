@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pratonton — Penerangan Login</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, sans-serif; background: #e8eef5; color: #111; }
+        .bar {
+            position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 10px;
+            justify-content: space-between; align-items: center; padding: 12px 16px;
+            background: #fff; border-bottom: 1px solid #d5deea;
+        }
+        .bar h1 { margin: 0; font-size: 15px; }
+        .bar p { margin: 2px 0 0; font-size: 12px; color: #6b7280; }
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tabs button {
+            border: 1px solid #c9d4e5; background: #fff; border-radius: 999px;
+            padding: 8px 14px; font-weight: 650; font-size: 13px; cursor: pointer;
+        }
+        .tabs button.active { background: #0b1f4d; color: #fff; border-color: #0b1f4d; }
+        .note {
+            margin: 12px 16px 0; padding: 10px 14px; border-radius: 10px;
+            background: #fff8e8; border: 1px solid #f1e0b0; color: #7a5b10; font-size: 13px;
+        }
+        .stage {
+            display: none; margin: 14px 16px 24px; min-height: 420px; border-radius: 16px;
+            padding: 40px 24px; text-align: center; color: #fff;
+            background: linear-gradient(160deg, #0b1f4d, #153a7a 55%, #1e4d96);
+            box-shadow: 0 10px 28px rgba(15,35,70,.12);
+        }
+        .stage.active { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+        .pill {
+            display: inline-flex; padding: 6px 12px; border-radius: 999px;
+            background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28);
+            font-size: 12px; font-weight: 650;
+        }
+        .logo {
+            background: #fff; border-radius: 12px; padding: 12px 14px;
+            box-shadow: 0 10px 24px rgba(0,0,0,.2); max-width: 380px;
+        }
+        .logo img { max-width: 100%; max-height: 96px; display: block; margin: 0 auto; }
+        .lead { margin: 0; max-width: 40ch; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.9); }
+        .wall { margin: 0; max-width: 42ch; font-size: 14px; line-height: 1.65; color: rgba(255,255,255,.88); }
+        .chips {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 440px;
+        }
+        .chip {
+            padding: 7px 11px; border-radius: 999px; font-size: 12px; font-weight: 600;
+            background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+            color: rgba(255,255,255,.92);
+        }
+        .glass {
+            max-width: 420px; width: 100%;
+            background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22);
+            border-radius: 14px; padding: 14px 16px; backdrop-filter: blur(6px);
+            text-align: left;
+        }
+        .glass p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,.92); }
+        .glass ul { margin: 0; padding-left: 1.1rem; font-size: 13px; line-height: 1.7; color: rgba(255,255,255,.85); }
+        .rec { margin: 0 16px 28px; font-size: 13px; color: #374151; }
+    </style>
+</head>
+<body>
+    <div class="bar">
+        <div>
+            <h1>Pratonton penerangan panel kiri</h1>
+            <p>Teks panjang diganti gaya yang lebih menarik — belum diguna pada login sebenar.</p>
+        </div>
+        <div class="tabs">
+            <button type="button" class="active" data-tab="a">Cadangan 1</button>
+            <button type="button" data-tab="b">Cadangan 2</button>
+            <button type="button" data-tab="c">Cadangan 3</button>
+        </div>
+    </div>
+
+    <div class="note">
+        Disyorkan: <strong>Cadangan 1</strong> — ayat pendek + cip fokus (mudah dibaca, nampak moden &amp; kemas).
+    </div>
+
+    <!-- 1: lead + chips -->
+    <div class="stage active" id="pane-a">
+        <span class="pill">Portal Rasmi</span>
+        <div class="logo"><img src="images/logo-alp-dbkl.png" alt="Logo"></div>
+        <p class="lead">
+            Mendigitalkan proses sumbangan pembangunan komuniti ALP DBKL yang sebelum ini dijalankan secara manual.
+        </p>
+        <div class="chips">
+            <span class="chip">Kelayakan</span>
+            <span class="chip">Peruntukan</span>
+            <span class="chip">Semakan</span>
+            <span class="chip">Perakuan</span>
+            <span class="chip">Kelulusan</span>
+            <span class="chip">Pembayaran</span>
+            <span class="chip">Pelaporan</span>
+            <span class="chip">Pemantauan</span>
+        </div>
+    </div>
+
+    <!-- 2: glass card -->
+    <div class="stage" id="pane-b">
+        <span class="pill">Portal Rasmi</span>
+        <div class="logo"><img src="images/logo-alp-dbkl.png" alt="Logo"></div>
+        <div class="glass">
+            <p>Sistem dibangunkan bagi mendigitalkan proses sumbangan pembangunan komuniti ALP Bandaraya Kuala Lumpur.</p>
+            <ul>
+                <li>Keperluan pengguna &amp; proses kerja</li>
+                <li>Kawalan kelayakan &amp; pengurusan peruntukan</li>
+                <li>Semakan, perakuan, kelulusan &amp; pembayaran</li>
+                <li>Pelaporan aktiviti &amp; pemantauan</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 3: short only -->
+    <div class="stage" id="pane-c">
+        <span class="pill">Portal Rasmi</span>
+        <div class="logo"><img src="images/logo-alp-dbkl.png" alt="Logo"></div>
+        <p class="wall">
+            Portal rasmi untuk pengurusan sumbangan ALP — dari permohonan hingga pembayaran dan pelaporan aktiviti.
+        </p>
+    </div>
+
+    <p class="rec">
+        <strong>1</strong> paling menarik secara visual ·
+        <strong>2</strong> paling lengkap tapi kemas ·
+        <strong>3</strong> paling ringkas.
+        Beritahu nombor untuk saya masukkan ke <code>/login</code>.
+    </p>
+
+    <script>
+        const buttons = [...document.querySelectorAll('.tabs button')];
+        const panes = {
+            a: document.getElementById('pane-a'),
+            b: document.getElementById('pane-b'),
+            c: document.getElementById('pane-c'),
+        };
+        buttons.forEach((btn) => btn.addEventListener('click', () => {
+            buttons.forEach((b) => b.classList.toggle('active', b === btn));
+            Object.entries(panes).forEach(([k, el]) => el.classList.toggle('active', k === btn.dataset.tab));
+        }));
+    </script>
+</body>
+</html>

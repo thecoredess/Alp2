@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
+
+/**
+ * Menyekat pengguna yang tidak aktif — log keluar serta-merta jika akaun
+ * dinyahaktifkan semasa sesi berjalan.
+ */
+class EnsureUserIsActive
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $user = Auth::user();
+
+        if ($user && ! $user->isActive()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Akaun anda telah dinyahaktifkan. Sila hubungi pentadbir sistem.']);
+        }
+
+        return $next($request);
+    }
+}

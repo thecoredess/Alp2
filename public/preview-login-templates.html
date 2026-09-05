@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pratonton Templat Log Masuk — ALP DBKL</title>
+    <style>
+        :root {
+            --navy-900: #0b1f4d;
+            --navy-700: #153a7a;
+            --navy-600: #1e4d96;
+            --navy-200: #aab9df;
+            --royal: #2563eb;
+            --danger: #b91c1c;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            background: #e8eef5;
+            color: var(--gray-900);
+        }
+        .bar {
+            position: sticky; top: 0; z-index: 20;
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+            padding: 12px 20px;
+            background: #fff;
+            border-bottom: 1px solid #dbe3ef;
+        }
+        .bar h1 { margin: 0; font-size: 15px; font-weight: 650; }
+        .bar p { margin: 2px 0 0; font-size: 12px; color: var(--gray-500); }
+        .tabs { display: flex; gap: 8px; }
+        .tabs button {
+            border: 1px solid #c9d4e5; background: #fff; color: var(--gray-700);
+            border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+        .tabs button.active {
+            background: var(--navy-900); color: #fff; border-color: var(--navy-900);
+        }
+        .note {
+            margin: 12px 20px 0; padding: 10px 14px; border-radius: 10px;
+            background: #fff8e8; border: 1px solid #f1e0b0; font-size: 13px; color: #7a5b10;
+        }
+        .stage {
+            margin: 16px 20px 28px;
+            height: calc(100vh - 140px);
+            min-height: 520px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(15, 35, 70, .12);
+            border: 1px solid #d5deea;
+            background: #fff;
+        }
+        .pane { display: none; height: 100%; }
+        .pane.active { display: flex; }
+        .brand {
+            width: 44%;
+            background: linear-gradient(160deg, var(--navy-900), var(--navy-700) 55%, var(--navy-600));
+            color: #fff;
+            padding: 48px 40px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            position: relative;
+        }
+        .brand::after {
+            content: "";
+            position: absolute; left: 40px; right: 40px; bottom: 0; height: 4px;
+            background: linear-gradient(90deg, #1d4ed8, #dc2626 50%, #e5e7eb);
+        }
+        .badge {
+            width: 52px; height: 52px; border-radius: 12px;
+            display: grid; place-items: center;
+            background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25);
+            font-weight: 700; letter-spacing: .04em; font-size: 13px;
+        }
+        .brand h2 { margin: 18px 0 8px; font-size: 28px; line-height: 1.2; font-weight: 650; }
+        .brand .sub { margin: 0; color: var(--navy-200); font-size: 14px; line-height: 1.5; max-width: 28ch; }
+        .brand .foot { font-size: 12px; color: rgba(255,255,255,.65); margin-top: 24px; }
+        .form-side {
+            width: 56%;
+            display: flex; align-items: center; justify-content: center;
+            padding: 40px;
+            background: #fff;
+        }
+        .form-box { width: 100%; max-width: 380px; }
+        .form-box h3 { margin: 0 0 6px; font-size: 22px; }
+        .form-box .hint { margin: 0 0 22px; color: var(--gray-500); font-size: 14px; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--gray-700); }
+        .field { margin-bottom: 16px; }
+        input[type=email], input[type=password], input[type=text], select {
+            width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 12px; font-size: 14px;
+        }
+        .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 8px 0 18px; font-size: 13px; }
+        .row a { color: var(--royal); text-decoration: none; font-weight: 600; }
+        .btn {
+            width: 100%; border: 0; border-radius: 10px; padding: 11px 14px;
+            background: #1e2a5a; color: #fff; font-weight: 650; font-size: 14px; cursor: default;
+        }
+        .uat {
+            margin-top: 18px; padding-top: 14px; border-top: 1px solid #eef2f7;
+            font-size: 12px; color: var(--gray-500);
+        }
+        .steps { margin-top: 28px; display: grid; gap: 12px; }
+        .step {
+            display: flex; gap: 12px; align-items: flex-start;
+            padding: 12px; border-radius: 12px; background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.12);
+        }
+        .num {
+            width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center;
+            background: rgba(255,255,255,.15); font-size: 12px; font-weight: 700; flex-shrink: 0;
+        }
+        .step strong { display: block; font-size: 13px; }
+        .step span { display: block; font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+        .b-brand { width: 50%; }
+        .b-form { width: 50%; }
+        @media (max-width: 860px) {
+            .pane.active { flex-direction: column; }
+            .brand, .form-side, .b-brand, .b-form { width: 100%; }
+            .brand { min-height: 220px; padding: 28px 24px; }
+            .stage { height: auto; min-height: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bar">
+        <div>
+            <h1>Pratonton Templat Log Masuk</h1>
+            <p>Pilih templat A atau B — ini contoh sahaja, belum diguna pada login sebenar.</p>
+        </div>
+        <div class="tabs">
+            <button type="button" class="active" data-tab="a">Templat A</button>
+            <button type="button" data-tab="b">Templat B</button>
+        </div>
+    </div>
+
+    <div class="note">
+        Cadangan A (disyorkan): brand kiri + borang kanan.
+        Cadangan B: borang kiri + aliran proses kanan.
+        Login sebenar kekal di <code>/login</code> sehingga anda pilih.
+    </div>
+
+    <!-- Templat A / B bertukar melalui tab -->
+    <div class="stage">
+        <div class="pane active" id="pane-a">
+            <aside class="brand">
+                <div>
+                    <div class="badge">DBKL</div>
+                    <h2>Sistem Ahli Lembaga Penasihat</h2>
+                    <p class="sub">Pengurusan peruntukan &amp; sumbangan ALP Bandaraya Kuala Lumpur.</p>
+                </div>
+                <p class="foot">URS v1.2 · Dewan Bandaraya Kuala Lumpur</p>
+            </aside>
+            <section class="form-side">
+                <div class="form-box">
+                    <h3>Log Masuk</h3>
+                    <p class="hint">Sila masukkan kelayakan anda untuk meneruskan.</p>
+                    <div class="field">
+                        <label>E-mel *</label>
+                        <input type="email" placeholder="nama@contoh.gov.my" disabled>
+                    </div>
+                    <div class="field">
+                        <label>Kata Laluan *</label>
+                        <input type="password" value="password" disabled>
+                    </div>
+                    <div class="row">
+                        <label style="margin:0;font-weight:500"><input type="checkbox" disabled> Ingat saya</label>
+                        <a href="#">Lupa kata laluan?</a>
+                    </div>
+                    <button class="btn" type="button">Log Masuk</button>
+                    <div class="uat">Akaun UAT · kata laluan <code>password</code></div>
+                </div>
+            </section>
+        </div>
+
+        <div class="pane" id="pane-b">
+            <section class="form-side b-form">
+                <div class="form-box">
+                    <div class="badge" style="background:#1e2a5a;color:#fff;margin-bottom:18px;">DBKL</div>
+                    <h3>Log Masuk</h3>
+                    <p class="hint">Akses Sistem ALP DBKL.</p>
+                    <div class="field">
+                        <label>E-mel *</label>
+                        <input type="email" placeholder="nama@contoh.gov.my" disabled>
+                    </div>
+                    <div class="field">
+                        <label>Kata Laluan *</label>
+                        <input type="password" value="password" disabled>
+                    </div>
+                    <div class="row">
+                        <label style="margin:0;font-weight:500"><input type="checkbox" disabled> Ingat saya</label>
+                        <a href="#">Lupa kata laluan?</a>
+                    </div>
+                    <button class="btn" type="button">Log Masuk</button>
+                </div>
+            </section>
+            <aside class="brand b-brand">
+                <div>
+                    <h2 style="font-size:26px;margin-top:0">ALP DBKL</h2>
+                    <p class="sub">Aliran ringkas permohonan sumbangan.</p>
+                    <div class="steps">
+                        <div class="step"><span class="num">1</span><div><strong>Hantar</strong><span>ALP sediakan &amp; hantar permohonan</span></div></div>
+                        <div class="step"><span class="num">2</span><div><strong>Semakan</strong><span>Pegawai JP semak kelengkapan</span></div></div>
+                        <div class="step"><span class="num">3</span><div><strong>Lulus</strong><span>Peraku / PEPU luluskan</span></div></div>
+                    </div>
+                </div>
+                <p class="foot">© Dewan Bandaraya Kuala Lumpur</p>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const buttons = document.querySelectorAll('.tabs button');
+        buttons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                buttons.forEach((b) => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.pane').forEach((p) => p.classList.remove('active'));
+                document.getElementById('pane-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

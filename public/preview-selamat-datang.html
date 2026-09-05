@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pratonton — SELAMAT DATANG (Login)</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #e8eef5; color: #111; }
+        .bar {
+            position: sticky; top: 0; z-index: 10;
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+            padding: 12px 18px; background: #fff; border-bottom: 1px solid #d5deea;
+        }
+        .bar h1 { margin: 0; font-size: 15px; }
+        .bar p { margin: 2px 0 0; font-size: 12px; color: #6b7280; }
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tabs button {
+            border: 1px solid #c9d4e5; background: #fff; border-radius: 999px;
+            padding: 8px 14px; font-size: 13px; font-weight: 650; cursor: pointer;
+        }
+        .tabs button.active { background: #0b1f4d; color: #fff; border-color: #0b1f4d; }
+        .note {
+            margin: 12px 18px 0; padding: 10px 14px; border-radius: 10px;
+            background: #fff8e8; border: 1px solid #f1e0b0; font-size: 13px; color: #7a5b10;
+        }
+        .wrap {
+            margin: 14px 18px 24px;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            min-height: 560px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #d5deea;
+            box-shadow: 0 10px 28px rgba(15,35,70,.1);
+            background: #fff;
+        }
+        .left {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            padding: 36px 28px;
+            text-align: center;
+            color: #fff;
+            background: linear-gradient(160deg, #0b1f4d, #153a7a 55%, #1e4d96);
+        }
+        .left.active { display: flex; }
+        .right {
+            display: flex; align-items: center; justify-content: center; padding: 32px 24px;
+            background: #fff;
+        }
+        .form {
+            width: 100%; max-width: 320px;
+        }
+        .form h3 { margin: 0 0 6px; font-size: 22px; color: #172144; }
+        .form p { margin: 0 0 18px; font-size: 13px; color: #6b7280; }
+        .field { margin-bottom: 12px; }
+        .field label { display: block; font-size: 12px; font-weight: 650; margin-bottom: 5px; color: #374151; }
+        .field input {
+            width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 12px; font-size: 14px;
+        }
+        .btn {
+            width: 100%; margin-top: 8px; border: 0; border-radius: 10px; padding: 11px;
+            background: #1e2a5a; color: #fff; font-weight: 650; font-size: 14px;
+        }
+        .logo {
+            background: #fff; border-radius: 12px; padding: 12px 14px;
+            box-shadow: 0 10px 24px rgba(0,0,0,.2); max-width: 360px;
+        }
+        .logo img { display: block; max-width: 100%; max-height: 88px; margin: 0 auto; }
+        .divider {
+            display: flex; align-items: center; gap: 10px; width: min(100%, 360px);
+            color: rgba(255,255,255,.85); font-size: 12px; font-weight: 650;
+        }
+        .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.3); }
+        .sub { margin: 0; max-width: 42ch; font-size: 13px; line-height: 1.6; color: rgba(255,255,255,.86); }
+        .welcome-hero {
+            margin: 0;
+            font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+            font-weight: 700;
+            letter-spacing: .02em;
+            line-height: 1.15;
+            text-shadow: 0 2px 18px rgba(0,0,0,.25);
+        }
+        .welcome-soft {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.9);
+        }
+        .welcome-line {
+            display: inline-flex; align-items: center; gap: 10px;
+            font-size: 0.95rem; font-weight: 650; letter-spacing: .06em;
+            color: #fff;
+        }
+        .welcome-line::before, .welcome-line::after {
+            content: ""; width: 28px; height: 2px;
+            background: linear-gradient(90deg, #60a5fa, #f87171);
+            border-radius: 99px;
+        }
+        .form-welcome {
+            margin: 0 0 4px;
+            font-size: 12px; font-weight: 700; letter-spacing: .14em;
+            text-transform: uppercase; color: #33509f;
+        }
+        .pick {
+            margin: 0 18px 28px;
+            display: grid; gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        }
+        .pick button {
+            text-align: left; cursor: pointer;
+            border: 1px solid #d5deea; background: #fff; border-radius: 12px;
+            padding: 12px 14px; font-size: 13px;
+        }
+        .pick strong { display: block; margin-bottom: 4px; color: #0b1f4d; }
+        .pick span { color: #6b7280; font-size: 12px; }
+        @media (max-width: 860px) {
+            .wrap { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bar">
+        <div>
+            <h1>Pratonton penempatan “SELAMAT DATANG”</h1>
+            <p>4 cadangan — belum diguna pada login sebenar.</p>
+        </div>
+        <div class="tabs">
+            <button type="button" class="active" data-tab="1">Cadangan 1</button>
+            <button type="button" data-tab="2">Cadangan 2</button>
+            <button type="button" data-tab="3">Cadangan 3</button>
+            <button type="button" data-tab="4">Cadangan 4</button>
+        </div>
+    </div>
+
+    <div class="note">
+        Disyorkan: <strong>Cadangan 1</strong> — “SELAMAT DATANG” besar di atas logo (paling mesra &amp; menarik).
+        Login sebenar kekal di <code>/login</code> sehingga anda pilih.
+    </div>
+
+    <div class="wrap">
+        <aside class="left active" id="left-1">
+            <p class="welcome-hero">SELAMAT DATANG</p>
+            <div class="logo"><img src="images/logo-alp-dbkl.png" alt="Logo ALP DBKL"></div>
+            <div class="divider">Portal Rasmi</div>
+            <p class="sub">Mendigitalkan proses sumbangan pembangunan komuniti ALP DBKL.</p>
+        </aside>
+
+        <aside class="left" id="left-2">
+            <div class="logo"><img src="images/logo-alp-dbkl.png" alt="Logo ALP DBKL"></div>
+            <div class="divider">Portal Rasmi</div>
+            <p class="welcome-soft">Selamat Datang</p>
+            <p class="sub">Mendigitalkan proses sumbangan pembangunan komuniti ALP DBKL.</p>
+        </aside>
+
+        <aside class="left" id="left-3">
+            <div class="logo"><img src="images/logo-alp-dbkl.png" alt="Logo ALP DBKL"></div>
+            <div class="welcome-line">SELAMAT DATANG</div>
+            <div class="divider">Portal Rasmi</div>
+            <p class="sub">Mendigitalkan proses sumbangan pembangunan komuniti ALP DBKL.</p>
+        </aside>
+
+        <aside class="left" id="left-4">
+            <div class="logo"><img src="images/logo-alp-dbkl.png" alt="Logo ALP DBKL"></div>
+            <div class="divider">Portal Rasmi</div>
+            <p class="sub">Mendigitalkan proses sumbangan pembangunan komuniti ALP DBKL.</p>
+        </aside>
+
+        <section class="right">
+            <div class="form">
+                <p class="form-welcome" id="form-welcome" hidden>SELAMAT DATANG</p>
+                <h3>Log Masuk</h3>
+                <p>Masukkan e-mel dan kata laluan anda.</p>
+                <div class="field"><label>E-mel</label><input type="email" placeholder="nama@domain.com" disabled></div>
+                <div class="field"><label>Kata Laluan</label><input type="password" value="password" disabled></div>
+                <button class="btn" type="button">Log Masuk</button>
+            </div>
+        </section>
+    </div>
+
+    <div class="pick">
+        <button type="button" data-tab="1"><strong>1 · Hero di atas logo</strong><span>Paling mesra &amp; menonjol pada panel kiri.</span></button>
+        <button type="button" data-tab="2"><strong>2 · Di bawah Portal Rasmi</strong><span>Selepas logo &amp; pemisah — aliran semula jadi.</span></button>
+        <button type="button" data-tab="3"><strong>3 · Dengan garis aksen</strong><span>Di antara logo dan Portal Rasmi — lebih hiasan.</span></button>
+        <button type="button" data-tab="4"><strong>4 · Atas borang Log Masuk</strong><span>Pada panel kanan — fokus kepada pengguna log masuk.</span></button>
+    </div>
+
+    <script>
+        const tabs = [...document.querySelectorAll('.tabs button')];
+        const picks = [...document.querySelectorAll('.pick button')];
+        const lefts = {
+            1: document.getElementById('left-1'),
+            2: document.getElementById('left-2'),
+            3: document.getElementById('left-3'),
+            4: document.getElementById('left-4'),
+        };
+        const formWelcome = document.getElementById('form-welcome');
+
+        function show(tab) {
+            tabs.forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+            Object.entries(lefts).forEach(([k, el]) => {
+                // For option 4, show left-4 (no welcome on left) and welcome on form
+                el.classList.toggle('active', k === (tab === '4' ? '4' : tab));
+            });
+            formWelcome.hidden = tab !== '4';
+        }
+
+        tabs.forEach((btn) => btn.addEventListener('click', () => show(btn.dataset.tab)));
+        picks.forEach((btn) => btn.addEventListener('click', () => show(btn.dataset.tab)));
+    </script>
+</body>
+</html>
