@@ -67,8 +67,8 @@ class CsrReportService
     /** Pecahan CSR mengikut kawasan (location). */
     public function byArea(array $filters): Collection
     {
-        return $this->base($filters)->with('application:id,location')->get()
-            ->groupBy(fn ($p) => $p->application?->location ?: 'Tidak dinyatakan')
+        return $this->base($filters)->with('application:id,purpose')->get()
+            ->groupBy(fn ($p) => $p->application?->purpose ?: 'Tidak dinyatakan')
             ->map(fn ($rows, $area) => ['area' => $area, 'count' => $rows->count()])
             ->values();
     }
@@ -77,7 +77,7 @@ class CsrReportService
     public function listing(array $filters): Collection
     {
         return $this->base($filters)
-            ->with(['alp:id,ref_code,name', 'application:id,location,target_group', 'report:id,project_id,beneficiary_count'])
+            ->with(['alp:id,ref_code,name', 'application:id,purpose,recipient_name', 'report:id,project_id,beneficiary_count'])
             ->orderByDesc('created_at')->get()
             ->map(fn (Project $p) => ['project' => $p, 'finance' => $this->financial->summary($p)]);
     }

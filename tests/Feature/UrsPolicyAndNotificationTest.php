@@ -57,15 +57,15 @@ class UrsPolicyAndNotificationTest extends TestCase
         $app = Application::factory()->create([
             'alp_id' => $this->alp->id,
             'financial_year_id' => $this->year->id,
-            'application_type' => ApplicationType::CSR,
+            'application_type' => ApplicationType::SUMBANGAN,
             'status' => ApplicationStatus::DRAFT,
+            'requested_amount' => $amount,
+            'purpose' => 'Tujuan ujian',
+            'recipient_name' => 'Persatuan Ujian',
+            'recipient_bank_account' => '1234567890',
         ]);
-        $app->budgetItems()->create([
-            'description' => 'Item', 'quantity' => 1, 'unit_cost' => $amount, 'total' => $amount, 'sort_order' => 1,
-        ]);
-        $app->recalculateRequestedAmount();
 
-        foreach (DocumentRequirement::requiredFor(ApplicationType::CSR) as $t) {
+        foreach (DocumentRequirement::requiredFor() as $t) {
             ApplicationDocument::factory()->type($t)->create(['application_id' => $app->id]);
         }
 

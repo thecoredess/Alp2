@@ -14,26 +14,49 @@ class UrsProgramRulesTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_br007_june_appointment_prorates_annual_ceiling(): void
+    public function test_br007_february_appointment_gets_full_annual_three_periods(): void
     {
         SystemSetting::set(UrsContributionPolicy::KEY_ENABLED, true);
         SystemSetting::set(UrsContributionPolicy::KEY_MAX_ANNUAL, '30000.00');
+        SystemSetting::set(UrsContributionPolicy::KEY_PERIOD_QUOTA, '10000.00');
+
+        $alp = Alp::factory()->create(['appointment_start' => '2026-02-09']);
+        $this->assertSame(3, UrsContributionPolicy::eligiblePeriodCountForAlp($alp, 2026));
+        $this->assertSame('30000.00', UrsContributionPolicy::maxAnnualForAlp($alp, 2026)->value());
+    }
+
+    public function test_br007_october_appointment_gets_one_period_only(): void
+    {
+        SystemSetting::set(UrsContributionPolicy::KEY_ENABLED, true);
+        SystemSetting::set(UrsContributionPolicy::KEY_MAX_ANNUAL, '30000.00');
+        SystemSetting::set(UrsContributionPolicy::KEY_PERIOD_QUOTA, '10000.00');
+
+        $alp = Alp::factory()->create(['appointment_start' => '2026-10-01']);
+        $this->assertSame(1, UrsContributionPolicy::eligiblePeriodCountForAlp($alp, 2026));
+        $this->assertSame('10000.00', UrsContributionPolicy::maxAnnualForAlp($alp, 2026)->value());
+    }
+
+    public function test_br007_june_appointment_gets_two_periods(): void
+    {
+        SystemSetting::set(UrsContributionPolicy::KEY_ENABLED, true);
+        SystemSetting::set(UrsContributionPolicy::KEY_MAX_ANNUAL, '30000.00');
+        SystemSetting::set(UrsContributionPolicy::KEY_PERIOD_QUOTA, '10000.00');
 
         $alp = Alp::factory()->create(['appointment_start' => '2026-06-01']);
-        $max = UrsContributionPolicy::maxAnnualForAlp($alp, 2026);
-
-        // 7/12 × 30000 = 17500
-        $this->assertSame('17500.00', $max->value());
+        $this->assertSame(2, UrsContributionPolicy::eligiblePeriodCountForAlp($alp, 2026));
+        $this->assertSame('20000.00', UrsContributionPolicy::maxAnnualForAlp($alp, 2026)->value());
     }
 
     public function test_br007_rejects_allocation_above_entitlement(): void
     {
         SystemSetting::set(UrsContributionPolicy::KEY_ENABLED, true);
         SystemSetting::set(UrsContributionPolicy::KEY_MAX_ANNUAL, '30000.00');
+        SystemSetting::set(UrsContributionPolicy::KEY_PERIOD_QUOTA, '10000.00');
 
         $alp = Alp::factory()->create(['appointment_start' => '2026-06-01']);
-        $errors = UrsContributionPolicy::validateAnnualAllocationForAlp(Money::of('20000.00'), $alp, 2026);
+        $this->assertEmpty(UrsContributionPolicy::validateAnnualAllocationForAlp(Money::of('20000.00'), $alp, 2026));
 
+        $errors = UrsContributionPolicy::validateAnnualAllocationForAlp(Money::of('25000.00'), $alp, 2026);
         $this->assertNotEmpty($errors);
     }
 
@@ -49,6 +72,15 @@ class UrsProgramRulesTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-03-15'));
         $this->assertTrue(UrsContributionPolicy::isShortNotice(Carbon::parse('2026-04-01')));
         $this->assertFalse(UrsContributionPolicy::isShortNotice(Carbon::parse('2026-06-20')));
+        Carbon::setTestNow();
+    }
+
+    public function test_br014_minimum_program_date_is_two_months_after_application(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-03-15'));
+        $this->assertSame('2026-05-15', UrsContributionPolicy::minimumProgramDate()->toDateString());
+        $this->assertEmpty(UrsContributionPolicy::validateProgramLeadTime(Carbon::parse('2026-05-15')));
+        $this->assertNotEmpty(UrsContributionPolicy::validateProgramLeadTime(Carbon::parse('2026-05-14')));
         Carbon::setTestNow();
     }
 

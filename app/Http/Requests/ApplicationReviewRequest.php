@@ -23,6 +23,24 @@ class ApplicationReviewRequest extends FormRequest
         return $this->user()?->can(ReviewType::SECRETARIAT->permission()) ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ((string) $this->route('type') !== ReviewType::SECRETARIAT->value) {
+            return;
+        }
+
+        // Pegawai JP: tiada UI lengkap/tidak lengkap — auto-isi checklist lengkap untuk perakuan.
+        if ($this->user()?->canMakeFullJpReviewDecision()) {
+            return;
+        }
+
+        $checklist = collect(JpReviewChecklist::keys())
+            ->mapWithKeys(fn (string $k) => [$k => JpReviewChecklist::LENGKAP])
+            ->all();
+
+        $this->merge(['checklist' => $checklist]);
+    }
+
     public function rules(): array
     {
         // Skip validasi checklist untuk route legacy (404 di controller).
@@ -31,23 +49,42 @@ class ApplicationReviewRequest extends FormRequest
         }
 
         $keys = JpReviewChecklist::keys();
+        $fullDecision = $this->user()?->canMakeFullJpReviewDecision() ?? false;
+        $allowed = $fullDecision
+            ? ReviewDecision::cases()
+            : ReviewDecision::forPegawaiJp();
 
-        return [
-            'decision' => ['required', Rule::enum(ReviewDecision::class)],
+        $rules = [
+            'decision' => ['required', Rule::enum(ReviewDecision::class), Rule::in(array_map(
+                fn (ReviewDecision $d) => $d->value,
+                $allowed,
+            ))],
             'comments' => [
                 Rule::requiredIf(fn () => $this->input('decision') !== ReviewDecision::RECOMMEND->value),
                 'nullable', 'string', 'max:2000',
             ],
-            'checklist' => ['required', 'array'],
-            ...collect($keys)->mapWithKeys(fn (string $k) => [
-                "checklist.$k" => ['required', Rule::in([JpReviewChecklist::LENGKAP, JpReviewChecklist::TIDAK_LENGKAP])],
-            ])->all(),
         ];
+
+        if ($fullDecision) {
+            $rules['checklist'] = ['required', 'array'];
+            foreach ($keys as $k) {
+                $rules["checklist.$k"] = ['required', Rule::in([JpReviewChecklist::LENGKAP, JpReviewChecklist::TIDAK_LENGKAP])];
+            }
+        } else {
+            $rules['checklist'] = ['nullable', 'array'];
+        }
+
+        return $rules;
     }
 
     public function withValidator(Validator $validator): void
     {
         if ((string) $this->route('type') !== ReviewType::SECRETARIAT->value) {
+            return;
+        }
+
+        // Hanya Admin JP wajib lengkapkan senarai semak secara manual.
+        if (! ($this->user()?->canMakeFullJpReviewDecision() ?? false)) {
             return;
         }
 
@@ -81,6 +118,7 @@ class ApplicationReviewRequest extends FormRequest
         return [
             'comments.required' => 'Sila nyatakan ulasan/sebab.',
             'checklist.required' => 'Sila lengkapkan senarai semak JP.',
+            'decision.in' => 'Pegawai JP hanya boleh syor kepada Pengarah JP atau kembalikan untuk pembetulan.',
         ];
     }
 }

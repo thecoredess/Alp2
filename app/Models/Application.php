@@ -5,7 +5,10 @@ namespace App\Models;
 use App\Enums\ApplicationStatus;
 use App\Enums\ApplicationType;
 use App\Enums\ApplicationPaymentStatus;
+use App\Enums\ProgramCategory;
 use App\Support\Money;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,27 +25,21 @@ class Application extends Model
         'alp_id',
         'recipient_id',
         'application_type',
-        'project_title',
-        'project_summary',
+        'purpose',
         'recipient_name',
         'recipient_ros_number',
+        'program_date',
+        'program_category',
         'recipient_bank_account',
         'recipient_address',
-        'program_category',
-        'objectives',
-        'scope',
-        'target_group',
-        'location',
-        'proposed_start_date',
-        'proposed_end_date',
-        'is_short_notice',
-        'compliance_declared_at',
         'requested_amount',
         'status',
         'revision_number',
         'submitted_at',
         'payment_status',
         'payment_voucher_no',
+        'payment_supplier_no',
+        'payment_voucher_date',
         'payment_reference',
         'paid_at',
         'payment_remarks',
@@ -62,18 +59,16 @@ class Application extends Model
     {
         return [
             'application_type' => ApplicationType::class,
-            'program_category' => \App\Enums\ProgramCategory::class,
             'status' => ApplicationStatus::class,
             'payment_status' => ApplicationPaymentStatus::class,
             'jkew_crosscheck_status' => \App\Enums\JkewCrosscheckStatus::class,
-            'proposed_start_date' => 'date',
-            'proposed_end_date' => 'date',
             'requested_amount' => 'decimal:2',
             'revision_number' => 'integer',
-            'is_short_notice' => 'boolean',
             'submitted_at' => 'datetime',
-            'compliance_declared_at' => 'datetime',
+            'program_date' => 'date',
+            'program_category' => ProgramCategory::class,
             'paid_at' => 'datetime',
+            'payment_voucher_date' => 'date',
             'payment_updated_at' => 'datetime',
             'sent_to_jkew_at' => 'datetime',
             'report_card_submitted_at' => 'datetime',
@@ -96,11 +91,6 @@ class Application extends Model
     public function recipient(): BelongsTo
     {
         return $this->belongsTo(Recipient::class);
-    }
-
-    public function budgetItems(): HasMany
-    {
-        return $this->hasMany(ApplicationBudgetItem::class)->orderBy('sort_order')->orderBy('id');
     }
 
     public function documents(): HasMany
@@ -153,6 +143,20 @@ class Application extends Model
 
     // ── Bantuan ─────────────────────────────────────────────────
 
+    /** Permohonan sumbangan rasmi URS (ALP/SUM/…) — bukan data legacy CSR/DEV. */
+    public function scopeOfficialSumbangan(Builder $query): Builder
+    {
+        return $query
+            ->where('application_type', ApplicationType::SUMBANGAN)
+            ->where('application_number', 'like', 'ALP/SUM/%');
+    }
+
+    public function isOfficialSumbangan(): bool
+    {
+        return $this->application_type === ApplicationType::SUMBANGAN
+            && str_starts_with((string) $this->application_number, 'ALP/SUM/');
+    }
+
     public function isDraft(): bool
     {
         return $this->status === ApplicationStatus::DRAFT;
@@ -168,33 +172,29 @@ class Application extends Model
         return $this->status->isEditableByOwner();
     }
 
-    /** Jumlah tepat item bajet (dikira dari ledger item, bukan input pengguna). */
-    public function budgetItemsTotal(): Money
-    {
-        $total = Money::zero();
-        foreach ($this->budgetItems as $item) {
-            $total = $total->plus(Money::of((string) $item->total));
-        }
-
-        return $total;
-    }
-
     /** Jumlah dipohon sebagai Money. */
     public function requestedAmountMoney(): Money
     {
         return Money::of((string) $this->requested_amount);
     }
 
-    /**
-     * Kira semula requested_amount dari item bajet (tepat) dan simpan.
-     * Digunakan semasa DRAFT untuk paparan; snapshot muktamad dibuat semasa hantar.
-     */
+    /** Alias lama — jumlah kini dimasukkan terus pada borang (bukan pecahan item). */
+    public function budgetItemsTotal(): Money
+    {
+        return $this->requestedAmountMoney();
+    }
+
     public function recalculateRequestedAmount(): Money
     {
-        $total = $this->budgetItemsTotal();
-        $this->requested_amount = $total->value();
-        $this->save();
+        return $this->requestedAmountMoney();
+    }
 
-        return $total;
+    /** Alias paparan: tujuan sumbangan. */
+    protected function projectTitle(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->attributes['purpose'] ?? null,
+            set: fn (?string $value) => ['purpose' => $value],
+        );
     }
 }

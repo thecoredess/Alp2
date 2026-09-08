@@ -34,7 +34,7 @@ enum RoleName: string
             self::PEGAWAI_KEWANGAN => 'Kerani Kewangan JP',
             self::PEGAWAI_JKEW => 'JKEW',
             self::PEGAWAI_TEKNIKAL => 'Pegawai Teknikal (legacy)',
-            self::PELULUS => 'Peraku / PEPU (Pelulus)',
+            self::PELULUS => 'TP / Pengarah JP (Peraku)',
             self::PENGURUSAN => 'PEPU / Pengurusan Tertinggi',
         };
     }

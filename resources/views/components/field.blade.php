@@ -5,7 +5,7 @@
         {{ $label }}
         @if($required)<span class="text-danger">*</span>@endif
     </label>
-    <div class="mt-1">
+    <div class="mt-2">
         {{ $slot }}
     </div>
     @if($hint)

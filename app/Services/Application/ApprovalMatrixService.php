@@ -36,23 +36,27 @@ class ApprovalMatrixService
 
     /**
      * Aras yang diperlukan (berurutan) untuk meluluskan sesuatu jumlah.
-     * Mengembalikan aras 1..N di mana N ialah band yang mengandungi jumlah.
+     * URS v1.2: Peraku (angkat ke PEPU) → PEPU (kelulusan akhir) untuk semua jumlah.
+     * Julat jumlah pada setiap aras adalah rujukan matriks sahaja.
      *
      * @return Collection<int, ApprovalLevel>
      *
-     * @throws ApplicationException jika tiada band terpakai untuk jumlah ini
+     * @throws ApplicationException jika tiada aras aktif
      */
     public function requiredLevels(Money $amount, ?int $financialYearId): Collection
     {
         $levels = $this->applicableLevels($financialYearId);
 
-        $band = $levels->first(fn (ApprovalLevel $l) => $l->contains($amount));
+        if ($levels->isEmpty()) {
+            throw new ApplicationException('Tiada matriks kelulusan dikonfigurasi untuk jumlah ini.');
+        }
 
+        $band = $levels->first(fn (ApprovalLevel $l) => $l->contains($amount));
         if (! $band) {
             throw new ApplicationException('Tiada matriks kelulusan dikonfigurasi untuk jumlah ini.');
         }
 
-        return $levels->filter(fn (ApprovalLevel $l) => $l->sequence <= $band->sequence)->values();
+        return $levels->values();
     }
 
     /**

@@ -42,14 +42,59 @@ enum DocumentType: string
         };
     }
 
+    /** Nama ringkas untuk paparan ALP (warga emas). */
+    public function simpleLabel(): string
+    {
+        return match ($this) {
+            self::PENDAFTARAN_PERTUBUHAN => 'Pendaftaran Pertubuhan',
+            self::BORANG_EFT => 'Borang Maklumat Bank',
+            self::PENYATA_BANK => 'Penyata Bank',
+            self::KERTAS_KERJA => 'Kertas Kerja',
+            self::SIJIL_ROS => 'Sijil ROS',
+            default => $this->label(),
+        };
+    }
+
+    /** Arahan ringkas muat naik. */
+    public function simpleHint(): string
+    {
+        return match ($this) {
+            self::PENDAFTARAN_PERTUBUHAN => 'Salinan pendaftaran pertubuhan atau organisasi penerima.',
+            self::BORANG_EFT => 'Borang maklumat akaun bank (EFT) yang lengkap.',
+            self::PENYATA_BANK => 'Salinan atau gambar muka depan penyata bank.',
+            self::KERTAS_KERJA => 'Ringkasan program / aktiviti yang dicadangkan.',
+            self::SIJIL_ROS => 'Sijil pendaftaran pertubuhan (ROS) yang masih sah.',
+            default => 'Muat naik fail PDF atau gambar.',
+        };
+    }
+
     /** @return list<self> */
     public static function reportCardTypes(): array
     {
         return [self::REPORT_CARD, self::LAPORAN_AKTIVITI];
     }
 
+    /** Lampiran wajib Senarai Semak Penyaluran Sumbangan ALP (item 2–6). */
+    public static function contributionAttachments(): array
+    {
+        return [
+            self::PENDAFTARAN_PERTUBUHAN,
+            self::BORANG_EFT,
+            self::PENYATA_BANK,
+            self::KERTAS_KERJA,
+            self::SIJIL_ROS,
+        ];
+    }
+
+    public static function contributionOptions(): array
+    {
+        return collect(self::contributionAttachments())
+            ->mapWithKeys(fn (self $t) => [$t->value => $t->label()])
+            ->all();
+    }
+
     public static function options(): array
     {
-        return collect(self::cases())->mapWithKeys(fn (self $t) => [$t->value => $t->label()])->all();
+        return self::contributionOptions();
     }
 }

@@ -7,12 +7,6 @@
         Masukkan e-mel untuk menerima pautan set semula.
     </p>
 
-    @if (session('status'))
-        <div class="mt-5 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
-            {{ session('status') }}
-        </div>
-    @endif
-
     <form method="POST" action="{{ route('password.email') }}" class="mt-7 space-y-4">
         @csrf
         <x-field label="E-mel" name="email" :required="true">

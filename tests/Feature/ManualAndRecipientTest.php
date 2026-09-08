@@ -32,24 +32,22 @@ class ManualAndRecipientTest extends TestCase
         $app = $this->draftWithBudgetAndDocs($alp, $year, '2000.00');
 
         $this->actingAs($user)->put(route('applications.wizard.maklumat.update', $app), [
-            'application_type' => $app->application_type->value,
-            'project_title' => $app->project_title,
+            'purpose' => $app->purpose,
             'recipient_name' => 'Persatuan Baru Ujian',
-            'recipient_ros_number' => 'ROS-99887766',
+            'recipient_ros_number' => $app->recipient_ros_number,
+            'program_date' => $app->program_date?->format('Y-m-d'),
+            'program_category' => $app->program_category?->value ?? 'komuniti',
+            'requested_amount' => '2000.00',
             'recipient_bank_account' => '1122334455',
-            'recipient_address' => 'Kampung Baru, Kuala Lumpur',
-            'program_category' => \App\Enums\ProgramCategory::KOMUNITI->value,
-            'location' => 'Kuala Lumpur',
-            'proposed_start_date' => now()->addMonths(3)->toDateString(),
-            'compliance_declaration' => '1',
+            'recipient_address' => 'No. 5, Jalan Ampang, 50450 Kuala Lumpur',
         ])->assertRedirect();
 
         $app->refresh();
         $this->assertNotNull($app->recipient_id);
         $this->assertDatabaseHas('recipients', [
             'id' => $app->recipient_id,
-            'ros_number' => 'ROS-99887766',
             'name' => 'Persatuan Baru Ujian',
+            'bank_account' => '1122334455',
         ]);
         $this->assertSame(1, Recipient::count());
     }
@@ -108,5 +106,31 @@ class ManualAndRecipientTest extends TestCase
         $this->actingAs($alp)
             ->post(route('manual.upload'), ['manual_pdf' => $pdf])
             ->assertForbidden();
+    }
+
+    public function test_manual_shows_alp_content_only_for_alp_user(): void
+    {
+        $alp = User::factory()->create()->assignRole(RoleName::ALP->value);
+
+        $this->actingAs($alp)
+            ->get(route('manual.show'))
+            ->assertOk()
+            ->assertSee('Tatacara ALP / Persatuan')
+            ->assertSee('ALP / Persatuan', false)
+            ->assertDontSee('Tatacara Pegawai Dalaman')
+            ->assertDontSee('Pegawai JP');
+    }
+
+    public function test_manual_shows_jp_content_only_for_secretariat_user(): void
+    {
+        $jp = User::factory()->create()->assignRole(RoleName::PEGAWAI_URUSSETIA->value);
+
+        $this->actingAs($jp)
+            ->get(route('manual.show'))
+            ->assertOk()
+            ->assertSee('Tatacara Pegawai Dalaman')
+            ->assertSee('Pegawai JP')
+            ->assertSee('syor kepada Pengarah JP')
+            ->assertDontSee('Tatacara ALP / Persatuan');
     }
 }

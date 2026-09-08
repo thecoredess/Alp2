@@ -1,17 +1,14 @@
 @extends('layouts.app')
-@section('title', 'Profil Saya')
-@section('heading', 'Profil Saya')
-@section('subheading', 'Kemaskini maklumat akaun anda')
+@section('title', 'Tetapan')
+@section('heading', 'Tetapan')
+@section('subheading', 'Profil, kata laluan dan konfigurasi sistem')
 
 @section('content')
-    <div class="mb-4">
-        <a href="{{ route('settings.user') }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">← Ketetapan Pengguna</a>
-    </div>
-
-    <div class="max-w-2xl space-y-6">
-        <div class="card p-6">
-            <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-5"
-                  x-data="{ preview: null, icon: @js(old('avatar_icon', $user->avatar_icon)) }">
+    <div class="page-shell space-y-6">
+        <div class="grid gap-6 xl:grid-cols-2">
+            <x-page-card title="Profil Saya" description="Maklumat akaun dan hubungan" icon="user-cog">
+                <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-5"
+                      x-data="{ preview: null, icon: @js(old('avatar_icon', $user->avatar_icon)) }">
                 @csrf
                 @method('PUT')
 
@@ -133,16 +130,96 @@
                     </div>
                 @endif
 
-                <div class="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-5">
-                    <a href="{{ route('password.change') }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">
-                        Tukar kata laluan →
-                    </a>
-                    <div class="flex gap-3">
-                        <a href="{{ route('dashboard') }}" class="btn-white">Batal</a>
-                        <button type="submit" class="btn-primary">Simpan Profil</button>
-                    </div>
+                <div class="flex flex-wrap items-center justify-end gap-3 border-t border-gray-100 pt-5">
+                    <a href="{{ route('dashboard') }}" class="btn-white">Batal</a>
+                    <button type="submit" class="btn-primary">Simpan Profil</button>
+                </div>
+                </form>
+            </x-page-card>
+
+            <x-page-card title="Tukar Kata Laluan" description="Minimum 8 aksara, huruf dan nombor" icon="check" class="scroll-mt-6 xl:sticky xl:top-[4.5rem] xl:self-start" id="kata-laluan">
+            @if ($user->must_change_password)
+                <div class="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    Demi keselamatan, anda perlu menetapkan kata laluan baharu sebelum meneruskan.
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('password.change.update') }}" class="space-y-5">
+                @csrf
+                @method('PUT')
+
+                <x-field label="Kata Laluan Semasa" name="current_password" :required="true">
+                    <x-password-input id="current_password" name="current_password" autocomplete="current-password" :required="true" />
+                </x-field>
+
+                <x-field label="Kata Laluan Baharu" name="password" :required="true">
+                    <x-password-input id="password" name="password" autocomplete="new-password" :required="true" />
+                </x-field>
+
+                <x-field label="Sahkan Kata Laluan Baharu" name="password_confirmation" :required="true">
+                    <x-password-input id="password_confirmation" name="password_confirmation" autocomplete="new-password" :required="true" />
+                </x-field>
+
+                <div class="flex justify-end border-t border-gray-100 pt-5">
+                    <button type="submit" class="btn-primary">Kemas Kini Kata Laluan</button>
                 </div>
             </form>
+            </x-page-card>
         </div>
+
+        @if ($canSystem ?? false)
+            <section id="sistem" class="scroll-mt-6">
+                <div class="mb-3">
+                    <h2 class="section-title">Tetapan Sistem</h2>
+                    <p class="mt-0.5 text-sm text-gray-500">Konfigurasi operasi, polisi URS dan pentadbiran.</p>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    @can('settings.manage')
+                        <a href="{{ route('settings.edit') }}" class="card group flex items-start gap-3 p-4 transition hover:border-royal-300 hover:shadow-sm">
+                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-royal-50 text-royal-700">
+                                <x-icon name="scale" class="h-5 w-5" />
+                            </span>
+                            <span>
+                                <span class="block text-sm font-semibold text-gray-900 group-hover:text-navy-800">Polisi URS</span>
+                                <span class="mt-0.5 block text-xs text-gray-500">Had sumbangan &amp; templat surat/borang.</span>
+                            </span>
+                        </a>
+                    @endcan
+                    @can('users.view')
+                        <a href="{{ route('users.index') }}" class="card group flex items-start gap-3 p-4 transition hover:border-royal-300 hover:shadow-sm">
+                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-royal-50 text-royal-700">
+                                <x-icon name="users-group" class="h-5 w-5" />
+                            </span>
+                            <span>
+                                <span class="block text-sm font-semibold text-gray-900 group-hover:text-navy-800">Pengguna</span>
+                                <span class="mt-0.5 block text-xs text-gray-500">Urus akaun, peranan dan status pengguna.</span>
+                            </span>
+                        </a>
+                    @endcan
+                    @can('financial_years.view')
+                        <a href="{{ route('financial-years.index') }}" class="card group flex items-start gap-3 p-4 transition hover:border-royal-300 hover:shadow-sm">
+                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-royal-50 text-royal-700">
+                                <x-icon name="calendar" class="h-5 w-5" />
+                            </span>
+                            <span>
+                                <span class="block text-sm font-semibold text-gray-900 group-hover:text-navy-800">Tahun Kewangan</span>
+                                <span class="mt-0.5 block text-xs text-gray-500">Buka / tutup tahun kewangan aktif.</span>
+                            </span>
+                        </a>
+                    @endcan
+                    @can('approval_matrix.view')
+                        <a href="{{ route('approval-matrix.index') }}" class="card group flex items-start gap-3 p-4 transition hover:border-royal-300 hover:shadow-sm">
+                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-royal-50 text-royal-700">
+                                <x-icon name="clipboard" class="h-5 w-5" />
+                            </span>
+                            <span>
+                                <span class="block text-sm font-semibold text-gray-900 group-hover:text-navy-800">Matriks Kelulusan</span>
+                                <span class="mt-0.5 block text-xs text-gray-500">Ambang Peraku / PEPU mengikut jumlah.</span>
+                            </span>
+                        </a>
+                    @endcan
+                </div>
+            </section>
+        @endif
     </div>
 @endsection

@@ -2,14 +2,20 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\ApplicationType;
 use App\Enums\ProgramCategory;
+use App\Http\Requests\Concerns\ValidatesProgramDate;
+use App\Http\Requests\Concerns\ValidatesRequestedAmount;
+use App\Rules\KualaLumpurAddress;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-/** Langkah 1 — Maklumat permohonan + penerima (URS v1.2 TBL-10). */
+/** Kemas kini draf Borang Penyaluran (medan a–i). */
 class ApplicationInfoRequest extends FormRequest
 {
+    use ValidatesProgramDate;
+    use ValidatesRequestedAmount;
+
     public function authorize(): bool
     {
         $application = $this->route('application');
@@ -22,44 +28,49 @@ class ApplicationInfoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'application_type' => ['required', Rule::enum(ApplicationType::class)],
-            'project_title' => ['required', 'string', 'max:255'],
-            'project_summary' => ['nullable', 'string', 'max:5000'],
             'recipient_name' => ['required', 'string', 'max:255'],
-            'recipient_ros_number' => ['required', 'string', 'max:64'],
-            'recipient_bank_account' => ['required', 'string', 'max:64'],
-            'recipient_address' => ['required', 'string', 'max:500'],
+            'recipient_ros_number' => ['required', 'string', 'max:100'],
+            'program_date' => ['required', 'date'],
             'program_category' => ['required', Rule::enum(ProgramCategory::class)],
-            'location' => ['required', 'string', 'max:255'],
-            'proposed_start_date' => ['required', 'date'],
-            'proposed_end_date' => ['nullable', 'date', 'after_or_equal:proposed_start_date'],
-            'compliance_declaration' => ['accepted'],
+            'requested_amount' => ['required', 'numeric', 'min:0.01', 'max:999999999.99'],
+            'purpose' => ['required', 'string', 'max:1000'],
+            'recipient_bank_account' => ['required', 'string', 'max:64'],
+            'recipient_address' => ['required', 'string', 'max:500', new KualaLumpurAddress],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $v) {
+            $application = $this->route('application');
+            $this->validateProgramDate($v, now());
+
+            $ctx = $this->amountContextFromApplication($application);
+            if ($ctx === null) {
+                return;
+            }
+
+            $this->validateRequestedAmount(
+                $v,
+                $ctx['alp_id'],
+                $ctx['financial_year_id'],
+                $ctx['calendar_year'],
+                $ctx['exclude_application_id'],
+            );
+        });
     }
 
     public function attributes(): array
     {
         return [
-            'application_type' => 'jenis permohonan',
-            'project_title' => 'tujuan / nama program',
-            'project_summary' => 'ringkasan',
-            'recipient_name' => 'nama penerima sumbangan',
-            'recipient_ros_number' => 'nombor pendaftaran ROS',
-            'recipient_bank_account' => 'no. akaun penerima',
+            'recipient_name' => 'nama persatuan',
+            'recipient_ros_number' => 'no. ROS',
+            'program_date' => 'tarikh program',
+            'program_category' => 'jenis/kategori program',
+            'requested_amount' => 'jumlah sumbangan',
+            'purpose' => 'tujuan sumbangan',
+            'recipient_bank_account' => 'no. akaun penerima sumbangan',
             'recipient_address' => 'alamat persatuan',
-            'program_category' => 'jenis program',
-            'location' => 'lokasi program',
-            'proposed_start_date' => 'tarikh program mula',
-            'proposed_end_date' => 'tarikh program tamat',
-            'compliance_declaration' => 'deklarasi pematuhan',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'proposed_end_date.after_or_equal' => 'Tarikh tamat mesti selepas atau sama dengan tarikh mula.',
-            'compliance_declaration.accepted' => 'Anda mesti mengesahkan deklarasi pematuhan BR-012.',
         ];
     }
 }

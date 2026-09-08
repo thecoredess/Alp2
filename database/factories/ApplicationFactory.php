@@ -20,30 +20,20 @@ class ApplicationFactory extends Factory
     public function definition(): array
     {
         return [
-            'application_number' => 'ALP/CSR/2026/'.fake()->unique()->numerify('####'),
+            'application_number' => 'ALP/SUM/2026/'.fake()->unique()->numerify('####'),
             'financial_year_id' => FinancialYear::factory()->active(),
             'alp_id' => Alp::factory(),
-            'application_type' => ApplicationType::CSR,
-            'project_title' => fake()->sentence(4),
-            'project_summary' => fake()->paragraph(),
+            'application_type' => ApplicationType::SUMBANGAN,
+            'purpose' => fake()->sentence(6),
             'recipient_name' => fake()->company(),
             'recipient_ros_number' => 'ROS-'.fake()->unique()->numerify('########'),
-            'recipient_bank_account' => fake()->numerify('##########'),
-            'recipient_address' => 'Jalan Tun Razak, Kuala Lumpur',
+            'program_date' => now()->addMonths(3)->toDateString(),
             'program_category' => ProgramCategory::KOMUNITI,
-            'location' => 'Kuala Lumpur',
-            'proposed_start_date' => now()->addMonths(3),
-            'compliance_declared_at' => now(),
-            'objectives' => fake()->sentence(),
-            'scope' => fake()->sentence(),
-            'requested_amount' => '0.00',
+            'recipient_bank_account' => fake()->numerify('##########'),
+            'recipient_address' => 'No. 1, Jalan Raja Laut, 50350 Kuala Lumpur',
+            'requested_amount' => '1000.00',
             'status' => ApplicationStatus::DRAFT,
         ];
-    }
-
-    public function development(): static
-    {
-        return $this->state(fn () => ['application_type' => ApplicationType::DEVELOPMENT]);
     }
 
     public function submitted(): static

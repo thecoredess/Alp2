@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\UserStatus;
+use App\Enums\RoleName;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -96,5 +97,29 @@ class User extends Authenticatable
     public function avatarInitial(): string
     {
         return strtoupper(mb_substr($this->name, 0, 1));
+    }
+
+    /**
+     * Admin JP (dan Super Admin) boleh buat Keputusan Semakan penuh
+     * (Disyorkan / Tidak Disyorkan / Kembalikan). Pegawai JP hanya perakuan.
+     */
+    public function canMakeFullJpReviewDecision(): bool
+    {
+        return $this->hasAnyRole([
+            RoleName::SYSTEM_ADMIN->value,
+            RoleName::SUPER_ADMIN->value,
+        ]);
+    }
+
+    /** Admin JP boleh mencipta/hantar permohonan bagi pihak ALP. */
+    public function canCreateApplicationOnBehalf(): bool
+    {
+        return $this->can('applications.create_on_behalf');
+    }
+
+    /** Admin JP boleh penepian lead time 2 bulan (BR-014) untuk notis pendek. */
+    public function canWaiveProgramLeadTime(): bool
+    {
+        return $this->canCreateApplicationOnBehalf();
     }
 }

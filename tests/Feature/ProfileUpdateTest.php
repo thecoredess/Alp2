@@ -28,7 +28,8 @@ class ProfileUpdateTest extends TestCase
         $this->actingAs($user)
             ->get(route('profile.edit'))
             ->assertOk()
-            ->assertSee('Profil Saya')
+            ->assertSee('Tetapan')
+            ->assertSee('Tukar Kata Laluan')
             ->assertSee($user->email);
     }
 

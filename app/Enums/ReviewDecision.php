@@ -17,6 +17,17 @@ enum ReviewDecision: string
         };
     }
 
+    /**
+     * Keputusan yang dibenarkan untuk Pegawai JP (perakuan sahaja).
+     * Keputusan penuh (termasuk Tidak Disyorkan) untuk Admin JP.
+     *
+     * @return list<self>
+     */
+    public static function forPegawaiJp(): array
+    {
+        return [self::RECOMMEND, self::RETURN_FOR_REVISION];
+    }
+
     public function badgeClasses(): string
     {
         return match ($this) {

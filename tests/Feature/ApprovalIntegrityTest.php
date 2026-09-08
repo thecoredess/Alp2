@@ -38,9 +38,10 @@ class ApprovalIntegrityTest extends TestCase
         $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
 
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
+        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         try {
-            $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PELULUS->value), null);
+            $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
         } catch (ApplicationException $e) {
             // dijangka
         }
@@ -78,18 +79,20 @@ class ApprovalIntegrityTest extends TestCase
         $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
         $allocation = Allocation::where('alp_id', $alp->id)->first();
 
+        $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
+
         BudgetTransaction::create([
             'allocation_id' => $allocation->id, 'alp_id' => $alp->id, 'financial_year_id' => $year->id,
             'application_id' => $app->id, 'type' => BudgetTransactionType::COMMITMENT, 'amount' => '2500.00', 'created_at' => now(),
         ]);
 
         try {
-            $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PELULUS->value), null);
+            $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
         } catch (ApplicationException $e) {
             // dijangka
         }
 
-        $this->assertSame(0, $app->approvals()->count());
+        $this->assertSame(1, $app->approvals()->where('decision', 'approved')->count());
         $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
         $this->assertSame(1, BudgetTransaction::where('application_id', $app->id)->where('type', 'commitment')->count());
     }
@@ -105,8 +108,10 @@ class ApprovalIntegrityTest extends TestCase
         $b = $this->toPendingApproval($this->submittedDirect($alp, $year, '2500.00'));
 
         $this->approvals()->approve($a, $this->userWithRole(RoleName::PELULUS->value), null);
+        $this->approvals()->approve($a->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
         try {
             $this->approvals()->approve($b, $this->userWithRole(RoleName::PELULUS->value), null);
+            $this->approvals()->approve($b->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
         } catch (ApplicationException $e) {
             // dijangka — baki tidak mencukupi selepas A dikomit
         }

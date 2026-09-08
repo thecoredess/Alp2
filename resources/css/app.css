@@ -59,7 +59,7 @@ body {
 /* ── Komponen borang & butang boleh guna semula ─────────────── */
 @layer components {
     .inp {
-        @apply block w-full rounded-lg border-gray-300 text-sm shadow-sm
+        @apply block w-full rounded-lg border-gray-300 px-3.5 py-2.5 text-sm shadow-sm
                focus:border-royal-500 focus:ring-royal-500;
     }
 
@@ -86,5 +86,63 @@ body {
 
     .card {
         @apply rounded-xl border border-gray-200 bg-white shadow-sm;
+    }
+
+    .stat-card {
+        @apply relative overflow-hidden rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm transition duration-200;
+    }
+
+    .stat-card[href] {
+        @apply block cursor-pointer hover:-translate-y-0.5 hover:shadow-md;
+    }
+
+    .action-block {
+        @apply relative block overflow-hidden rounded-xl border border-gray-200 border-l-4 bg-white p-5 shadow-sm transition duration-200;
+    }
+
+    .action-block:hover {
+        @apply -translate-y-0.5 shadow-md;
+    }
+
+    .dashboard-section-title {
+        @apply mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900;
+    }
+
+    .dashboard-section-title::before {
+        content: '';
+        @apply h-4 w-1 rounded-full bg-royal-500;
+    }
+
+    /* ── Standard layout halaman ─────────────────────────────── */
+    .page-shell {
+        @apply w-full;
+    }
+
+    .page-aside {
+        @apply space-y-4 lg:sticky lg:top-[4.5rem] lg:self-start;
+    }
+
+    .card-header {
+        @apply border-b border-gray-100 bg-gray-50/80 px-6 py-5;
+    }
+
+    .tabs-pill {
+        @apply inline-flex w-full gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm sm:w-auto;
+    }
+
+    .tabs-pill-btn {
+        @apply flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium transition sm:flex-none sm:px-5;
+    }
+
+    .form-grid {
+        @apply grid grid-cols-1 gap-5 sm:grid-cols-2;
+    }
+
+    .form-grid-full {
+        @apply sm:col-span-2;
+    }
+
+    .section-title {
+        @apply text-sm font-semibold uppercase tracking-wide text-navy-700;
     }
 }

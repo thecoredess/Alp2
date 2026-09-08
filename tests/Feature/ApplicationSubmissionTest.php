@@ -16,6 +16,7 @@ use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\Budget\BudgetService;
 use App\Support\UrsContributionPolicy;
+use Carbon\Carbon;
 use Database\Seeders\DocumentRequirementSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -45,24 +46,21 @@ class ApplicationSubmissionTest extends TestCase
         app(BudgetService::class)->allocate($this->alp, $this->year, $amount, 'REF');
     }
 
-    private function makeDraft(string $amount, bool $withDocs = true, bool $withItems = true): Application
+    private function makeDraft(string $amount, bool $withDocs = true): Application
     {
         $app = Application::factory()->create([
             'alp_id' => $this->alp->id,
             'financial_year_id' => $this->year->id,
-            'application_type' => ApplicationType::CSR,
+            'application_type' => ApplicationType::SUMBANGAN,
             'status' => ApplicationStatus::DRAFT,
+            'requested_amount' => $amount,
+            'purpose' => 'Tujuan ujian',
+            'recipient_name' => 'Persatuan Ujian',
+            'recipient_bank_account' => '1234567890',
         ]);
 
-        if ($withItems) {
-            $app->budgetItems()->create([
-                'description' => 'Item', 'quantity' => 1, 'unit_cost' => $amount, 'total' => $amount, 'sort_order' => 1,
-            ]);
-            $app->recalculateRequestedAmount();
-        }
-
         if ($withDocs) {
-            foreach (DocumentRequirement::requiredFor(ApplicationType::CSR) as $t) {
+            foreach (DocumentRequirement::requiredFor() as $t) {
                 ApplicationDocument::factory()->type($t)->create(['application_id' => $app->id]);
             }
         }
@@ -130,7 +128,7 @@ class ApplicationSubmissionTest extends TestCase
     public function test_zero_amount_is_rejected(): void
     {
         $this->allocate('500000.00');
-        $app = $this->makeDraft('0.00', withItems: false); // tiada item → 0
+        $app = $this->makeDraft('0.00');
 
         $this->submit($app)->assertSessionHas('error');
         $this->assertSame(ApplicationStatus::DRAFT, $app->fresh()->status);
@@ -179,5 +177,49 @@ class ApplicationSubmissionTest extends TestCase
         $app = $this->makeDraft('40000.00');
         $this->submit($app)->assertSessionHas('error');
         $this->assertSame(ApplicationStatus::DRAFT, $app->fresh()->status);
+    }
+
+    public function test_submit_rejects_program_date_within_two_months_of_submit_day(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-03-15'));
+        $this->allocate('500000.00');
+        $app = $this->makeDraft('1500.00');
+        $app->update(['program_date' => '2026-04-01']);
+
+        $this->submit($app)->assertSessionHas('error');
+        $this->assertSame(ApplicationStatus::DRAFT, $app->fresh()->status);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_stale_draft_program_date_blocks_submit_until_updated(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-01-01'));
+        $this->allocate('500000.00');
+        $app = $this->makeDraft('1500.00');
+        $app->update(['program_date' => '2026-03-01']);
+
+        Carbon::setTestNow(Carbon::parse('2026-02-01'));
+        $this->submit($app)->assertSessionHas('error');
+
+        $payload = [
+            'recipient_name' => $app->recipient_name,
+            'recipient_ros_number' => $app->recipient_ros_number,
+            'program_date' => '2026-04-01',
+            'program_category' => $app->program_category->value,
+            'requested_amount' => $app->requested_amount,
+            'purpose' => $app->purpose,
+            'recipient_bank_account' => $app->recipient_bank_account,
+            'recipient_address' => $app->recipient_address,
+        ];
+
+        $this->actingAs($this->user)
+            ->put(route('applications.wizard.maklumat.update', $app), $payload)
+            ->assertRedirect();
+
+        $this->submit($app->fresh())->assertRedirect(route('applications.show', $app));
+        $this->assertSame(ApplicationStatus::SUBMITTED, $app->fresh()->status);
+
+        Carbon::setTestNow();
     }
 }

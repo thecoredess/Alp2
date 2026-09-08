@@ -24,6 +24,10 @@ class ProfileController extends Controller
         return view('profile.edit', [
             'user' => $user,
             'avatarIcons' => ProfileAvatarIcons::options(),
+            'canSystem' => $user->can('users.view')
+                || $user->can('financial_years.view')
+                || $user->can('settings.manage')
+                || $user->can('approval_matrix.view'),
         ]);
     }
 

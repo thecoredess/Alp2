@@ -1,96 +1,126 @@
 @extends('layouts.app')
-@section('title', 'Dokumen')
+@section('title', 'Muat Naik Lampiran')
 @section('heading', 'Permohonan — '.$application->application_number)
-@section('subheading', $application->application_type->label().' · Draf')
+@section('subheading', 'Langkah 2 · Muat naik dokumen sokongan')
 
 @php
-    $uploadedTypes = $application->documents->pluck('document_type')->map(fn ($t) => $t->value)->all();
+    $requiredTypes = $requirements->map(fn ($r) => $r->document_type)->values();
+    $docsByType = $application->documents
+        ->groupBy(fn ($d) => $d->document_type->value)
+        ->map(fn ($group) => $group->sortByDesc('id')->first());
+    $doneCount = $requiredTypes->filter(fn ($t) => $docsByType->has($t->value))->count();
+    $totalCount = $requiredTypes->count();
+    $allDone = $doneCount === $totalCount && $totalCount > 0;
+    $progress = $totalCount > 0 ? round(($doneCount / $totalCount) * 100) : 0;
+    $jpIncomplete = $jpIncomplete ?? [];
 @endphp
 
 @section('content')
     <x-wizard-steps :application="$application" :current="$step" />
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {{-- Checklist + senarai --}}
-        <div class="lg:col-span-2 space-y-4">
-            <div class="card p-5">
-                <h3 class="mb-3 text-sm font-semibold text-gray-900">Senarai Semak Dokumen</h3>
-                <ul class="space-y-2 text-sm">
-                    @foreach ($requirements as $req)
-                        @php $done = in_array($req->document_type->value, $uploadedTypes, true); @endphp
-                        <li class="flex items-center justify-between">
-                            <span class="flex items-center gap-2">
-                                <span class="{{ $done ? 'text-green-600' : 'text-gray-300' }}">{{ $done ? '✓' : '○' }}</span>
-                                {{ $req->document_type->label() }}
-                            </span>
-                            @if ($req->is_required)
-                                <span class="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700">WAJIB</span>
+    <x-page-shell>
+        @include('applications.partials.program-date-warning')
+        @include('applications.partials.jp-incomplete-banner')
+
+        <x-page-card title="Kemajuan Muat Naik" icon="paper-clip">
+            <p class="text-3xl font-bold text-navy-700">{{ $doneCount }}/{{ $totalCount }}</p>
+            <p class="mt-1 text-sm text-gray-500">dokumen selesai</p>
+            <div class="mt-4 h-2 overflow-hidden rounded-full bg-gray-100">
+                <div class="h-full rounded-full bg-green-500 transition-all" style="width: {{ $progress }}%"></div>
+            </div>
+            @if ($allDone)
+                <p class="mt-3 text-sm font-medium text-green-700">Semua lengkap — boleh ke langkah hantar.</p>
+            @else
+                <p class="mt-3 text-sm text-amber-700">{{ $totalCount - $doneCount }} dokumen lagi diperlukan.</p>
+            @endif
+        </x-page-card>
+
+        <div class="rounded-lg border border-navy-100 bg-navy-50 px-4 py-3 text-sm text-navy-800">
+            Tekan <strong>Pilih Fail</strong> pada setiap item. Format: PDF atau gambar (maksimum 10 MB).
+            Borang Penyaluran sudah diisi — tidak perlu muat naik semula.
+            <x-association-guide-links class="mt-2" />
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            @foreach ($requiredTypes as $index => $type)
+                @php
+                    $doc = $docsByType->get($type->value);
+                    $done = $doc !== null;
+                @endphp
+                <div @class([
+                    'card overflow-hidden border-2 p-5',
+                    'border-red-400 bg-red-50 ring-1 ring-red-200' => ($jpIncomplete['dokumen'] ?? null) !== null,
+                    'border-green-200 bg-green-50/40' => ($jpIncomplete['dokumen'] ?? null) === null && $done,
+                    'border-gray-200' => ($jpIncomplete['dokumen'] ?? null) === null && ! $done,
+                ])>
+                    <div class="flex items-start gap-4">
+                        <span @class([
+                            'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg font-bold',
+                            'bg-green-600 text-white' => $done,
+                            'bg-gray-200 text-gray-600' => ! $done,
+                        ])>{{ $done ? '✓' : ($index + 1) }}</span>
+
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="font-semibold text-gray-900">{{ $type->simpleLabel() }}</h3>
+                                @if ($done)
+                                    <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Selesai</span>
+                                @else
+                                    <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">Belum</span>
+                                @endif
+                            </div>
+                            <p class="mt-1 text-sm text-gray-600">{{ $type->simpleHint() }}</p>
+
+                            @if ($done)
+                                <p class="mt-2 truncate text-sm font-medium text-gray-800" title="{{ $doc->original_filename }}">{{ $doc->original_filename }}</p>
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <form method="POST" action="{{ route('applications.documents.store', $application) }}" enctype="multipart/form-data" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="document_type" value="{{ $type->value }}">
+                                        <label class="btn-white cursor-pointer !px-3 !py-2 text-xs">
+                                            Tukar Fail
+                                            <input type="file" name="file" class="sr-only" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                                                   onchange="if(this.files.length) this.form.requestSubmit()">
+                                        </label>
+                                    </form>
+                                    <form method="POST" action="{{ route('applications.documents.destroy', [$application, $doc]) }}"
+                                          data-swal-confirm="Buang fail ini?"
+                                          data-swal-title="Buang Lampiran"
+                                          data-swal-icon="warning"
+                                          data-swal-confirm-text="Ya, buang">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn-white !px-3 !py-2 text-xs text-danger">Buang</button>
+                                    </form>
+                                </div>
                             @else
-                                <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-500">PILIHAN</span>
+                                <form method="POST" action="{{ route('applications.documents.store', $application) }}" enctype="multipart/form-data" class="mt-3">
+                                    @csrf
+                                    <input type="hidden" name="document_type" value="{{ $type->value }}">
+                                    <label class="btn-primary inline-flex cursor-pointer !px-4 !py-2 text-sm">
+                                        Pilih Fail
+                                        <input type="file" name="file" class="sr-only" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                                               onchange="if(this.files.length) this.form.requestSubmit()">
+                                    </label>
+                                </form>
+                                @error('file')
+                                    <p class="mt-2 text-sm text-danger">{{ $message }}</p>
+                                @enderror
                             @endif
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
-
-            <div class="card overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50">
-                        <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                            <th class="px-4 py-3">Jenis</th>
-                            <th class="px-4 py-3">Nama Fail</th>
-                            <th class="px-4 py-3">Saiz</th>
-                            <th class="px-4 py-3 text-right">Tindakan</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse ($application->documents as $doc)
-                            <tr>
-                                <td class="px-4 py-3 text-gray-700">{{ $doc->document_type->label() }}</td>
-                                <td class="px-4 py-3 text-gray-900">{{ $doc->original_filename }}</td>
-                                <td class="px-4 py-3 text-gray-500">{{ number_format($doc->file_size / 1024, 0) }} KB</td>
-                                <td class="px-4 py-3 text-right">
-                                    <div class="flex items-center justify-end gap-3">
-                                        <a href="{{ route('applications.documents.download', [$application, $doc]) }}" class="text-royal-600 hover:text-royal-700 text-xs font-medium">Muat Turun</a>
-                                        <form method="POST" action="{{ route('applications.documents.destroy', [$application, $doc]) }}" onsubmit="return confirm('Buang dokumen ini?')">
-                                            @csrf @method('DELETE')
-                                            <button class="text-danger hover:text-red-700 text-xs font-medium">Buang</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="4" class="px-4 py-8 text-center text-gray-400">Belum ada dokumen dimuat naik.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="flex justify-between gap-3">
-                <a href="{{ route('applications.wizard.bajet', $application) }}" class="btn-white">← Sebelumnya</a>
-                <a href="{{ route('applications.wizard.semakan', $application) }}" class="btn-primary">Seterusnya →</a>
-            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
         </div>
 
-        {{-- Muat naik --}}
-        <div>
-            <div class="card p-5">
-                <h3 class="mb-3 text-sm font-semibold text-gray-900">Muat Naik Dokumen</h3>
-                <form method="POST" action="{{ route('applications.documents.store', $application) }}" enctype="multipart/form-data" class="space-y-4">
-                    @csrf
-                    <x-field label="Jenis Dokumen" name="document_type" :required="true">
-                        <select name="document_type" class="inp" required>
-                            @foreach (\App\Enums\DocumentType::options() as $val => $label)
-                                <option value="{{ $val }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </x-field>
-                    <x-field label="Fail" name="file" :required="true" hint="PDF, imej, Word, Excel. Maksimum 10 MB.">
-                        <input type="file" name="file" required class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-navy-700 file:px-3 file:py-2 file:text-white">
-                    </x-field>
-                    <button class="btn-primary w-full">Muat Naik</button>
-                </form>
-            </div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:justify-between">
+            <a href="{{ route('applications.wizard.maklumat', $application) }}" class="btn-white">← Kembali ke Borang</a>
+            @if ($allDone)
+                <a href="{{ route('applications.wizard.semakan', $application) }}" class="btn-primary">Seterusnya: Semak &amp; Hantar →</a>
+            @else
+                <span class="btn-primary pointer-events-none opacity-50" title="Lengkapkan semua dokumen dahulu">
+                    Seterusnya ({{ $totalCount - $doneCount }} lagi)
+                </span>
+            @endif
         </div>
-    </div>
+    </x-page-shell>
 @endsection

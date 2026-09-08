@@ -18,38 +18,36 @@ class SettingsHubTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
     }
 
-    public function test_any_user_can_open_settings_hub_and_user_settings(): void
+    public function test_tetapan_url_redirects_to_profile(): void
     {
         $user = User::factory()->create()->assignRole(RoleName::ALP->value);
 
         $this->actingAs($user)
             ->get(route('settings.index'))
-            ->assertOk()
-            ->assertSee('Ketetapan Pengguna')
-            ->assertSee('Ketetapan Sistem');
-
-        $this->actingAs($user)
-            ->get(route('settings.user'))
-            ->assertOk()
-            ->assertSee('Profil Saya');
+            ->assertRedirect(route('profile.edit'));
     }
 
-    public function test_alp_cannot_open_system_settings(): void
+    public function test_profile_page_shows_user_settings(): void
     {
         $user = User::factory()->create()->assignRole(RoleName::ALP->value);
 
         $this->actingAs($user)
-            ->get(route('settings.system'))
-            ->assertForbidden();
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('Tetapan')
+            ->assertSee('Tukar Kata Laluan')
+            ->assertDontSee('Polisi URS');
     }
 
-    public function test_admin_can_open_system_settings(): void
+    public function test_admin_sees_system_settings_on_profile_page(): void
     {
         $admin = User::factory()->create()->assignRole(RoleName::SYSTEM_ADMIN->value);
 
         $this->actingAs($admin)
-            ->get(route('settings.system'))
+            ->get(route('profile.edit'))
             ->assertOk()
-            ->assertSee('Polisi URS');
+            ->assertSee('Tetapan Sistem')
+            ->assertSee('Polisi URS')
+            ->assertSee('Pengguna');
     }
 }

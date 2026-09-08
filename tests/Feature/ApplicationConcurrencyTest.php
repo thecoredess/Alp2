@@ -47,12 +47,14 @@ class ApplicationConcurrencyTest extends TestCase
             $app = Application::factory()->create([
                 'alp_id' => $alp->id,
                 'financial_year_id' => $year->id,
-                'application_type' => ApplicationType::CSR,
+                'application_type' => ApplicationType::SUMBANGAN,
                 'status' => ApplicationStatus::DRAFT,
+                'requested_amount' => '70.00',
+                'purpose' => 'Tujuan ujian',
+                'recipient_name' => 'Persatuan Ujian',
+                'recipient_bank_account' => '1234567890',
             ]);
-            $app->budgetItems()->create(['description' => 'Item', 'quantity' => 1, 'unit_cost' => '70.00', 'total' => '70.00', 'sort_order' => 1]);
-            $app->recalculateRequestedAmount();
-            foreach (DocumentRequirement::requiredFor(ApplicationType::CSR) as $t) {
+            foreach (DocumentRequirement::requiredFor() as $t) {
                 ApplicationDocument::factory()->type($t)->create(['application_id' => $app->id]);
             }
 

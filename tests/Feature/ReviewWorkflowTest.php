@@ -159,4 +159,99 @@ class ReviewWorkflowTest extends TestCase
             ->post(route('reviews.store', [$app, 'technical']), ['decision' => 'recommend'])
             ->assertNotFound();
     }
+
+    public function test_secretariat_show_includes_alp_budget_detail(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->submitted($alp, $year, '2500.00');
+        $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
+
+        $this->actingAs($jp)
+            ->get(route('reviews.show', [$app, 'secretariat']))
+            ->assertOk()
+            ->assertSee('Ringkasan Ledger')
+            ->assertSee('Peruntukan Tahunan')
+            ->assertSee('Permohonan Diluluskan')
+            ->assertSee('Pending Lain')
+            ->assertSee('permohonan/semua')
+            ->assertSee('status=approved')
+            ->assertSee('alp='.$alp->id)
+            ->assertSee('Perakuan Pegawai JP')
+            ->assertSee('Syor kepada Pengarah JP')
+            ->assertSee('Ulasan')
+            ->assertDontSee('Keputusan Semakan Admin JP')
+            ->assertDontSee('Senarai Semak JP')
+            ->assertDontSee('Tidak lengkap');
+    }
+
+    public function test_pegawai_jp_cannot_submit_not_recommended(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->submitted($alp, $year, '2500.00');
+        $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
+
+        $this->actingAs($jp)
+            ->from(route('reviews.show', [$app, 'secretariat']))
+            ->post(route('reviews.store', [$app, 'secretariat']), [
+                'decision' => ReviewDecision::NOT_RECOMMENDED->value,
+                'comments' => 'Tidak sesuai',
+            ])
+            ->assertRedirect(route('reviews.show', [$app, 'secretariat']))
+            ->assertSessionHasErrors('decision');
+
+        $this->assertSame(ApplicationStatus::SUBMITTED, $app->fresh()->status);
+    }
+
+    public function test_pegawai_jp_can_recommend_without_checklist_fields(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->submitted($alp, $year, '2500.00');
+        $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
+
+        $this->actingAs($jp)
+            ->post(route('reviews.store', [$app, 'secretariat']), [
+                'decision' => ReviewDecision::RECOMMEND->value,
+                'comments' => 'Disyorkan kepada Pengarah JP',
+            ])
+            ->assertRedirect(route('reviews.secretariat'));
+
+        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
+    }
+
+    public function test_admin_jp_sees_full_decision_and_can_not_recommend(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->submitted($alp, $year, '2500.00');
+        $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
+
+        $this->actingAs($admin)
+            ->get(route('reviews.show', [$app, 'secretariat']))
+            ->assertOk()
+            ->assertSee('Keputusan Semakan Admin JP')
+            ->assertSee('Tidak Disyorkan')
+            ->assertSee('Senarai Semak JP')
+            ->assertDontSee('Perakuan Pegawai JP');
+
+        $this->actingAs($admin)
+            ->post(route('reviews.store', [$app, 'secretariat']), [
+                'decision' => ReviewDecision::NOT_RECOMMENDED->value,
+                'comments' => 'Tidak disyorkan oleh Admin JP',
+                'checklist' => $this->lengkapChecklist(),
+            ])
+            ->assertRedirect(route('reviews.secretariat'));
+
+        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
+        $this->assertDatabaseHas('application_reviews', [
+            'application_id' => $app->id,
+            'decision' => ReviewDecision::NOT_RECOMMENDED->value,
+        ]);
+    }
 }

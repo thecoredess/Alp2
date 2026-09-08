@@ -5,7 +5,6 @@ use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\AllocationController;
-use App\Http\Controllers\ApplicationBudgetItemController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ApplicationDocumentController;
 use App\Http\Controllers\ApplicationWizardController;
@@ -18,13 +17,13 @@ use App\Http\Controllers\FinancialYearController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\AssociationGuideController;
 use App\Http\Controllers\ManualController;
 use App\Http\Controllers\RecipientController;
 use App\Http\Controllers\ReportCardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AlpController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\SettingsHubController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -62,9 +61,8 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     Route::put('profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('profil/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
 
-    Route::get('ketetapan', [SettingsHubController::class, 'index'])->name('settings.index');
-    Route::get('ketetapan/pengguna', [SettingsHubController::class, 'user'])->name('settings.user');
-    Route::get('ketetapan/sistem', [SettingsHubController::class, 'system'])->name('settings.system');
+    Route::get('tetapan', fn () => redirect()->route('profile.edit'))->name('settings.index');
+    Route::get('ketetapan', fn () => redirect()->route('settings.index'));
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -91,21 +89,15 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     Route::get('permohonan/baharu', [ApplicationController::class, 'create'])->name('applications.create');
     Route::post('permohonan', [ApplicationController::class, 'store'])->name('applications.store');
 
-    Route::get('permohonan/{application}/maklumat', [ApplicationWizardController::class, 'maklumat'])->name('applications.wizard.maklumat');
-    Route::put('permohonan/{application}/maklumat', [ApplicationWizardController::class, 'updateMaklumat'])->name('applications.wizard.maklumat.update');
-    Route::get('permohonan/{application}/objektif', [ApplicationWizardController::class, 'objektif'])->name('applications.wizard.objektif');
-    Route::put('permohonan/{application}/objektif', [ApplicationWizardController::class, 'updateObjektif'])->name('applications.wizard.objektif.update');
-    Route::get('permohonan/{application}/bajet', [ApplicationWizardController::class, 'bajet'])->name('applications.wizard.bajet');
-    Route::get('permohonan/{application}/dokumen', [ApplicationWizardController::class, 'dokumen'])->name('applications.wizard.dokumen');
+    Route::get('permohonan/{application}/borang', [ApplicationWizardController::class, 'maklumat'])->name('applications.wizard.maklumat');
+    Route::put('permohonan/{application}/borang', [ApplicationWizardController::class, 'updateMaklumat'])->name('applications.wizard.maklumat.update');
+    Route::get('permohonan/{application}/lampiran', [ApplicationWizardController::class, 'dokumen'])->name('applications.wizard.dokumen');
     Route::get('permohonan/{application}/semakan', [ApplicationWizardController::class, 'semakan'])->name('applications.wizard.semakan');
     Route::post('permohonan/{application}/hantar', [ApplicationWizardController::class, 'hantar'])->name('applications.submit');
 
-    Route::post('permohonan/{application}/bajet/item', [ApplicationBudgetItemController::class, 'store'])->name('applications.items.store');
-    Route::put('permohonan/{application}/bajet/item/{item}', [ApplicationBudgetItemController::class, 'update'])->name('applications.items.update');
-    Route::delete('permohonan/{application}/bajet/item/{item}', [ApplicationBudgetItemController::class, 'destroy'])->name('applications.items.destroy');
-
     Route::post('permohonan/{application}/dokumen', [ApplicationDocumentController::class, 'store'])->name('applications.documents.store');
     Route::get('permohonan/{application}/dokumen/{document}/muat-turun', [ApplicationDocumentController::class, 'download'])->name('applications.documents.download');
+    Route::get('permohonan/{application}/dokumen/{document}/lihat', [ApplicationDocumentController::class, 'view'])->name('applications.documents.view');
     Route::delete('permohonan/{application}/dokumen/{document}', [ApplicationDocumentController::class, 'destroy'])->name('applications.documents.destroy');
 
     // Semakan Pegawai JP (M04) — kewangan/teknikal pra-kelulusan dinyahaktif
@@ -129,12 +121,14 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
 
     Route::get('permohonan/{application}', [ApplicationController::class, 'show'])->name('applications.show');
     Route::get('permohonan/{application}/surat-kelulusan', [ApplicationController::class, 'letter'])->name('applications.letter');
+    Route::get('permohonan/{application}/surat-kelulusan/pdf', [ApplicationController::class, 'letterPdf'])->name('applications.letter.pdf');
     Route::get('permohonan/{application}/borang-penyaluran', [ApplicationController::class, 'borang'])->name('applications.borang');
     Route::post('permohonan/{application}/report-card', [ReportCardController::class, 'store'])->name('applications.report-card.store');
 
     Route::get('laporan-aktiviti', [ReportCardController::class, 'index'])->name('report-cards.index');
     Route::get('manual', [ManualController::class, 'show'])->name('manual.show');
     Route::get('manual/pdf', [ManualController::class, 'download'])->name('manual.download');
+    Route::get('panduan-dokumen-persatuan/pdf', [AssociationGuideController::class, 'download'])->name('association-guide.download');
     Route::post('manual/pdf', [ManualController::class, 'upload'])->name('manual.upload');
     Route::delete('manual/pdf', [ManualController::class, 'destroy'])->name('manual.destroy');
 
@@ -142,7 +136,7 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     Route::get('penerima/{recipient}', [RecipientController::class, 'show'])->name('recipients.show');
 
     Route::get('notifikasi', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('notifikasi/{id}/baca', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::get('notifikasi/{id}/baca', [NotificationController::class, 'markRead'])->name('notifications.read');
     Route::post('notifikasi/baca-semua', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
 
     // Pembayaran / Baucar (M06)

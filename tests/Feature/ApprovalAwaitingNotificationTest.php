@@ -52,8 +52,8 @@ class ApprovalAwaitingNotificationTest extends TestCase
         $peraku = $this->userWithRole(RoleName::PELULUS->value);
         $pepu = $this->userWithRole(RoleName::PENGURUSAN->value);
 
-        // > RM3k → Peraku kemudian PEPU.
-        $app = $this->toPendingApproval($this->submitted($alp, $year, '8000.00'));
+        // Peraku kemudian PEPU untuk semua jumlah.
+        $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
 
         Notification::assertSentTo(
             $peraku,

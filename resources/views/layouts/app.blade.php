@@ -68,9 +68,7 @@
                             <p class="text-xs text-gray-500 truncate">{{ auth()->user()->unit }}</p>
                         @endif
                     </div>
-                    <a href="{{ route('settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Ketetapan</a>
-                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profil Saya</a>
-                    <a href="{{ route('password.change') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Tukar Kata Laluan</a>
+                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Tetapan</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-danger hover:bg-red-50">Log Keluar</button>
@@ -79,7 +77,7 @@
             </div>
         </header>
 
-        <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <main class="flex-1 px-4 py-4 sm:px-5 lg:px-6">
             @include('partials.flash')
             @yield('content')
         </main>

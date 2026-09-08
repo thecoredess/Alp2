@@ -8,17 +8,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password as PasswordRule;
-use Illuminate\View\View;
 
 /**
  * Tukar kata laluan sendiri (pengguna yang telah log masuk).
- * Turut digunakan untuk aliran "wajib tukar kata laluan".
+ * Borang dipaparkan dalam halaman profil — laluan GET dialih ke sana.
  */
 class ChangePasswordController extends Controller
 {
-    public function edit(): View
+    public function edit(): RedirectResponse
     {
-        return view('auth.change-password');
+        return redirect()->to(route('profile.edit').'#kata-laluan');
     }
 
     public function update(Request $request): RedirectResponse
@@ -38,6 +37,8 @@ class ChangePasswordController extends Controller
             'must_change_password' => false,
         ])->save();
 
-        return redirect()->route('dashboard')->with('status', 'Kata laluan anda telah dikemas kini.');
+        return redirect()
+            ->to(route('profile.edit').'#kata-laluan')
+            ->with('status', 'Kata laluan anda telah dikemas kini.');
     }
 }

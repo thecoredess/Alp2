@@ -28,16 +28,10 @@ class JkewPaymentScopeTest extends TestCase
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
 
-        $pending = $this->toPendingApproval($this->submitted($alp, $year, '2000.00'));
-        app(\App\Services\Application\ApprovalService::class)
-            ->approve($pending, $this->userWithRole(RoleName::PELULUS->value), null);
-        $pending = $pending->fresh();
+        $pending = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2000.00')));
         $this->assertSame(ApplicationPaymentStatus::PENDING_PAYMENT, $pending->payment_status);
 
-        $sent = $this->toPendingApproval($this->submitted($alp, $year, '2100.00'));
-        app(\App\Services\Application\ApprovalService::class)
-            ->approve($sent, $this->userWithRole(RoleName::PELULUS->value), null);
-        $sent = $sent->fresh();
+        $sent = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2100.00')));
         $sent->update([
             'payment_status' => ApplicationPaymentStatus::SENT_TO_JKEW,
             'sent_to_jkew_at' => now(),
@@ -62,10 +56,7 @@ class JkewPaymentScopeTest extends TestCase
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
 
-        $pending = $this->toPendingApproval($this->submitted($alp, $year, '2200.00'));
-        app(\App\Services\Application\ApprovalService::class)
-            ->approve($pending, $this->userWithRole(RoleName::PELULUS->value), null);
-        $pending = $pending->fresh();
+        $pending = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2200.00')));
 
         $finance = User::factory()->create()->assignRole(RoleName::PEGAWAI_KEWANGAN->value);
 
@@ -81,15 +72,9 @@ class JkewPaymentScopeTest extends TestCase
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
 
-        $pending = $this->toPendingApproval($this->submitted($alp, $year, '2000.00'));
-        app(\App\Services\Application\ApprovalService::class)
-            ->approve($pending, $this->userWithRole(RoleName::PELULUS->value), null);
-        $pending = $pending->fresh();
+        $pending = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2000.00')));
 
-        $sent = $this->toPendingApproval($this->submitted($alp, $year, '2100.00'));
-        app(\App\Services\Application\ApprovalService::class)
-            ->approve($sent, $this->userWithRole(RoleName::PELULUS->value), null);
-        $sent = $sent->fresh();
+        $sent = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2100.00')));
         $sent->update([
             'payment_status' => ApplicationPaymentStatus::SENT_TO_JKEW,
             'sent_to_jkew_at' => now(),

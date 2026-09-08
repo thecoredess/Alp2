@@ -49,6 +49,37 @@ class ApplicationBudgetService
     }
 
     /**
+     * Permohonan diluluskan bagi ALP dalam tahun kewangan.
+     *
+     * @return \Illuminate\Support\Collection<int, Application>
+     */
+    public function approvedApplications(int $alpId, int $financialYearId): \Illuminate\Support\Collection
+    {
+        return Application::query()
+            ->where('alp_id', $alpId)
+            ->where('financial_year_id', $financialYearId)
+            ->where('status', ApplicationStatus::APPROVED->value)
+            ->orderByDesc('updated_at')
+            ->get(['id', 'application_number', 'recipient_name', 'requested_amount', 'updated_at', 'status']);
+    }
+
+    /**
+     * Permohonan pending (belum muktamad) bagi ALP — boleh kecualikan satu permohonan.
+     *
+     * @return \Illuminate\Support\Collection<int, Application>
+     */
+    public function pendingApplications(int $alpId, int $financialYearId, ?int $excludeApplicationId = null): \Illuminate\Support\Collection
+    {
+        return Application::query()
+            ->where('alp_id', $alpId)
+            ->where('financial_year_id', $financialYearId)
+            ->whereIn('status', ApplicationStatus::pendingRequestValues())
+            ->when($excludeApplicationId, fn ($q) => $q->where('id', '!=', $excludeApplicationId))
+            ->orderByDesc('submitted_at')
+            ->get(['id', 'application_number', 'recipient_name', 'requested_amount', 'submitted_at', 'status']);
+    }
+
+    /**
      * Jumlah yang tersedia untuk permohonan pending BAHARU
      * = Ledger Available − Pending Request LAIN (tidak termasuk permohonan ini).
      */

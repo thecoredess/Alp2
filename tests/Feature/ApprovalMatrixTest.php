@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 /**
  * Matriks URS v1.2 (ApprovalLevelSeeder):
- * Aras 1 ≤3000 (Peraku), Aras 2 >3000 (PEPU). Aras 3 dinyahaktif.
+ * Peraku (angkat ke PEPU) → PEPU (kelulusan akhir) untuk semua jumlah.
  */
 class ApprovalMatrixTest extends TestCase
 {
@@ -32,26 +32,13 @@ class ApprovalMatrixTest extends TestCase
         $this->seed(ApprovalLevelSeeder::class);
     }
 
-    public function test_small_amount_requires_single_level(): void
+    public function test_all_amounts_require_two_levels_in_sequence(): void
     {
-        $required = $this->matrix()->requiredLevels(Money::of('2500'), null);
-        $this->assertCount(1, $required);
-        $this->assertSame(1, $required->first()->sequence);
-    }
-
-    public function test_above_threshold_requires_two_levels_in_sequence(): void
-    {
-        $required = $this->matrix()->requiredLevels(Money::of('5000'), null);
-        $this->assertCount(2, $required);
-        $this->assertSame([1, 2], $required->pluck('sequence')->all());
-    }
-
-    public function test_large_amount_still_only_two_active_levels(): void
-    {
-        $required = $this->matrix()->requiredLevels(Money::of('150000'), null);
-        $this->assertCount(2, $required);
-        $this->assertSame([1, 2], $required->pluck('sequence')->all());
-        $this->assertFalse(ApprovalLevel::query()->where('sequence', 3)->where('active', true)->exists());
+        foreach (['2500', '5000', '150000'] as $amount) {
+            $required = $this->matrix()->requiredLevels(Money::of($amount), null);
+            $this->assertCount(2, $required, "Failed for amount {$amount}");
+            $this->assertSame([1, 2], $required->pluck('sequence')->all());
+        }
     }
 
     public function test_missing_configuration_fails_safely(): void
@@ -68,11 +55,9 @@ class ApprovalMatrixTest extends TestCase
         $this->matrix()->assertNoOverlap(null, Money::of('1000'), Money::of('4000'));
     }
 
-    public function test_non_overlapping_range_is_accepted_after_clearing_pepu_band(): void
+    public function test_non_overlapping_range_is_accepted_for_pepu_band(): void
     {
-        ApprovalLevel::where('sequence', 2)->delete();
-
-        $this->matrix()->assertNoOverlap(null, Money::of('3000.01'), Money::of('500000.00'));
+        $this->matrix()->assertNoOverlap(null, Money::of('999999999.99'), null, ApprovalLevel::where('sequence', 2)->value('id'));
         $this->assertTrue(true);
     }
 

@@ -21,8 +21,8 @@ class ApprovalLevelSeeder extends Seeder
     public function run(): void
     {
         $levels = [
-            ['Aras 1 — Peraku (TP/Pengarah JP)', '0.00', '3000.00', RoleName::PELULUS->value, 1],
-            ['Aras 2 — PEPU / Pengurusan Tertinggi', '3000.01', null, RoleName::PENGURUSAN->value, 2],
+            ['Pengesyoran PEPU', '0.00', '999999999.98', RoleName::PELULUS->value, 1],
+            ['Kelulusan PEPU / Pengurusan Tertinggi', '999999999.99', null, RoleName::PENGURUSAN->value, 2],
         ];
 
         foreach ($levels as [$name, $min, $max, $role, $seq]) {

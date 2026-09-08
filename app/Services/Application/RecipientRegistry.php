@@ -5,37 +5,45 @@ namespace App\Services\Application;
 use App\Models\Application;
 use App\Models\Recipient;
 
-/**
- * Upsert penerima/persatuan dari medan TBL-10 (CRS-ready; AD-005 = ROS).
- */
+/** Upsert penerima dari medan Borang Penyaluran (nama + akaun bank). */
 class RecipientRegistry
 {
     public function syncFromApplication(Application $application): ?Recipient
     {
-        $ros = trim((string) $application->recipient_ros_number);
-        if ($ros === '' || blank($application->recipient_name)) {
+        if (blank($application->recipient_name) || blank($application->recipient_bank_account)) {
             return null;
         }
 
-        $normalized = Recipient::normalizeRos($ros);
+        $account = trim((string) $application->recipient_bank_account);
 
         $recipient = Recipient::query()
-            ->whereRaw('LOWER(TRIM(ros_number)) = ?', [$normalized])
+            ->whereRaw('REPLACE(TRIM(bank_account), " ", "") = ?', [preg_replace('/\s+/', '', $account)])
             ->first();
 
+        if (! $recipient && filled($application->recipient_ros_number)) {
+            $recipient = Recipient::query()
+                ->where('ros_number', $application->recipient_ros_number)
+                ->first();
+        }
+
+        $payload = [
+            'name' => $application->recipient_name,
+            'bank_account' => $account,
+        ];
+
+        if (filled($application->recipient_ros_number)) {
+            $payload['ros_number'] = $application->recipient_ros_number;
+        }
+
+        if (filled($application->recipient_address)) {
+            $payload['address'] = $application->recipient_address;
+        }
+
         if ($recipient) {
-            $recipient->update([
-                'name' => $application->recipient_name,
-                'ros_number' => $ros,
-                'bank_account' => $application->recipient_bank_account,
-                'address' => $application->recipient_address,
-            ]);
+            $recipient->update($payload);
         } else {
-            $recipient = Recipient::create([
-                'name' => $application->recipient_name,
-                'ros_number' => $ros,
-                'bank_account' => $application->recipient_bank_account,
-                'address' => $application->recipient_address,
+            $recipient = Recipient::create($payload + [
+                'ros_number' => $application->recipient_ros_number ?: ('AKAUN-'.$account),
             ]);
         }
 

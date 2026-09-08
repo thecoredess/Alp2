@@ -2,6 +2,24 @@
     $link = fn (bool $active) => $active
         ? 'flex items-center gap-3 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-white'
         : 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-navy-100 hover:bg-white/5 hover:text-white transition';
+
+    $user = auth()->user();
+    $hasAlp = (bool) $user->alp_id;
+    $canAllApplications = $user->can('applications.view_all');
+    $canReviewJp = $user->can('applications.review.secretariat');
+    $canApprove = $user->can('applications.approve');
+    $canPayments = $user->can('payments.view');
+    $canReportCards = $canAllApplications || $canReviewJp;
+    $showProcess = $hasAlp || $canAllApplications || $canReviewJp || $canApprove || $canPayments || $canReportCards;
+
+    $canReports = $user->can('reports.view');
+    $canAllocations = $user->can('allocations.view') || $user->can('budget.view_all');
+    $showMonitoring = $hasAlp || $canReports || $canAllocations;
+
+    $canRecipients = $canAllApplications;
+    $canAlps = $user->can('alps.view');
+    $hideReferenceMenu = $user->hasRole(\App\Enums\RoleName::PEGAWAI_KEWANGAN->value);
+    $showReference = ! $hideReferenceMenu && ($canRecipients || $canAlps);
 @endphp
 
 <div class="flex h-full flex-col">
@@ -19,128 +37,110 @@
                 <x-icon name="dashboard" class="h-5 w-5 shrink-0" />
                 Dashboard
             </a>
-
-            @can('reports.view')
-                <a href="{{ route('reports.index') }}" class="{{ $link(request()->routeIs('reports.*')) }}">
-                    <x-icon name="document" class="h-5 w-5 shrink-0" />
-                    Laporan
-                </a>
-            @endcan
-
-            @can('alps.view')
-                <a href="{{ route('alps.index') }}" class="{{ $link(request()->routeIs('alps.*')) }}">
-                    <x-icon name="users-group" class="h-5 w-5 shrink-0" />
-                    Ahli Lembaga
-                </a>
-            @endcan
-
-            @if(auth()->user()->alp_id)
-                <a href="{{ route('budget.mine') }}" class="{{ $link(request()->routeIs('budget.mine')) }}">
-                    <x-icon name="wallet" class="h-5 w-5 shrink-0" />
-                    Bajet Saya
-                </a>
-            @endif
-
-            @canany(['allocations.view', 'budget.view_all'])
-                <a href="{{ route('allocations.index') }}" class="{{ $link(request()->routeIs('allocations.index') || request()->routeIs('allocations.show')) }}">
-                    <x-icon name="wallet" class="h-5 w-5 shrink-0" />
-                    Peruntukan (Ringkasan)
-                </a>
-            @endcanany
-
-            @if(auth()->user()->alp_id)
-                <a href="{{ route('applications.index') }}" class="{{ $link(request()->routeIs('applications.index') || request()->routeIs('applications.wizard.*') || request()->routeIs('applications.create')) }}">
-                    <x-icon name="document" class="h-5 w-5 shrink-0" />
-                    Permohonan Saya
-                </a>
-            @endif
-
-            @can('applications.view_all')
-                <a href="{{ route('applications.all') }}" class="{{ $link(request()->routeIs('applications.all')) }}">
-                    <x-icon name="document" class="h-5 w-5 shrink-0" />
-                    Semua Permohonan
-                </a>
-            @endcan
         </div>
 
-        @canany(['applications.review.secretariat', 'applications.approve'])
+        @if($showProcess)
             <div>
-                <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-navy-300">Semakan &amp; Kelulusan</p>
+                <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-navy-300">Aliran proses</p>
                 <div class="space-y-1">
-                    @can('applications.review.secretariat')
+                    @if($hasAlp)
+                        <a href="{{ route('applications.index') }}" class="{{ $link(request()->routeIs('applications.index') || request()->routeIs('applications.wizard.*') || request()->routeIs('applications.create')) }}">
+                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('applications.index') || request()->routeIs('applications.wizard.*') || request()->routeIs('applications.create') ? 'text-white' : 'text-navy-300' }}">1</span>
+                            Permohonan Saya
+                        </a>
+                    @endif
+                    @if($canAllApplications)
+                        <a href="{{ route('applications.all') }}" class="{{ $link(request()->routeIs('applications.all')) }}">
+                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('applications.all') ? 'text-white' : 'text-navy-300' }}">1</span>
+                            Semua Permohonan
+                        </a>
+                    @endif
+                    @if($canReviewJp)
                         <a href="{{ route('reviews.secretariat') }}" class="{{ $link(request()->routeIs('reviews.secretariat')) }}">
-                            <x-icon name="clipboard" class="h-5 w-5 shrink-0" /> Semakan Pegawai JP
+                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('reviews.secretariat') ? 'text-white' : 'text-navy-300' }}">2</span>
+                            {{ $user->canMakeFullJpReviewDecision() ? 'Semakan Admin JP' : 'Semakan Pegawai JP' }}
                         </a>
-                    @endcan
-                    @can('applications.approve')
+                    @endif
+                    @if($canApprove)
                         <a href="{{ route('approvals.queue') }}" class="{{ $link(request()->routeIs('approvals.*')) }}">
-                            <x-icon name="check" class="h-5 w-5 shrink-0" /> Kelulusan
+                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('approvals.*') ? 'text-white' : 'text-navy-300' }}">3</span>
+                            Kelulusan
                         </a>
-                    @endcan
+                    @endif
+                    @if($canPayments)
+                        <a href="{{ route('payments.index') }}" class="{{ $link(request()->routeIs('payments.*')) }}">
+                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('payments.*') ? 'text-white' : 'text-navy-300' }}">4</span>
+                            Pembayaran / Baucar
+                        </a>
+                    @endif
+                    @if($canReportCards)
+                        <a href="{{ route('report-cards.index') }}" class="{{ $link(request()->routeIs('report-cards.*')) }}">
+                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('report-cards.*') ? 'text-white' : 'text-navy-300' }}">5</span>
+                            Laporan Aktiviti
+                        </a>
+                    @endif
                 </div>
             </div>
-        @endcanany
+        @endif
 
-        @can('payments.view')
+        @if($showMonitoring)
             <div>
-                <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-navy-300">Pembayaran</p>
+                <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-navy-300">Pemantauan</p>
                 <div class="space-y-1">
-                    <a href="{{ route('payments.index') }}" class="{{ $link(request()->routeIs('payments.*')) }}">
-                        <x-icon name="wallet" class="h-5 w-5 shrink-0" /> Pembayaran / Baucar
-                    </a>
+                    @if($hasAlp)
+                        <a href="{{ route('budget.mine') }}" class="{{ $link(request()->routeIs('budget.mine')) }}">
+                            <x-icon name="wallet" class="h-5 w-5 shrink-0" />
+                            Bajet Saya
+                        </a>
+                    @endif
+                    @if($canAllocations)
+                        <a href="{{ route('allocations.index') }}" class="{{ $link(request()->routeIs('allocations.index') || request()->routeIs('allocations.show')) }}">
+                            <x-icon name="wallet" class="h-5 w-5 shrink-0" />
+                            Peruntukan (Ringkasan)
+                        </a>
+                    @endif
+                    @if($canReports)
+                        <a href="{{ route('reports.index') }}" class="{{ $link(request()->routeIs('reports.*')) }}">
+                            <x-icon name="document" class="h-5 w-5 shrink-0" />
+                            Laporan
+                        </a>
+                    @endif
                 </div>
             </div>
-        @endcan
+        @endif
 
-        @canany(['applications.view_all', 'applications.review.secretariat'])
+        @if($showReference)
             <div>
-                <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-navy-300">Program</p>
+                <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-navy-300">Rujukan</p>
                 <div class="space-y-1">
-                    <a href="{{ route('report-cards.index') }}" class="{{ $link(request()->routeIs('report-cards.*')) }}">
-                        <x-icon name="clipboard" class="h-5 w-5 shrink-0" /> Laporan Aktiviti
-                    </a>
-                    @can('applications.view_all')
+                    @if($canRecipients)
                         <a href="{{ route('recipients.index') }}" class="{{ $link(request()->routeIs('recipients.*')) }}">
-                            <x-icon name="users-group" class="h-5 w-5 shrink-0" /> Penerima / Persatuan
+                            <x-icon name="users-group" class="h-5 w-5 shrink-0" />
+                            Penerima / Persatuan
                         </a>
-                    @endcan
+                    @endif
+                    @if($canAlps)
+                        <a href="{{ route('alps.index') }}" class="{{ $link(request()->routeIs('alps.*')) }}">
+                            <x-icon name="users-group" class="h-5 w-5 shrink-0" />
+                            Ahli Lembaga
+                        </a>
+                    @endif
                 </div>
             </div>
-        @endcanany
+        @endif
 
         <div>
-            <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-navy-300">Ketetapan</p>
+            <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-navy-300">Tetapan</p>
             <div class="space-y-1">
-                <a href="{{ route('settings.index') }}" class="{{ $link(request()->routeIs('settings.index')) }}">
+                <a href="{{ route('profile.edit') }}" class="{{ $link(request()->routeIs('profile.*') || request()->routeIs('password.change*') || request()->routeIs('settings.edit') || request()->routeIs('settings.update') || request()->routeIs('users.*') || request()->routeIs('financial-years.*') || request()->routeIs('approval-matrix.*')) }}">
                     <x-icon name="user-cog" class="h-5 w-5 shrink-0" />
-                    Semua Ketetapan
+                    Tetapan
                 </a>
-                <a href="{{ route('settings.user') }}" class="{{ $link(request()->routeIs('settings.user') || request()->routeIs('profile.*') || request()->routeIs('password.change*')) }}">
-                    <x-icon name="user-cog" class="h-5 w-5 shrink-0" />
-                    Ketetapan Pengguna
+                <a href="{{ route('manual.show') }}" class="{{ $link(request()->routeIs('manual.*')) }}">
+                    <x-icon name="document" class="h-5 w-5 shrink-0" />
+                    Manual Pengguna
                 </a>
-                @canany(['users.view', 'financial_years.view', 'settings.manage', 'approval_matrix.view'])
-                    <a href="{{ route('settings.system') }}" class="{{ $link(request()->routeIs('settings.system') || request()->routeIs('settings.edit') || request()->routeIs('settings.update') || request()->routeIs('users.*') || request()->routeIs('financial-years.*') || request()->routeIs('approval-matrix.*')) }}">
-                        <x-icon name="scale" class="h-5 w-5 shrink-0" />
-                        Ketetapan Sistem
-                    </a>
-                @endcanany
             </div>
-        </div>
-
-        <div class="space-y-1">
-            <a href="{{ route('manual.show') }}" class="{{ $link(request()->routeIs('manual.*')) }}">
-                <x-icon name="document" class="h-5 w-5 shrink-0" />
-                Manual Pengguna
-            </a>
-            <a href="{{ route('notifications.index') }}" class="{{ $link(request()->routeIs('notifications.*')) }}">
-                <x-icon name="document" class="h-5 w-5 shrink-0" />
-                <span class="flex-1">Notifikasi</span>
-                @php $unread = auth()->user()->unreadNotifications->count(); @endphp
-                @if($unread > 0)
-                    <span class="rounded-full bg-royal-500 px-2 py-0.5 text-[10px] font-semibold text-white">{{ $unread }}</span>
-                @endif
-            </a>
         </div>
     </nav>
 

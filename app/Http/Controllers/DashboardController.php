@@ -132,13 +132,15 @@ class DashboardController extends Controller
         $pending = Money::zero();
         $projected = Money::zero();
         $appStats = null;
+        $annualAllocation = null;
+        $annualAvailable = null;
 
         if ($activeYear) {
             if ($user->alp_id) {
-                $summary = $this->budget->summaryFor($user->alp_id, $activeYear->id);
-                $pending = $this->appBudget->pendingRequest($user->alp_id, $activeYear->id);
-                $projected = $summary->available()->minus($pending);
                 $scope = 'own';
+                $alpSummary = $this->budget->summaryFor($user->alp_id, $activeYear->id);
+                $annualAllocation = $alpSummary->allocation;
+                $annualAvailable = $alpSummary->available();
                 $appStats = [
                     'draft' => $this->count($activeYear->id, [ApplicationStatus::DRAFT->value], $user->alp_id),
                     'in_process' => $this->count($activeYear->id, $this->inProcessStatuses(), $user->alp_id),
@@ -166,19 +168,36 @@ class DashboardController extends Controller
         if ($user->canAny(['applications.review.secretariat', 'applications.approve', 'payments.view'])) {
             $officerQueues = [];
             if ($user->can('applications.review.secretariat')) {
-                $officerQueues[] = ['label' => 'Menunggu Semakan JP', 'count' => $this->count($activeYear?->id, [ApplicationStatus::SUBMITTED->value]), 'route' => 'reviews.secretariat'];
+                $officerQueues[] = [
+                    'label' => 'Menunggu Semakan JP',
+                    'description' => 'Permohonan dihantar ALP — perlu semakan & senarai semak JP',
+                    'count' => $this->count($activeYear?->id, [ApplicationStatus::SUBMITTED->value]),
+                    'route' => 'reviews.secretariat',
+                    'icon' => 'clipboard',
+                    'tone' => 'blue',
+                ];
             }
             if ($user->can('applications.approve')) {
-                $officerQueues[] = ['label' => 'Menunggu Peraku / Pelulus', 'count' => $this->count($activeYear?->id, [ApplicationStatus::PENDING_APPROVAL->value]), 'route' => 'approvals.queue'];
+                $officerQueues[] = [
+                    'label' => 'Menunggu Peraku / Pelulus',
+                    'description' => 'Permohonan disyorkan JP — menunggu kelulusan Peraku / PEPU',
+                    'count' => $this->count($activeYear?->id, [ApplicationStatus::PENDING_APPROVAL->value]),
+                    'route' => 'approvals.queue',
+                    'icon' => 'shield-check',
+                    'tone' => 'amber',
+                ];
             }
             if ($user->can('payments.view')) {
                 $officerQueues[] = [
                     'label' => 'Pembayaran / Baucar',
+                    'description' => 'Permohonan diluluskan — kemas kini baucar & status bayaran',
                     'count' => Application::query()
                         ->where('status', ApplicationStatus::APPROVED->value)
                         ->whereIn('payment_status', \App\Enums\ApplicationPaymentStatus::openValues())
                         ->count(),
                     'route' => 'payments.index',
+                    'icon' => 'receipt',
+                    'tone' => 'green',
                 ];
             }
         }
@@ -223,10 +242,9 @@ class DashboardController extends Controller
             $user->alp_id && ! $user->can('applications.view_all') ? $user->alp_id : null,
         );
 
-        $kpiWatchlist = $this->kpiWatchlist(
-            $activeYear?->id,
-            $user->alp_id && ! $user->can('applications.view_all') ? $user->alp_id : null,
-        );
+        $kpiWatchlist = $user->can('applications.view_all')
+            ? $this->kpiWatchlist($activeYear?->id, null)
+            : collect();
 
         return view('dashboard.index', [
             'activeYear' => $activeYear,
@@ -244,6 +262,8 @@ class DashboardController extends Controller
             'overdueDays' => UrsContributionPolicy::overdueDays(),
             'kpiWatchlist' => $kpiWatchlist,
             'kpiDays' => ApplicationTimelineService::KPI_DAYS,
+            'annualAllocation' => $annualAllocation,
+            'annualAvailable' => $annualAvailable,
         ]);
     }
 

@@ -14,6 +14,7 @@ use App\Services\Application\ApplicationBudgetService;
 use App\Services\Application\ApplicationException;
 use App\Services\Application\ApplicationReviewService;
 use App\Services\Budget\BudgetService;
+use App\Support\UrsContributionPolicy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -61,7 +62,8 @@ class ReviewController extends Controller
             ->when($request->filled('jenis'), fn ($q) => $q->where('application_type', $request->string('jenis')))
             ->when($request->filled('cari'), fn ($q) => $q->where(fn ($s) => $s
                 ->where('application_number', 'like', '%'.$request->string('cari').'%')
-                ->orWhere('project_title', 'like', '%'.$request->string('cari').'%')))
+                ->orWhere('purpose', 'like', '%'.$request->string('cari').'%')
+                ->orWhere('recipient_name', 'like', '%'.$request->string('cari').'%')))
             ->with(['alp', 'financialYear'])
             ->latest('submitted_at')
             ->paginate(15)
@@ -87,12 +89,37 @@ class ReviewController extends Controller
         $expected = $this->reviews->expectedReviewType($application);
         abort_if($expected !== $reviewType, 404, 'Permohonan tiada pada peringkat semakan ini.');
 
-        $application->load(['alp', 'financialYear', 'budgetItems', 'documents', 'reviews.reviewer']);
+        $application->load(['alp', 'financialYear', 'documents', 'reviews.reviewer']);
 
         $summary = $this->budget->summaryFor($application->alp_id, $application->financial_year_id);
         $otherPending = $this->appBudget->pendingRequest($application->alp_id, $application->financial_year_id, $application->id);
         $thisRequest = $application->requestedAmountMoney();
         $projected = $summary->available()->minus($otherPending)->minus($thisRequest);
+
+        $approvedApplications = $this->appBudget->approvedApplications($application->alp_id, $application->financial_year_id);
+        $pendingApplications = $this->appBudget->pendingApplications($application->alp_id, $application->financial_year_id, $application->id);
+
+        $periodSummary = null;
+        if (UrsContributionPolicy::enabled() && $application->financialYear) {
+            $period = UrsContributionPolicy::periodFor(now(), (int) $application->financialYear->year);
+            $used = UrsContributionPolicy::periodUsage(
+                $application->alp_id,
+                $application->financial_year_id,
+                $period['start'],
+                $period['end'],
+            );
+            $quota = UrsContributionPolicy::maxPeriodQuota();
+            $remaining = $quota->minus($used);
+            if ($remaining->isNegative()) {
+                $remaining = \App\Support\Money::zero();
+            }
+            $periodSummary = [
+                'label' => $period['label'],
+                'quota' => $quota,
+                'used' => $used,
+                'remaining' => $remaining,
+            ];
+        }
 
         return view('reviews.show', [
             'application' => $application,
@@ -100,8 +127,12 @@ class ReviewController extends Controller
             'summary' => $summary,
             'otherPending' => $otherPending,
             'thisRequest' => $thisRequest,
+            'approvedApplications' => $approvedApplications,
+            'pendingApplications' => $pendingApplications,
+            'periodSummary' => $periodSummary,
             'checklistItems' => \App\Support\JpReviewChecklist::items(),
             'checklistHints' => \App\Support\JpReviewChecklist::hints($application, $projected),
+            'fullJpDecision' => $request->user()->canMakeFullJpReviewDecision(),
         ]);
     }
 

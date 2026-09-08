@@ -9,6 +9,7 @@ use App\Models\Alp;
 use App\Models\Application;
 use App\Models\FinancialYear;
 use App\Models\User;
+use Carbon\Carbon;
 use Database\Seeders\DocumentRequirementSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,34 +34,33 @@ class ApplicationTest extends TestCase
         return User::factory()->create(['alp_id' => $alp->id])->assignRole(RoleName::ALP->value);
     }
 
-    public function test_alp_can_create_csr_draft(): void
+    private function borangPayload(array $overrides = []): array
     {
-        $user = $this->alpUser();
-
-        $this->actingAs($user)->post(route('applications.store'), [
-            'application_type' => ApplicationType::CSR->value,
-            'project_title' => 'Program CSR Ujian',
-        ])->assertRedirect();
-
-        $this->assertDatabaseHas('applications', [
-            'alp_id' => $user->alp_id,
-            'application_type' => ApplicationType::CSR->value,
-            'status' => ApplicationStatus::DRAFT->value,
-        ]);
+        return array_merge([
+            'recipient_name' => 'Persatuan Komuniti Ujian',
+            'recipient_ros_number' => 'ROS-12345678',
+            'program_date' => now()->addMonths(3)->format('Y-m-d'),
+            'program_category' => 'komuniti',
+            'requested_amount' => '1500.00',
+            'purpose' => 'Sumbangan program komuniti',
+            'recipient_bank_account' => '1234567890',
+            'recipient_address' => 'No. 12, Jalan Ampang, 50450 Kuala Lumpur',
+        ], $overrides);
     }
 
-    public function test_alp_can_create_development_draft(): void
+    public function test_alp_can_create_sumbangan_draft(): void
     {
         $user = $this->alpUser();
 
-        $this->actingAs($user)->post(route('applications.store'), [
-            'application_type' => ApplicationType::DEVELOPMENT->value,
-            'project_title' => 'Projek Pembangunan Ujian',
-        ])->assertRedirect();
+        $this->actingAs($user)->post(route('applications.store'), $this->borangPayload())
+            ->assertRedirect();
 
         $this->assertDatabaseHas('applications', [
             'alp_id' => $user->alp_id,
-            'application_type' => ApplicationType::DEVELOPMENT->value,
+            'application_type' => ApplicationType::SUMBANGAN->value,
+            'purpose' => 'Sumbangan program komuniti',
+            'requested_amount' => '1500.00',
+            'status' => ApplicationStatus::DRAFT->value,
         ]);
     }
 
@@ -69,20 +69,51 @@ class ApplicationTest extends TestCase
         $user = $this->alpUser();
         $app = Application::factory()->create(['alp_id' => $user->alp_id]);
 
-        $this->actingAs($user)->put(route('applications.wizard.maklumat.update', $app), [
-            'application_type' => ApplicationType::CSR->value,
-            'project_title' => 'Tajuk Dikemas Kini',
-            'recipient_name' => 'Persatuan Contoh',
-            'recipient_ros_number' => 'ROS-12345678',
-            'recipient_bank_account' => '1234567890',
-            'recipient_address' => 'Kampung Baru, Kuala Lumpur',
-            'program_category' => \App\Enums\ProgramCategory::KOMUNITI->value,
-            'location' => 'Kuala Lumpur',
-            'proposed_start_date' => now()->addMonths(3)->toDateString(),
-            'compliance_declaration' => '1',
-        ])->assertRedirect(route('applications.wizard.objektif', $app));
+        $this->actingAs($user)->put(route('applications.wizard.maklumat.update', $app), $this->borangPayload([
+            'purpose' => 'Tujuan dikemas kini',
+            'requested_amount' => '2000.00',
+        ]))->assertRedirect(route('applications.wizard.dokumen', $app));
 
-        $this->assertSame('Tajuk Dikemas Kini', $app->fresh()->project_title);
+        $this->assertSame('Tujuan dikemas kini', $app->fresh()->purpose);
+    }
+
+    public function test_borang_rejects_program_date_within_two_months(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-03-15'));
+        $user = $this->alpUser();
+
+        $this->actingAs($user)->post(route('applications.store'), $this->borangPayload([
+            'program_date' => '2026-04-01',
+        ]))->assertSessionHasErrors('program_date');
+
+        Carbon::setTestNow();
+    }
+
+    public function test_borang_rejects_non_kl_address(): void
+    {
+        $user = $this->alpUser();
+        $app = Application::factory()->create(['alp_id' => $user->alp_id]);
+
+        $this->actingAs($user)->put(route('applications.wizard.maklumat.update', $app), $this->borangPayload([
+            'recipient_address' => 'Persatuan Komuniti, Johor Bahru, Johor',
+        ]))
+            ->assertSessionHasErrors('recipient_address');
+    }
+
+    public function test_borang_rejects_amount_above_policy_limit(): void
+    {
+        \App\Models\SystemSetting::set(\App\Support\UrsContributionPolicy::KEY_ENABLED, true);
+        \App\Models\SystemSetting::set(\App\Support\UrsContributionPolicy::KEY_MAX_PER_APPLICATION, '3000.00');
+
+        $user = $this->alpUser();
+        $app = Application::factory()->create(['alp_id' => $user->alp_id]);
+
+        $this->actingAs($user)->put(route('applications.wizard.maklumat.update', $app), $this->borangPayload([
+            'requested_amount' => '5000.00',
+        ]))
+            ->assertSessionHasErrors('requested_amount');
+
+        $this->assertNotSame('5000.00', $app->fresh()->requested_amount);
     }
 
     public function test_submitted_application_is_read_only_for_owner(): void
@@ -93,18 +124,9 @@ class ApplicationTest extends TestCase
         $this->actingAs($user)->get(route('applications.wizard.maklumat', $app))
             ->assertRedirect(route('applications.show', $app));
 
-        $this->actingAs($user)->put(route('applications.wizard.maklumat.update', $app), [
-            'application_type' => ApplicationType::CSR->value,
-            'project_title' => 'Cuba Ubah',
-            'recipient_name' => 'Persatuan Contoh',
-            'recipient_ros_number' => 'ROS-12345678',
-            'recipient_bank_account' => '1234567890',
-            'recipient_address' => 'Kampung Baru, Kuala Lumpur',
-            'program_category' => \App\Enums\ProgramCategory::KOMUNITI->value,
-            'location' => 'Kuala Lumpur',
-            'proposed_start_date' => now()->addMonths(3)->toDateString(),
-            'compliance_declaration' => '1',
-        ])->assertForbidden();
+        $this->actingAs($user)->put(route('applications.wizard.maklumat.update', $app), $this->borangPayload([
+            'purpose' => 'Cuba Ubah',
+        ]))->assertForbidden();
     }
 
     public function test_alp_cannot_access_another_alps_application(): void
@@ -120,10 +142,103 @@ class ApplicationTest extends TestCase
 
     public function test_unauthorized_user_cannot_create_application(): void
     {
-        // Pegawai kewangan tiada alp_id & tiada applications.create.
         $officer = User::factory()->create(['alp_id' => null])->assignRole(RoleName::PEGAWAI_KEWANGAN->value);
 
         $this->actingAs($officer)->get(route('applications.create'))->assertForbidden();
+    }
+
+    public function test_admin_jp_can_create_short_notice_application_for_alp(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-03-15'));
+        $alp = Alp::factory()->create();
+        $admin = User::factory()->create(['alp_id' => null])->assignRole(RoleName::SYSTEM_ADMIN->value);
+
+        $this->actingAs($admin)->get(route('applications.create'))->assertOk()->assertSee('Notis pendek dibenarkan');
+
+        $this->actingAs($admin)->post(route('applications.store'), $this->borangPayload([
+            'alp_id' => $alp->id,
+            'program_date' => '2026-04-01',
+        ]))->assertRedirect();
+
+        $this->assertDatabaseHas('applications', [
+            'alp_id' => $alp->id,
+            'created_by' => $admin->id,
+            'program_date' => '2026-04-01',
+            'status' => ApplicationStatus::DRAFT->value,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_admin_jp_amount_field_shows_live_max_warning_like_alp(): void
+    {
+        $admin = User::factory()->create(['alp_id' => null])->assignRole(RoleName::SYSTEM_ADMIN->value);
+
+        $this->actingAs($admin)
+            ->get(route('applications.create'))
+            ->assertOk()
+            ->assertSee('Had setiap permohonan: RM')
+            ->assertSee('forceMaxPerApp: true', false)
+            ->assertSee('Ralat jumlah sumbangan');
+    }
+
+    public function test_admin_jp_cannot_create_application_above_rm3000(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = FinancialYear::query()->first();
+        $admin = User::factory()->create(['alp_id' => null])->assignRole(RoleName::SYSTEM_ADMIN->value);
+        app(\App\Services\Budget\BudgetService::class)->allocate($alp, $year, '500000.00', 'REF-MAX');
+
+        $this->actingAs($admin)->post(route('applications.store'), $this->borangPayload([
+            'alp_id' => $alp->id,
+            'requested_amount' => '3000.01',
+        ]))->assertSessionHasErrors('requested_amount');
+
+        $this->actingAs($admin)->post(route('applications.store'), $this->borangPayload([
+            'alp_id' => $alp->id,
+            'requested_amount' => '3000.00',
+        ]))->assertRedirect();
+
+        $this->assertDatabaseHas('applications', [
+            'alp_id' => $alp->id,
+            'created_by' => $admin->id,
+            'requested_amount' => '3000.00',
+        ]);
+    }
+
+    public function test_admin_jp_can_submit_short_notice_application_to_pegawai_jp(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-03-15'));
+        $alp = Alp::factory()->create();
+        $year = FinancialYear::query()->where('status', 'active')->first()
+            ?? FinancialYear::factory()->active()->create(['year' => 2026]);
+        $admin = User::factory()->create(['alp_id' => null])->assignRole(RoleName::SYSTEM_ADMIN->value);
+
+        app(\App\Services\Budget\BudgetService::class)->allocate($alp, $year, '500000.00', 'REF-ADMIN');
+
+        $app = Application::factory()->create([
+            'alp_id' => $alp->id,
+            'financial_year_id' => $year->id,
+            'application_type' => ApplicationType::SUMBANGAN,
+            'status' => ApplicationStatus::DRAFT,
+            'requested_amount' => '1500.00',
+            'program_date' => '2026-04-01',
+            'created_by' => $admin->id,
+        ]);
+
+        foreach (\App\Models\DocumentRequirement::requiredFor() as $docType) {
+            \App\Models\ApplicationDocument::factory()->type($docType)->create(['application_id' => $app->id]);
+        }
+
+        $this->actingAs($admin)
+            ->post(route('applications.submit', $app))
+            ->assertRedirect(route('applications.show', $app))
+            ->assertSessionHas('status');
+
+        $this->assertSame(ApplicationStatus::SUBMITTED, $app->fresh()->status);
+        $this->assertStringContainsString('Pegawai JP', session('status'));
+
+        Carbon::setTestNow();
     }
 
     public function test_staff_with_view_all_can_see_all_applications(): void

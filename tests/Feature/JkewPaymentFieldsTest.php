@@ -26,10 +26,7 @@ class JkewPaymentFieldsTest extends TestCase
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
-        app(\App\Services\Application\ApprovalService::class)
-            ->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-        $app = $app->fresh();
+        $app = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2500.00')));
 
         $finance = User::factory()->create()->assignRole(RoleName::PEGAWAI_KEWANGAN->value);
 

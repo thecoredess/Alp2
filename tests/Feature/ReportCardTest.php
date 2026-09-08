@@ -32,10 +32,9 @@ class ReportCardTest extends TestCase
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
         $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
-        app(\App\Services\Application\ApprovalService::class)
-            ->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
+        $app = $this->fullyApprove($app);
 
-        return [$app->fresh(), $alp];
+        return [$app, $alp];
     }
 
     public function test_alp_can_upload_report_card_after_approval(): void
@@ -65,10 +64,9 @@ class ReportCardTest extends TestCase
         Notification::fake();
         [$app, $alp] = $this->approvedApp();
         $owner = $this->userWithRole(RoleName::ALP->value, $alp);
-        $app->update([
-            'proposed_start_date' => now()->subMonths(3),
-            'proposed_end_date' => now()->subMonths(2),
-        ]);
+        $app->statusHistories()
+            ->where('to_status', \App\Enums\ApplicationStatus::APPROVED->value)
+            ->update(['created_at' => now()->subMonths(2)]);
 
         $sent = app(ApplicationReportCardService::class)->sendReminders(onlyOverdue: true);
         $this->assertSame(1, $sent);

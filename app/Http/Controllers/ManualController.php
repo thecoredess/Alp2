@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleName;
 use App\Support\OfficialManual;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,14 +15,22 @@ class ManualController extends Controller
 {
     public function show(Request $request): View
     {
-        $role = $request->user()->roles->first()?->name;
+        $role = RoleName::tryFrom($request->user()->roles->first()?->name ?? '');
+
+        [$audience, $audienceLabel] = match ($role) {
+            RoleName::ALP, RoleName::URUSSETIA_ALP => ['alp', 'ALP / Persatuan'],
+            RoleName::PEGAWAI_URUSSETIA => ['jp', RoleName::PEGAWAI_URUSSETIA->label()],
+            RoleName::PELULUS => ['jp', RoleName::PELULUS->label()],
+            RoleName::PENGURUSAN => ['jp', RoleName::PENGURUSAN->label()],
+            RoleName::PEGAWAI_KEWANGAN => ['jp', RoleName::PEGAWAI_KEWANGAN->label()],
+            RoleName::PEGAWAI_JKEW => ['jp', RoleName::PEGAWAI_JKEW->label()],
+            RoleName::SYSTEM_ADMIN, RoleName::SUPER_ADMIN => ['jp', RoleName::SYSTEM_ADMIN->label()],
+            default => ['umum', 'Umum'],
+        };
 
         return view('manual.show', [
-            'audience' => match ($role) {
-                'alp', 'urussetia_alp' => 'alp',
-                'pegawai_urussetia', 'pelulus', 'pengurusan', 'pegawai_kewangan', 'pegawai_jkew', 'system_admin', 'super_admin' => 'jp',
-                default => 'umum',
-            },
+            'audience' => $audience,
+            'audienceLabel' => $audienceLabel,
             'hasOfficialPdf' => OfficialManual::exists(),
             'canManageManual' => $request->user()->can('settings.manage'),
         ]);

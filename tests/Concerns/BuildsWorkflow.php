@@ -7,7 +7,6 @@ use App\Enums\ApplicationType;
 use App\Enums\ReviewDecision;
 use App\Enums\ReviewType;
 use App\Enums\RoleName;
-use App\Enums\ProgramCategory;
 use App\Models\Alp;
 use App\Models\Application;
 use App\Models\ApplicationDocument;
@@ -17,6 +16,7 @@ use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\Application\ApplicationReviewService;
 use App\Services\Application\ApplicationSubmissionService;
+use App\Services\Application\ApprovalService;
 use App\Services\Budget\BudgetService;
 use App\Support\UrsContributionPolicy;
 use Database\Seeders\ApprovalLevelSeeder;
@@ -33,22 +33,18 @@ trait BuildsWorkflow
         $this->seed(WorkflowSettingsSeeder::class);
         $this->seed(ApprovalLevelSeeder::class);
 
-        // Ujian aliran/matrix boleh guna jumlah > BR-005; ujian Urs* aktifkan semula secara eksplisit.
         SystemSetting::set(UrsContributionPolicy::KEY_ENABLED, false);
     }
 
-    /** Medan penerima URS (BR-008/009) — unik setiap draf supaya assert ROS lulus. */
     protected function ursRecipientAttrs(): array
     {
         return [
             'recipient_name' => 'Persatuan Ujian '.fake()->unique()->numerify('###'),
             'recipient_ros_number' => 'ROS-'.fake()->unique()->numerify('########'),
+            'program_date' => now()->addMonths(3)->toDateString(),
+            'program_category' => 'komuniti',
             'recipient_bank_account' => fake()->numerify('##########'),
-            'recipient_address' => 'Kampung Baru, Kuala Lumpur',
-            'location' => 'Kuala Lumpur',
-            'program_category' => ProgramCategory::KOMUNITI,
-            'proposed_start_date' => now()->addMonths(3)->toDateString(),
-            'compliance_declared_at' => now(),
+            'recipient_address' => 'No. 1, Jalan Raja Laut, 50350 Kuala Lumpur',
         ];
     }
 
@@ -67,55 +63,50 @@ trait BuildsWorkflow
         app(BudgetService::class)->allocate($alp, $year, $amount, 'REF');
     }
 
-    protected function draftWithBudgetAndDocs(Alp $alp, FinancialYear $year, string $amount, ApplicationType $type = ApplicationType::CSR): Application
+    protected function draftWithBudgetAndDocs(Alp $alp, FinancialYear $year, string $amount, ApplicationType $type = ApplicationType::SUMBANGAN): Application
     {
         $app = Application::factory()->create([
             'alp_id' => $alp->id,
             'financial_year_id' => $year->id,
             'application_type' => $type,
             'status' => ApplicationStatus::DRAFT,
+            'requested_amount' => $amount,
+            'purpose' => 'Tujuan ujian sumbangan',
             ...$this->ursRecipientAttrs(),
         ]);
-        $app->budgetItems()->create(['description' => 'Item', 'quantity' => 1, 'unit_cost' => $amount, 'total' => $amount, 'sort_order' => 1]);
-        $app->recalculateRequestedAmount();
 
-        foreach (DocumentRequirement::requiredFor($type) as $docType) {
+        foreach (DocumentRequirement::requiredFor() as $docType) {
             ApplicationDocument::factory()->type($docType)->create(['application_id' => $app->id]);
         }
 
         return $app->fresh();
     }
 
-    protected function submitted(Alp $alp, FinancialYear $year, string $amount, ApplicationType $type = ApplicationType::CSR): Application
+    protected function submitted(Alp $alp, FinancialYear $year, string $amount, ApplicationType $type = ApplicationType::SUMBANGAN): Application
     {
         $app = $this->draftWithBudgetAndDocs($alp, $year, $amount, $type);
 
         return app(ApplicationSubmissionService::class)->submit($app, $this->userWithRole(RoleName::ALP->value, $alp));
     }
 
-    /**
-     * Cipta permohonan terus pada status SUBMITTED tanpa semakan penghantaran
-     * (untuk mensimulasikan keadaan luar biasa/bersejarah yang menguji perlindungan Fasa 4).
-     */
-    protected function submittedDirect(Alp $alp, FinancialYear $year, string $amount, ApplicationType $type = ApplicationType::CSR): Application
+    protected function submittedDirect(Alp $alp, FinancialYear $year, string $amount, ApplicationType $type = ApplicationType::SUMBANGAN): Application
     {
         $app = Application::factory()->submitted()->create([
             'alp_id' => $alp->id,
             'financial_year_id' => $year->id,
             'application_type' => $type,
+            'requested_amount' => $amount,
+            'purpose' => 'Tujuan ujian sumbangan',
             ...$this->ursRecipientAttrs(),
         ]);
-        $app->budgetItems()->create(['description' => 'Item', 'quantity' => 1, 'unit_cost' => $amount, 'total' => $amount, 'sort_order' => 1]);
-        $app->recalculateRequestedAmount();
 
-        foreach (\App\Models\DocumentRequirement::requiredFor($type) as $docType) {
+        foreach (DocumentRequirement::requiredFor() as $docType) {
             ApplicationDocument::factory()->type($docType)->create(['application_id' => $app->id]);
         }
 
         return $app->fresh();
     }
 
-    /** Senarai semak JP semua lengkap (UR-M04-001) — untuk majukan ke perakuan dalam ujian. */
     protected function lengkapChecklist(): array
     {
         return collect(\App\Support\JpReviewChecklist::keys())
@@ -123,7 +114,6 @@ trait BuildsWorkflow
             ->all();
     }
 
-    /** Majukan permohonan yang telah dihantar hingga PENDING_APPROVAL (URS v1.2: JP sahaja). */
     protected function toPendingApproval(Application $app): Application
     {
         $reviews = app(ApplicationReviewService::class);
@@ -136,6 +126,16 @@ trait BuildsWorkflow
             null,
             $this->lengkapChecklist(),
         );
+
+        return $app->fresh();
+    }
+
+    /** Luluskan kedua-dua aras: Peraku → PEPU. */
+    protected function fullyApprove(Application $app): Application
+    {
+        $approvals = app(ApprovalService::class);
+        $approvals->approve($app->fresh(), $this->userWithRole(RoleName::PELULUS->value), null);
+        $approvals->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         return $app->fresh();
     }

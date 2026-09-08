@@ -29,8 +29,9 @@ class ApplicationPaymentTest extends TestCase
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
         $app = $this->toPendingApproval($this->submitted($alp, $year, $amount));
-        app(\App\Services\Application\ApprovalService::class)
-            ->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
+        $approvals = app(\App\Services\Application\ApprovalService::class);
+        $approvals->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
+        $approvals->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         return $app->fresh();
     }
@@ -52,8 +53,10 @@ class ApplicationPaymentTest extends TestCase
         $this->actingAs($finance)
             ->put(route('payments.update', $app), [
                 'payment_status' => ApplicationPaymentStatus::VOUCHER_PREPARED->value,
+                'payment_supplier_no' => 'SUP-2026-001',
                 'payment_voucher_no' => 'BV-2026-001',
-                'payment_reference' => 'REF-1',
+                'payment_voucher_date' => '2026-09-07',
+                'payment_remarks' => 'Catatan ujian',
             ])
             ->assertRedirect()
             ->assertSessionHas('status');
@@ -61,11 +64,14 @@ class ApplicationPaymentTest extends TestCase
         $app->refresh();
         $this->assertSame(ApplicationPaymentStatus::VOUCHER_PREPARED, $app->payment_status);
         $this->assertSame('BV-2026-001', $app->payment_voucher_no);
+        $this->assertSame('SUP-2026-001', $app->payment_supplier_no);
 
         $this->actingAs($finance)
             ->put(route('payments.update', $app), [
                 'payment_status' => ApplicationPaymentStatus::PAID->value,
+                'payment_supplier_no' => 'SUP-2026-001',
                 'payment_voucher_no' => 'BV-2026-001',
+                'payment_voucher_date' => '2026-09-07',
                 'paid_at' => now()->format('Y-m-d H:i:s'),
             ])
             ->assertRedirect();

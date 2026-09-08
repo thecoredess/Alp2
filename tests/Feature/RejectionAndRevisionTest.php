@@ -66,8 +66,7 @@ class RejectionAndRevisionTest extends TestCase
         $this->assertSame('85000.00', app(ApplicationBudgetService::class)->pendingRequest($alp->id, $year->id)->value());
 
         // Pemohon mengubah bajet & hantar semula.
-        $app->budgetItems()->first()->update(['unit_cost' => '90000.00', 'total' => '90000.00']);
-        $app->recalculateRequestedAmount();
+        $app->update(['requested_amount' => '90000.00']);
         app(ApplicationSubmissionService::class)->resubmit($app->fresh(), $this->userWithRole(RoleName::ALP->value, $alp));
 
         $app->refresh();
@@ -91,10 +90,53 @@ class RejectionAndRevisionTest extends TestCase
 
         $owner = $this->userWithRole(RoleName::ALP->value, $alp);
 
-        // Boleh capai wizard & tambah item semasa REVISION_REQUIRED.
         $this->actingAs($owner)->get(route('applications.wizard.maklumat', $app->fresh()))->assertOk();
-        $this->actingAs($owner)->post(route('applications.items.store', $app->fresh()), [
-            'description' => 'Tambahan', 'quantity' => 1, 'unit_cost' => '100.00',
+        $this->actingAs($owner)->put(route('applications.wizard.maklumat.update', $app->fresh()), [
+            'recipient_name' => 'Persatuan Dikemas Kini',
+            'recipient_ros_number' => $app->recipient_ros_number,
+            'program_date' => $app->program_date?->format('Y-m-d'),
+            'program_category' => $app->program_category?->value ?? 'komuniti',
+            'requested_amount' => '86000.00',
+            'purpose' => 'Tujuan dibetulkan',
+            'recipient_bank_account' => '1234567890',
+            'recipient_address' => 'No. 12, Jalan Raja Laut, 50350 Kuala Lumpur',
         ])->assertRedirect();
+        $this->assertSame('Tujuan dibetulkan', $app->fresh()->purpose);
+    }
+
+    public function test_alp_sees_red_cards_for_admin_jp_incomplete_checklist(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->submitted($alp, $year, '2500.00');
+        $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
+        $owner = $this->userWithRole(RoleName::ALP->value, $alp);
+
+        $checklist = $this->lengkapChecklist();
+        $checklist['recipient'] = \App\Support\JpReviewChecklist::TIDAK_LENGKAP;
+        $checklist['dokumen'] = \App\Support\JpReviewChecklist::TIDAK_LENGKAP;
+
+        app(ApplicationReviewService::class)->review(
+            $app,
+            ReviewType::SECRETARIAT,
+            $admin,
+            ReviewDecision::RETURN_FOR_REVISION,
+            'Sila betulkan maklumat persatuan dan lampiran',
+            $checklist,
+        );
+
+        $this->actingAs($owner)
+            ->get(route('applications.show', $app->fresh()))
+            ->assertOk()
+            ->assertSee('Item ditanda tidak lengkap oleh Admin JP')
+            ->assertSee('border-red-400')
+            ->assertSee('Tidak lengkap');
+
+        $this->actingAs($owner)
+            ->get(route('applications.wizard.maklumat', $app->fresh()))
+            ->assertOk()
+            ->assertSee('Item ditanda tidak lengkap oleh Admin JP')
+            ->assertSee('border-red-400');
     }
 }

@@ -4,20 +4,22 @@
 @section('subheading', 'Had sumbangan URS v1.2 — wajib diaktifkan untuk operasi rasmi')
 
 @section('content')
-    <div class="mb-4">
-        <a href="{{ route('settings.system') }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">← Ketetapan Sistem</a>
-    </div>
+    <div class="page-shell">
+        <div class="mb-4">
+            <a href="{{ route('profile.edit') }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">← Kembali ke Tetapan</a>
+        </div>
 
-    <div class="mb-4 rounded-lg border border-royal-200 bg-royal-50 px-4 py-3 text-sm text-royal-800">
-        Polisi ini menguatkuasakan peraturan wang URS v1.2:
-        <strong>BR-001</strong> (maks RM30,000/tahun),
-        <strong>BR-005</strong> (maks RM3,000/permohonan),
-        <strong>BR-002</strong> (3 tempoh × kuota), dan
-        <strong>BR-003</strong> (baki tempoh luput).
-        Lalai: <strong>ON</strong>.
-    </div>
+        <div class="mb-4 rounded-lg border border-royal-200 bg-royal-50 px-4 py-3 text-sm text-royal-900">
+            Polisi ini menguatkuasakan peraturan wang URS v1.2:
+            <strong>BR-001</strong> (maks RM30,000/tahun),
+            <strong>BR-005</strong> (maks RM3,000/permohonan),
+            <strong>BR-002</strong> (3 tempoh × kuota), dan
+            <strong>BR-003</strong> (baki tempoh luput).
+            Lalai: <strong>ON</strong>.
+        </div>
 
-    <form method="POST" action="{{ route('settings.update') }}" class="card max-w-xl space-y-5 p-6">
+        <x-page-card title="Polisi URS" icon="scale" class="max-w-3xl">
+        <form method="POST" action="{{ route('settings.update') }}" class="space-y-5">
         @csrf
         @method('PUT')
 
@@ -95,8 +97,10 @@
             </div>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 border-t border-gray-100 pt-5">
             <button type="submit" class="btn-primary">Simpan</button>
         </div>
-    </form>
+        </form>
+        </x-page-card>
+    </div>
 @endsection

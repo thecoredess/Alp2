@@ -10,8 +10,7 @@
             <label class="block text-xs text-gray-500">Jenis</label>
             <select name="jenis" class="inp" onchange="this.form.requestSubmit()">
                 <option value="">Semua</option>
-                <option value="csr" @selected(request('jenis')==='csr')>CSR</option>
-                <option value="development" @selected(request('jenis')==='development')>Pembangunan</option>
+                <option value="sumbangan" @selected(request('jenis')==='sumbangan')>Sumbangan</option>
             </select>
         </div>
         <div>
@@ -33,7 +32,7 @@
     <div class="mb-5 card p-5">
         <h3 class="mb-3 text-sm font-semibold text-gray-900">Corong Permohonan</h3>
         <div class="flex flex-wrap items-center gap-2 text-sm">
-            @foreach ([['Draf', 'draft', 'reports.applications', ['status'=>'draft']], ['Semakan', 'review', null, null], ['Menunggu Lulus', 'pending_approval', 'approvals.queue', []], ['Diluluskan', 'approved', null, null], ['Projek', 'project', null, null]] as $i => [$label, $key, $route, $params])
+            @foreach ([['Draf', 'draft', 'reports.applications', ['status'=>'draft']], ['Semakan', 'review', null, null], ['Menunggu Lulus', 'pending_approval', 'approvals.queue', []], ['Diluluskan', 'approved', null, null]] as $i => [$label, $key, $route, $params])
                 @if ($i > 0)<span class="text-gray-300">→</span>@endif
                 <div class="rounded-lg border border-gray-200 px-4 py-2 text-center">
                     <p class="text-lg font-semibold text-navy-700">{{ $pipeline[$key] }}</p>
@@ -55,22 +54,24 @@
     <div class="card overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 text-sm">
             <thead class="bg-gray-50"><tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                <th class="px-3 py-3">No. Permohonan</th><th class="px-3 py-3">ALP</th><th class="px-3 py-3">Jenis</th>
-                <th class="px-3 py-3">Tajuk</th><th class="px-3 py-3 text-right">Amaun</th><th class="px-3 py-3">Status</th><th class="px-3 py-3">Tarikh</th>
+                <th class="px-3 py-3">No. Permohonan</th><th class="px-3 py-3">ALP</th>
+                <th class="px-3 py-3">Tujuan / Penerima</th><th class="px-3 py-3 text-right">Amaun</th><th class="px-3 py-3">Status</th><th class="px-3 py-3">Tarikh</th>
             </tr></thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($listing as $a)
                     <tr class="hover:bg-gray-50">
                         <td class="px-3 py-2 font-mono text-xs text-gray-700">{{ $a->application_number }}</td>
                         <td class="px-3 py-2 text-gray-600">{{ $a->alp?->ref_code }}</td>
-                        <td class="px-3 py-2 text-gray-600">{{ $a->application_type->label() }}</td>
-                        <td class="px-3 py-2 text-gray-900">{{ \Illuminate\Support\Str::limit($a->project_title, 40) }}</td>
+                        <td class="px-3 py-2 text-gray-900">
+                            <p>{{ \Illuminate\Support\Str::limit($a->purpose, 40) }}</p>
+                            <p class="text-xs text-gray-500">{{ $a->recipient_name }}</p>
+                        </td>
                         <td class="px-3 py-2 text-right"><x-money :value="$a->requested_amount" /></td>
                         <td class="px-3 py-2"><x-status-badge :label="$a->status->label()" :classes="$a->status->badgeClasses()" /></td>
                         <td class="px-3 py-2 text-gray-500">{{ $a->created_at?->format('d/m/Y') }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="px-4 py-10 text-center text-gray-400">Tiada permohonan untuk tapisan ini.</td></tr>
+                    <tr><td colspan="6" class="px-4 py-10 text-center text-gray-400">Tiada permohonan untuk tapisan ini.</td></tr>
                 @endforelse
             </tbody>
         </table>

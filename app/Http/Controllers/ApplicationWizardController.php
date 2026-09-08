@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ApplicationInfoRequest;
-use App\Http\Requests\ApplicationScopeRequest;
+use App\Enums\DocumentType;
 use App\Models\Application;
 use App\Models\DocumentRequirement;
 use App\Services\Application\ApplicationBudgetService;
 use App\Services\Application\ApplicationException;
 use App\Services\Application\ApplicationSubmissionService;
+use App\Services\Application\RecipientRegistry;
 use App\Services\Audit\AuditService;
 use App\Services\Budget\BudgetService;
+use App\Support\ApplicationAmountValidator;
+use App\Support\UrsContributionPolicy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -20,11 +23,10 @@ class ApplicationWizardController extends Controller
         private readonly ApplicationBudgetService $appBudget,
         private readonly BudgetService $budget,
         private readonly AuditService $audit,
-        private readonly \App\Services\Application\RecipientRegistry $recipients,
+        private readonly RecipientRegistry $recipients,
     ) {}
 
-    // ── Langkah 1 — Maklumat Projek ─────────────────────────────
-
+    /** Langkah 1 — Borang Penyaluran (kemas kini draf). */
     public function maklumat(Application $application): View|RedirectResponse
     {
         if ($redirect = $this->ensureDraft($application, 'view')) {
@@ -32,77 +34,45 @@ class ApplicationWizardController extends Controller
         }
         $this->authorize('update', $application);
 
-        return view('applications.wizard.maklumat', ['application' => $application, 'step' => 1]);
+        return view('applications.wizard.maklumat', [
+            'application' => $application,
+            'alp' => $application->alp,
+            'step' => 1,
+            'amountLimits' => ApplicationAmountValidator::limitsFor(
+                $application->alp,
+                $application->financialYear,
+                $application->id,
+                forceMaxPerApplication: $request->user()->canCreateApplicationOnBehalf(),
+            ),
+            'jpIncomplete' => \App\Support\JpReviewChecklist::latestIncompleteFor($application),
+            ...$this->programDateContext($application),
+        ]);
     }
 
     public function updateMaklumat(ApplicationInfoRequest $request, Application $application): RedirectResponse
     {
         $this->authorize('update', $application);
 
-        $data = collect($request->validated())->except('compliance_declaration')->all();
-        $data['compliance_declared_at'] = now();
-        $data['updated_by'] = $request->user()->id;
-
-        $application->update($data);
-        $this->recipients->syncFromApplication($application->fresh());
-        $this->audit->log('APPLICATION_UPDATED', $application, null, ['step' => 'maklumat']);
-
-        $shortNotice = \App\Support\UrsContributionPolicy::isShortNotice($application->fresh()->proposed_start_date);
-        $status = 'Maklumat projek disimpan.';
-        if ($shortNotice) {
-            $status .= ' Amaran BR-014: kurang 2 bulan sebelum program — masih boleh diproses (BR-015).';
-        }
-
-        return redirect()->route('applications.wizard.objektif', $application)
-            ->with('status', $status);
-    }
-
-    // ── Langkah 2 — Objektif & Skop ─────────────────────────────
-
-    public function objektif(Application $application): View|RedirectResponse
-    {
-        if ($redirect = $this->ensureDraft($application, 'view')) {
-            return $redirect;
-        }
-        $this->authorize('update', $application);
-
-        return view('applications.wizard.objektif', ['application' => $application, 'step' => 2]);
-    }
-
-    public function updateObjektif(ApplicationScopeRequest $request, Application $application): RedirectResponse
-    {
-        $this->authorize('update', $application);
-
+        $data = $request->validated();
         $application->update([
-            ...$request->validated(),
+            'purpose' => $data['purpose'],
+            'recipient_name' => $data['recipient_name'],
+            'recipient_ros_number' => $data['recipient_ros_number'],
+            'program_date' => $data['program_date'],
+            'program_category' => $data['program_category'],
+            'recipient_bank_account' => $data['recipient_bank_account'],
+            'recipient_address' => $data['recipient_address'],
+            'requested_amount' => number_format((float) $data['requested_amount'], 2, '.', ''),
             'updated_by' => $request->user()->id,
         ]);
-        $this->audit->log('APPLICATION_UPDATED', $application, null, ['step' => 'objektif']);
+        $this->recipients->syncFromApplication($application->fresh());
+        $this->audit->log('APPLICATION_UPDATED', $application, null, ['step' => 'borang']);
 
-        return redirect()->route('applications.wizard.bajet', $application)
-            ->with('status', 'Objektif & skop disimpan.');
+        return redirect()->route('applications.wizard.dokumen', $application)
+            ->with('status', 'Borang Penyaluran disimpan.');
     }
 
-    // ── Langkah 3 — Pecahan Bajet ───────────────────────────────
-
-    public function bajet(Application $application): View|RedirectResponse
-    {
-        if ($redirect = $this->ensureDraft($application, 'view')) {
-            return $redirect;
-        }
-        $this->authorize('update', $application);
-
-        $application->load('budgetItems');
-
-        return view('applications.wizard.bajet', [
-            'application' => $application,
-            'step' => 3,
-            'position' => $this->budgetPosition($application),
-        ]);
-    }
-
-    // ── Langkah 4 — Dokumen ─────────────────────────────────────
-
+    /** Langkah 2 — Lampiran senarai semak. */
     public function dokumen(Application $application): View|RedirectResponse
     {
         if ($redirect = $this->ensureDraft($application, 'view')) {
@@ -112,15 +82,24 @@ class ApplicationWizardController extends Controller
 
         $application->load('documents.uploader');
 
+        $order = collect(DocumentType::contributionAttachments())
+            ->map(fn (DocumentType $t) => $t->value)
+            ->flip();
+
+        $requirements = DocumentRequirement::activeFor()
+            ->sortBy(fn (DocumentRequirement $r) => $order[$r->document_type->value] ?? 99)
+            ->values();
+
         return view('applications.wizard.dokumen', [
             'application' => $application,
-            'step' => 4,
-            'requirements' => DocumentRequirement::activeFor($application->application_type),
+            'step' => 2,
+            'requirements' => $requirements,
+            'jpIncomplete' => \App\Support\JpReviewChecklist::latestIncompleteFor($application),
+            ...$this->programDateContext($application),
         ]);
     }
 
-    // ── Langkah 5 — Semakan ─────────────────────────────────────
-
+    /** Langkah 3 — Semak & hantar kepada JP. */
     public function semakan(Application $application, ApplicationSubmissionService $submission): View|RedirectResponse
     {
         if ($redirect = $this->ensureDraft($application, 'view')) {
@@ -128,17 +107,17 @@ class ApplicationWizardController extends Controller
         }
         $this->authorize('update', $application);
 
-        $application->load(['budgetItems', 'documents', 'financialYear', 'alp']);
+        $application->load(['documents', 'financialYear', 'alp', 'reviews']);
 
         return view('applications.wizard.semakan', [
             'application' => $application,
-            'step' => 5,
+            'step' => 3,
             'position' => $this->budgetPosition($application),
             'missingDocuments' => $submission->missingRequiredDocuments($application),
+            'jpIncomplete' => \App\Support\JpReviewChecklist::latestIncompleteFor($application),
+            ...$this->programDateContext($application),
         ]);
     }
-
-    // ── Langkah 6 — Hantar ──────────────────────────────────────
 
     public function hantar(Application $application, ApplicationSubmissionService $submission): RedirectResponse
     {
@@ -156,12 +135,15 @@ class ApplicationWizardController extends Controller
         }
 
         return redirect()->route('applications.show', $application)
-            ->with('status', 'Permohonan '.$application->application_number.($isRevision ? ' berjaya dihantar semula.' : ' berjaya dihantar.'));
+            ->with('status', 'Permohonan '.$application->application_number.(
+                $isRevision
+                    ? ' berjaya dihantar semula kepada Jabatan Pentadbiran.'
+                    : (request()->user()->canCreateApplicationOnBehalf()
+                        ? ' berjaya dihantar kepada Pegawai JP.'
+                        : ' berjaya dihantar kepada Jabatan Pentadbiran.')
+            ));
     }
 
-    // ── Bantuan ─────────────────────────────────────────────────
-
-    /** Jika bukan draf, alihkan ke halaman butiran (baca sahaja). */
     private function ensureDraft(Application $application, string $ability): ?RedirectResponse
     {
         $this->authorize($ability, $application);
@@ -174,24 +156,39 @@ class ApplicationWizardController extends Controller
         return null;
     }
 
-    /** Kedudukan bajet untuk paparan (semua nilai Money, tepat). */
     private function budgetPosition(Application $application): array
     {
         $summary = $this->budget->summaryFor($application->alp_id, $application->financial_year_id);
         $ledgerAvailable = $summary->available();
         $otherPending = $this->appBudget->pendingRequest($application->alp_id, $application->financial_year_id, $application->id);
-        $thisRequest = $application->budgetItemsTotal();
+        $thisRequest = $application->requestedAmountMoney();
         $availableForNew = $ledgerAvailable->minus($otherPending);
         $balanceAfter = $availableForNew->minus($thisRequest);
 
         return [
-            'summary' => $summary,               // BudgetSummary: allocation/committed/spent
+            'summary' => $summary,
             'ledger_available' => $ledgerAvailable,
             'other_pending' => $otherPending,
             'this_request' => $thisRequest,
             'available_for_new' => $availableForNew,
             'balance_after' => $balanceAfter,
             'sufficient' => ! $thisRequest->greaterThan($availableForNew),
+        ];
+    }
+
+    /** @return array{programDateMin: string, programDateSubmitErrors: list<string>, waiveProgramLeadTime: bool} */
+    private function programDateContext(Application $application): array
+    {
+        $waive = request()->user()?->canWaiveProgramLeadTime() ?? false;
+
+        return [
+            'programDateMin' => $waive
+                ? now()->toDateString()
+                : UrsContributionPolicy::minimumProgramDate()->format('Y-m-d'),
+            'programDateSubmitErrors' => $waive
+                ? []
+                : UrsContributionPolicy::programDateSubmitErrors($application->program_date),
+            'waiveProgramLeadTime' => $waive,
         ];
     }
 }

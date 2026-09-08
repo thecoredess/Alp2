@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Semakan — '.$application->application_number)
 @section('heading', $reviewType->label())
-@section('subheading', $application->application_number.' · '.$application->project_title)
+@section('subheading', $application->application_number.' · '.($application->recipient_name ?? $application->purpose))
 
 @php
     $ledgerAvailable = $summary->available();
@@ -9,160 +9,209 @@
 @endphp
 
 @section('content')
-    <div class="mb-5">
-        <a href="{{ route('reviews.'.$reviewType->value) }}" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
-            <x-icon name="arrow-left" class="h-4 w-4" /> Kembali ke giliran
-        </a>
-    </div>
+    <x-page-shell>
+        <div class="mb-5">
+            <a href="{{ route('reviews.'.$reviewType->value) }}" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+                <x-icon name="arrow-left" class="h-4 w-4" /> Kembali ke giliran
+            </a>
+        </div>
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div class="lg:col-span-2 space-y-4">
-            {{-- Ringkasan --}}
-            <div class="card p-6">
-                <h3 class="mb-3 text-sm font-semibold text-gray-900">Maklumat Permohonan</h3>
-                <dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-                    <div><dt class="text-gray-500">ALP</dt><dd class="text-gray-900">{{ $application->alp->ref_code }} — {{ $application->alp->name }}</dd></div>
-                    <div><dt class="text-gray-500">Jenis</dt><dd class="text-gray-900">{{ $application->application_type->label() }}</dd></div>
-                    <div class="sm:col-span-2"><dt class="text-gray-500">Objektif</dt><dd class="text-gray-900 whitespace-pre-line">{{ $application->objectives ?? '—' }}</dd></div>
-                    <div class="sm:col-span-2"><dt class="text-gray-500">Skop</dt><dd class="text-gray-900 whitespace-pre-line">{{ $application->scope ?? '—' }}</dd></div>
-                    <div><dt class="text-gray-500">Lokasi</dt><dd class="text-gray-900">{{ $application->location ?? '—' }}</dd></div>
-                    <div><dt class="text-gray-500">Jumlah Dipohon</dt><dd class="font-semibold text-navy-700"><x-money :value="$application->requested_amount" /></dd></div>
-                </dl>
-            </div>
-
-            {{-- Bajet --}}
-            <div class="card overflow-x-auto">
-                <div class="px-4 pt-4 text-sm font-semibold text-gray-900">Pecahan Bajet</div>
-                <table class="mt-2 min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50"><tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        <th class="px-4 py-2">Item</th><th class="px-4 py-2 text-right">Qty</th><th class="px-4 py-2 text-right">Harga</th><th class="px-4 py-2 text-right">Jumlah</th>
-                    </tr></thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @foreach ($application->budgetItems as $item)
-                            <tr><td class="px-4 py-2 text-gray-900">{{ $item->description }}</td>
-                            <td class="px-4 py-2 text-right text-gray-600">{{ $item->quantity }}</td>
-                            <td class="px-4 py-2 text-right text-gray-600"><x-money :value="$item->unit_cost" /></td>
-                            <td class="px-4 py-2 text-right font-medium"><x-money :value="$item->total" /></td></tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- Dokumen --}}
-            <div class="card p-5">
-                <h3 class="mb-2 text-sm font-semibold text-gray-900">Dokumen</h3>
-                @forelse ($application->documents as $doc)
-                    <div class="flex justify-between py-1 text-sm">
-                        <span class="text-gray-700">{{ $doc->document_type->label() }} — {{ $doc->original_filename }}</span>
-                        <a href="{{ route('applications.documents.download', [$application, $doc]) }}" class="text-royal-600 hover:text-royal-700 text-xs font-medium">Muat Turun</a>
-                    </div>
-                @empty
-                    <p class="text-sm text-gray-400">Tiada dokumen.</p>
-                @endforelse
-            </div>
-
-            {{-- Sejarah semakan --}}
-            @if ($application->reviews->isNotEmpty())
-                <div class="card p-5">
-                    <h3 class="mb-2 text-sm font-semibold text-gray-900">Sejarah Semakan</h3>
-                    @foreach ($application->reviews as $r)
-                        <div class="border-b border-gray-100 py-2 text-sm last:border-0">
-                            <div class="flex justify-between">
-                                <span class="font-medium text-gray-800">{{ $r->review_type->label() }}</span>
-                                <x-status-badge :label="$r->decision->label()" :classes="$r->decision->badgeClasses()" />
-                            </div>
-                            <p class="text-xs text-gray-500">{{ $r->reviewed_at?->format('d/m/Y H:i') }} · {{ $r->reviewer?->name }} · Pusingan {{ $r->revision_number }}</p>
-                            @if ($r->comments)<p class="mt-1 text-gray-600">{{ $r->comments }}</p>@endif
-                            @if (is_array($r->checklist) && $r->checklist !== [])
-                                <ul class="mt-2 space-y-0.5 text-xs text-gray-500">
-                                    @foreach (\App\Support\JpReviewChecklist::items() as $ck => $clabel)
-                                        @if (isset($r->checklist[$ck]))
-                                            <li>
-                                                {{ $r->checklist[$ck] === 'lengkap' ? '✓' : '✗' }}
-                                                {{ $clabel }}
-                                            </li>
-                                        @endif
-                                    @endforeach
-                                </ul>
-                            @endif
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div class="space-y-4 lg:col-span-2">
+                <x-page-card title="Borang Penyaluran Sumbangan" icon="clipboard">
+                    <dl class="flex flex-col gap-4">
+                        <div class="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">a) Nama ALP</dt>
+                            <dd class="mt-1.5 font-medium text-gray-900">
+                                @can('applications.view_all')
+                                    <a href="{{ route('applications.all', ['alp' => $application->alp_id, 'status' => \App\Enums\ApplicationStatus::APPROVED->value, 'tahun' => $application->financial_year_id]) }}"
+                                       class="text-royal-700 hover:text-royal-800 hover:underline"
+                                       title="Senarai permohonan diluluskan {{ $application->alp->ref_code }}">
+                                        {{ $application->alp->ref_code }} — {{ $application->alp->name }}
+                                    </a>
+                                @else
+                                    {{ $application->alp->ref_code }} — {{ $application->alp->name }}
+                                @endcan
+                            </dd>
                         </div>
-                    @endforeach
-                </div>
-            @endif
-        </div>
+                        <div class="rounded-xl border border-gray-100 p-4">
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">b) Nama Persatuan</dt>
+                            <dd class="mt-1.5 font-medium text-gray-900">{{ $application->recipient_name ?? '—' }}</dd>
+                        </div>
+                        <div class="rounded-xl border border-gray-100 p-4">
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">c) No. ROS</dt>
+                            <dd class="mt-1.5 font-mono font-medium text-gray-900">{{ $application->recipient_ros_number ?? '—' }}</dd>
+                        </div>
+                        <div class="rounded-xl border border-gray-100 p-4">
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">d) Tarikh Program</dt>
+                            <dd class="mt-1.5 font-medium text-gray-900">{{ $application->program_date?->format('d/m/Y') ?? '—' }}</dd>
+                        </div>
+                        <div class="rounded-xl border border-gray-100 p-4">
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">e) Jenis/Kategori Program</dt>
+                            <dd class="mt-1.5 font-medium text-gray-900">{{ $application->program_category?->label() ?? '—' }}</dd>
+                        </div>
+                        <div class="rounded-xl border border-royal-100 bg-gradient-to-br from-royal-50 to-navy-50 p-4">
+                            <dt class="text-xs font-medium uppercase tracking-wide text-royal-600">f) Jumlah Sumbangan</dt>
+                            <dd class="mt-1 text-2xl font-bold text-navy-700"><x-money :value="$application->requested_amount" /></dd>
+                        </div>
+                        <div class="rounded-xl border border-gray-100 p-4">
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">g) Tujuan</dt>
+                            <dd class="mt-1.5 whitespace-pre-line text-gray-900">{{ $application->purpose ?? '—' }}</dd>
+                        </div>
+                        <div class="rounded-xl border border-gray-100 p-4">
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">h) No. Akaun</dt>
+                            <dd class="mt-1.5 font-mono font-medium text-gray-900">{{ $application->recipient_bank_account ?? '—' }}</dd>
+                        </div>
+                        <div class="rounded-xl border border-gray-100 p-4">
+                            <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">i) Alamat Persatuan</dt>
+                            <dd class="mt-1.5 whitespace-pre-line text-gray-900">{{ $application->recipient_address ?? '—' }}</dd>
+                        </div>
+                    </dl>
+                </x-page-card>
 
-        {{-- Panel kanan: kedudukan kewangan + borang --}}
-        <div class="space-y-4">
-            <div class="card p-5">
-                <h3 class="mb-3 text-sm font-semibold text-gray-900">Kedudukan Kewangan</h3>
-                <dl class="space-y-2 text-sm">
-                    <div class="flex justify-between"><dt class="text-gray-500">Peruntukan</dt><dd class="font-medium text-navy-700"><x-money :value="$summary->allocation" /></dd></div>
-                    <div class="flex justify-between"><dt class="text-gray-500">Pending Lain</dt><dd class="text-orange-600"><x-money :value="$otherPending" /></dd></div>
-                    <div class="flex justify-between"><dt class="text-gray-500">Permohonan Ini</dt><dd class="text-gray-900"><x-money :value="$thisRequest" /></dd></div>
-                    <div class="flex justify-between"><dt class="text-gray-500">Committed</dt><dd class="text-amber-600"><x-money :value="$summary->committed" /></dd></div>
-                    <div class="flex justify-between"><dt class="text-gray-500">Spent</dt><dd class="text-purple-600"><x-money :value="$summary->spent" /></dd></div>
-                    <div class="flex justify-between border-t border-gray-100 pt-2"><dt class="font-medium text-gray-600">Ledger Available</dt><dd class="font-semibold text-green-600"><x-money :value="$ledgerAvailable" /></dd></div>
-                    <div class="flex justify-between"><dt class="text-gray-500">Projected Available</dt><dd class="font-semibold {{ $projected->isNegative() ? 'text-danger' : 'text-green-600' }}"><x-money :value="$projected" /></dd></div>
-                </dl>
-                <p class="mt-2 text-[11px] text-gray-400">Ledger Available = Peruntukan − Committed − Spent. Projected = Ledger Available − Pending − Permohonan Ini.</p>
-            </div>
-
-            <div class="card p-5">
-                <h3 class="mb-3 text-sm font-semibold text-gray-900">Keputusan {{ $reviewType->label() }}</h3>
-                <form method="POST" action="{{ route('reviews.store', [$application, $reviewType->value]) }}" class="space-y-4">
-                    @csrf
-
-                    <div>
-                        <p class="mb-2 text-sm font-medium text-gray-800">Senarai Semak JP <span class="text-danger">*</span></p>
-                        <p class="mb-3 text-[11px] text-gray-500">UR-M04-001: tandakan setiap item. Hantar ke perakuan hanya jika semua <strong>Lengkap</strong>.</p>
-                        @error('checklist')
-                            <p class="mb-2 text-xs text-danger">{{ $message }}</p>
-                        @enderror
-                        <ul class="space-y-3">
-                            @foreach ($checklistItems as $key => $label)
-                                @php
-                                    $hint = $checklistHints[$key] ?? null;
-                                    $oldVal = old('checklist.'.$key, ($hint['ok'] ?? false) ? 'lengkap' : '');
-                                @endphp
-                                <li class="rounded-lg border border-gray-100 bg-gray-50/80 p-3">
-                                    <p class="text-sm text-gray-800">{{ $label }}</p>
-                                    @if ($hint)
-                                        <p class="mt-1 text-[11px] {{ $hint['ok'] ? 'text-green-700' : 'text-amber-700' }}">
-                                            Petunjuk sistem: {{ $hint['note'] }}
-                                        </p>
-                                    @endif
-                                    <div class="mt-2 flex gap-4 text-sm">
-                                        <label class="inline-flex items-center gap-1.5">
-                                            <input type="radio" name="checklist[{{ $key }}]" value="lengkap" class="text-royal-600" @checked($oldVal === 'lengkap') required>
-                                            Lengkap
-                                        </label>
-                                        <label class="inline-flex items-center gap-1.5">
-                                            <input type="radio" name="checklist[{{ $key }}]" value="tidak_lengkap" class="text-royal-600" @checked($oldVal === 'tidak_lengkap')>
-                                            Tidak lengkap
-                                        </label>
+                <x-page-card title="Lampiran" icon="paper-clip">
+                    @if ($application->documents->isEmpty())
+                        <p class="text-sm text-gray-400">Tiada lampiran.</p>
+                    @else
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            @foreach ($application->documents as $doc)
+                                <div class="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50/80 px-4 py-3 text-sm">
+                                    <div class="min-w-0">
+                                        <p class="font-medium text-gray-900">{{ $doc->document_type->simpleLabel() }}</p>
+                                        <p class="truncate text-xs text-gray-500" title="{{ $doc->original_filename }}">{{ $doc->original_filename }}</p>
                                     </div>
-                                    @error('checklist.'.$key)
-                                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
-                                    @enderror
-                                </li>
+                                    <a href="{{ route('applications.documents.view', [$application, $doc]) }}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="btn-white shrink-0 !px-3 !py-2 text-xs">
+                                        Lihat
+                                    </a>
+                                </div>
                             @endforeach
-                        </ul>
-                    </div>
+                        </div>
+                    @endif
+                </x-page-card>
 
-                    <x-field label="Keputusan" name="decision" :required="true">
-                        <select name="decision" class="inp" required>
-                            @foreach (\App\Enums\ReviewDecision::cases() as $d)
-                                <option value="{{ $d->value }}" @selected(old('decision') === $d->value)>{{ $d->label() }}</option>
+                @if ($application->reviews->isNotEmpty())
+                    <x-page-card title="Sejarah Semakan" icon="clock">
+                        <div class="space-y-3">
+                            @foreach ($application->reviews as $r)
+                                <div class="rounded-xl border border-gray-100 bg-gray-50/50 p-4 text-sm">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <span class="font-medium text-gray-900">{{ $r->review_type->label() }}</span>
+                                        <x-status-badge :label="$r->decision->label()" :classes="$r->decision->badgeClasses()" />
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        {{ $r->reviewed_at?->format('d/m/Y H:i') }} · {{ $r->reviewer?->name }} · Pusingan {{ $r->revision_number }}
+                                    </p>
+                                    @if ($r->comments)
+                                        <p class="mt-2 text-gray-600">{{ $r->comments }}</p>
+                                    @endif
+                                    @if (is_array($r->checklist) && $r->checklist !== [])
+                                        <ul class="mt-2 space-y-1 text-xs text-gray-500">
+                                            @foreach (\App\Support\JpReviewChecklist::items() as $ck => $clabel)
+                                                @if (isset($r->checklist[$ck]))
+                                                    <li>{{ $r->checklist[$ck] === 'lengkap' ? '✓' : '✗' }} {{ $clabel }}</li>
+                                                @endif
+                                            @endforeach
+                                        </ul>
+                                    @endif
+                                </div>
                             @endforeach
-                        </select>
-                    </x-field>
-                    <x-field label="Ulasan / Catatan" name="comments" hint="Wajib jika bukan 'Disyorkan'.">
-                        <textarea name="comments" rows="4" class="inp">{{ old('comments') }}</textarea>
-                    </x-field>
-                    <button class="btn-navy w-full">Hantar Keputusan</button>
-                </form>
-                <p class="mt-2 text-[11px] text-gray-400">Semakan Pegawai JP adalah nasihat — kelulusan formal oleh Peraku / PEPU. Semakan ini TIDAK mencipta komitmen bajet.</p>
+                        </div>
+                    </x-page-card>
+                @endif
+            </div>
+
+            <div class="space-y-4">
+                <x-page-card title="Kedudukan Kewangan" icon="wallet" description="{{ $application->alp->ref_code }} · {{ $application->financialYear?->year ?? '—' }}">
+                    @include('reviews.partials.alp-budget-detail')
+                </x-page-card>
+
+                <x-page-card
+                    title="{{ $fullJpDecision ? 'Keputusan Semakan Admin JP' : 'Perakuan Pegawai JP' }}"
+                    description="{{ $fullJpDecision ? 'UR-M04-001 · Keputusan penuh Admin JP' : 'Syor kepada Pengarah JP (Peraku)' }}"
+                >
+                    <div x-data="{ act: '{{ old('decision', $fullJpDecision ? '' : 'recommend') }}' }" class="space-y-5">
+                        <form method="POST" action="{{ route('reviews.store', [$application, $reviewType->value]) }}" class="space-y-5">
+                            @csrf
+
+                            @if ($fullJpDecision)
+                                <div>
+                                    <p class="mb-3 text-sm font-medium text-gray-800">Senarai Semak JP <span class="text-danger">*</span></p>
+                                    @error('checklist')
+                                        <p class="mb-2 text-xs text-danger">{{ $message }}</p>
+                                    @enderror
+                                    <ul class="space-y-3">
+                                        @foreach ($checklistItems as $key => $label)
+                                            @php
+                                                $hint = $checklistHints[$key] ?? null;
+                                                $oldVal = old('checklist.'.$key, ($hint['ok'] ?? false) ? 'lengkap' : '');
+                                            @endphp
+                                            <li class="rounded-xl border border-gray-100 p-4">
+                                                <p class="text-sm font-medium text-gray-900">{{ $label }}</p>
+                                                @if ($hint)
+                                                    <p class="mt-1 text-xs {{ $hint['ok'] ? 'text-green-700' : 'text-amber-700' }}">
+                                                        Petunjuk sistem: {{ $hint['note'] }}
+                                                    </p>
+                                                @endif
+                                                <div class="mt-3 flex gap-4 text-sm">
+                                                    <label class="inline-flex items-center gap-1.5">
+                                                        <input type="radio" name="checklist[{{ $key }}]" value="lengkap" class="text-royal-600" @checked($oldVal === 'lengkap') required>
+                                                        Lengkap
+                                                    </label>
+                                                    <label class="inline-flex items-center gap-1.5">
+                                                        <input type="radio" name="checklist[{{ $key }}]" value="tidak_lengkap" class="text-royal-600" @checked($oldVal === 'tidak_lengkap')>
+                                                        Tidak lengkap
+                                                    </label>
+                                                </div>
+                                                @error('checklist.'.$key)
+                                                    <p class="mt-1 text-xs text-danger">{{ $message }}</p>
+                                                @enderror
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+
+                                <x-field label="Keputusan" name="decision" :required="true">
+                                    <select name="decision" class="inp" required x-model="act">
+                                        <option value="">— Pilih —</option>
+                                        @foreach (\App\Enums\ReviewDecision::cases() as $d)
+                                            <option value="{{ $d->value }}" @selected(old('decision') === $d->value)>{{ $d->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                </x-field>
+
+                                <x-field label="Ulasan / Catatan" name="comments" hint="Wajib jika bukan 'Disyorkan'.">
+                                    <textarea name="comments" rows="4" class="inp">{{ old('comments') }}</textarea>
+                                </x-field>
+
+                                <button type="submit" class="btn-navy w-full">Hantar Keputusan</button>
+                            @else
+                                <input type="hidden" name="decision" :value="act">
+
+                                <div class="flex gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1 text-sm">
+                                    <button type="button" @click="act='recommend'" :class="act==='recommend' ? 'bg-navy-700 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'" class="flex-1 rounded-lg px-2 py-2 font-medium transition">Syor kepada Pengarah JP</button>
+                                    <button type="button" @click="act='return_for_revision'" :class="act==='return_for_revision' ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'" class="flex-1 rounded-lg px-2 py-2 font-medium transition">Kembalikan</button>
+                                </div>
+
+                                <x-field label="Ulasan" name="comments" hint="Catatan perakuan untuk Pengarah JP. Wajib jika kembalikan.">
+                                    <textarea name="comments" rows="4" class="inp" placeholder="Ulasan / catatan syor kepada Pengarah JP">{{ old('comments') }}</textarea>
+                                </x-field>
+
+                                <button type="submit" class="btn-navy w-full" x-text="act === 'return_for_revision' ? 'Kembalikan Untuk Pembetulan' : 'Syor kepada Pengarah JP'"></button>
+                            @endif
+                        </form>
+                    </div>
+                    <p class="mt-3 text-xs text-gray-400">
+                        @if ($fullJpDecision)
+                            Keputusan Admin JP bersifat nasihat — kelulusan formal oleh Peraku / PEPU. Semakan ini tidak mencipta komitmen bajet.
+                        @else
+                            Pegawai JP menghantar perakuan dan ulasan kepada Pengarah JP (Peraku). Tiada penandaan lengkap / tidak lengkap pada peringkat ini.
+                        @endif
+                    </p>
+                </x-page-card>
             </div>
         </div>
-    </div>
+    </x-page-shell>
 @endsection

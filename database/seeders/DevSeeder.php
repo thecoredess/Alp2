@@ -74,7 +74,7 @@ class DevSeeder extends Seeder
         $this->makeUser('Pegawai Kewangan', 'kewangan@dbkl.test', RoleName::PEGAWAI_KEWANGAN);
         $this->makeUser('Pegawai JKEW', 'jkew@dbkl.test', RoleName::PEGAWAI_JKEW);
         $this->makeUser('Pegawai Teknikal', 'teknikal@dbkl.test', RoleName::PEGAWAI_TEKNIKAL);
-        $this->makeUser('Pelulus', 'pelulus@dbkl.test', RoleName::PELULUS);
+        $this->makeUser('TP / Pengarah JP', 'pelulus@dbkl.test', RoleName::PELULUS);
         $this->makeUser('Pengurusan DBKL', 'pengurusan@dbkl.test', RoleName::PENGURUSAN);
 
         // 4. Peruntukan contoh MELALUI aliran maker-checker (governance) — DEV DATA.
@@ -83,7 +83,7 @@ class DevSeeder extends Seeder
         $checker = User::where('email', 'pelulus@dbkl.test')->first();
         $requestService = app(\App\Services\Budget\BudgetRequestService::class);
         $approvalService = app(\App\Services\Budget\BudgetRequestApprovalService::class);
-        $amounts = ['ALP-01' => '500000.00', 'ALP-02' => '500000.00', 'ALP-03' => '300000.00'];
+        $amounts = ['ALP-01' => '30000.00', 'ALP-02' => '30000.00', 'ALP-03' => '30000.00'];
 
         foreach ($alps as $alp) {
             $exists = \App\Models\Allocation::where('alp_id', $alp->id)
@@ -97,26 +97,12 @@ class DevSeeder extends Seeder
                 'request_type' => \App\Enums\BudgetRequestType::INITIAL_ALLOCATION,
                 'alp_id' => $alp->id,
                 'financial_year_id' => $year->id,
-                'amount' => $amounts[$alp->ref_code] ?? '300000.00',
+                'amount' => $amounts[$alp->ref_code] ?? '30000.00',
                 'reference_number' => "DBKL/BGT/{$year->year}/".str_pad((string) $alp->id, 4, '0', STR_PAD_LEFT),
-                'reason' => 'Peruntukan tahunan (data pembangunan)',
+                'reason' => 'Peruntukan tahunan URS (RM30,000)',
             ]);
             $requestService->submit($req, $maker);
             $approvalService->approve($req->fresh(), $checker);
-
-            // Contoh pelarasan (tambah RM50,000) untuk ALP-02, melalui aliran yang sama.
-            if ($alp->ref_code === 'ALP-02') {
-                $adj = $requestService->createDraft($maker, [
-                    'request_type' => \App\Enums\BudgetRequestType::ALLOCATION_INCREASE,
-                    'alp_id' => $alp->id,
-                    'financial_year_id' => $year->id,
-                    'amount' => '50000.00',
-                    'reference_number' => "DBKL/BGT/{$year->year}/PIND/0001",
-                    'reason' => 'Tambahan peruntukan (contoh)',
-                ]);
-                $requestService->submit($adj, $maker);
-                $approvalService->approve($adj->fresh(), $checker);
-            }
         }
 
         // 5. Permohonan contoh (data pembangunan) untuk ALP-01.
@@ -149,17 +135,13 @@ class DevSeeder extends Seeder
                 'financial_year_id' => $year->id,
                 'alp_id' => $alp->id,
                 'application_type' => \App\Enums\ApplicationType::CSR,
-                'project_title' => 'Program Pendidikan Komuniti (Diluluskan)',
-                'project_summary' => 'Program pendidikan untuk komuniti setempat.',
-                'objectives' => 'Meningkatkan literasi.',
-                'scope' => 'Kelas & bahan.',
-                'target_group' => 'Pelajar',
-                'location' => 'Zon Tengah',
+                'purpose' => 'Program Pendidikan Komuniti (Diluluskan)',
+                'recipient_name' => 'Persatuan Pendidikan Komuniti',
+                'recipient_bank_account' => '1000000001',
+                'requested_amount' => '40000.00',
                 'status' => \App\Enums\ApplicationStatus::APPROVED,
                 'submitted_at' => now()->subDays(3),
             ]);
-            $app->budgetItems()->create(['description' => 'Bahan pembelajaran', 'quantity' => 1, 'unit' => 'pakej', 'unit_cost' => '40000.00', 'total' => '40000.00', 'sort_order' => 1]);
-            $app->recalculateRequestedAmount(); // 40,000.00
 
             \App\Models\ApplicationStatusHistory::create([
                 'application_id' => $app->id,
@@ -270,12 +252,12 @@ class DevSeeder extends Seeder
             $app = \App\Models\Application::create([
                 'application_number' => $numbers->next($type, $year->year),
                 'financial_year_id' => $year->id, 'alp_id' => $alp->id, 'application_type' => $type,
-                'project_title' => $title, 'project_summary' => 'Data pembangunan untuk pelaporan.',
-                'objectives' => 'Objektif contoh.', 'scope' => 'Skop contoh.', 'target_group' => 'Komuniti',
-                'location' => $alp->portfolio_zone, 'status' => \App\Enums\ApplicationStatus::APPROVED, 'submitted_at' => now()->subDays(20),
+                'purpose' => $title,
+                'recipient_name' => 'Persatuan '.$title,
+                'recipient_bank_account' => '10000000'.str_pad((string) $alp->id, 2, '0', STR_PAD_LEFT),
+                'requested_amount' => $amount,
+                'status' => \App\Enums\ApplicationStatus::APPROVED, 'submitted_at' => now()->subDays(20),
             ]);
-            $app->budgetItems()->create(['description' => 'Kos projek', 'quantity' => 1, 'unit' => 'projek', 'unit_cost' => $amount, 'total' => $amount, 'sort_order' => 1]);
-            $app->recalculateRequestedAmount();
             \App\Models\ApplicationStatusHistory::create(['application_id' => $app->id, 'from_status' => \App\Enums\ApplicationStatus::PENDING_APPROVAL->value, 'to_status' => \App\Enums\ApplicationStatus::APPROVED->value, 'remarks' => 'Diluluskan (dev)', 'created_at' => now()]);
 
             $project = app(\App\Services\Project\ProjectCreationService::class)->createFromApproved($app->fresh());
@@ -363,15 +345,12 @@ class DevSeeder extends Seeder
                 'financial_year_id' => $year->id,
                 'alp_id' => $alp->id,
                 'application_type' => \App\Enums\ApplicationType::DEVELOPMENT,
-                'project_title' => 'Naik Taraf Dewan Komuniti (Draf)',
-                'project_summary' => 'Cadangan menaik taraf kemudahan dewan komuniti.',
-                'objectives' => 'Meningkatkan kemudahan awam.',
-                'scope' => 'Kerja pembaikan dan naik taraf.',
-                'location' => 'PPR Seri Murni',
+                'purpose' => 'Naik Taraf Dewan Komuniti (Draf)',
+                'recipient_name' => 'Persatuan Penduduk PPR Seri Murni',
+                'recipient_bank_account' => '1000000099',
+                'requested_amount' => '60000.00',
                 'status' => \App\Enums\ApplicationStatus::DRAFT,
             ]);
-            $draft->budgetItems()->create(['description' => 'Kerja pembinaan', 'quantity' => 1, 'unit' => 'projek', 'unit_cost' => '60000.00', 'total' => '60000.00', 'sort_order' => 1]);
-            $draft->recalculateRequestedAmount();
         });
 
         // SUBMITTED — CSR (menjadi Pending Request RM85,000).
@@ -381,19 +360,13 @@ class DevSeeder extends Seeder
                 'financial_year_id' => $year->id,
                 'alp_id' => $alp->id,
                 'application_type' => \App\Enums\ApplicationType::CSR,
-                'project_title' => 'Program Komuniti PPR Seri Murni',
-                'project_summary' => 'Program kebajikan komuniti setempat.',
-                'objectives' => 'Membantu golongan sasaran.',
-                'scope' => 'Program sehari.',
-                'target_group' => 'Penduduk PPR',
-                'location' => 'PPR Seri Murni',
+                'purpose' => 'Program Komuniti PPR Seri Murni',
+                'recipient_name' => 'Persatuan Penduduk PPR Seri Murni',
+                'recipient_bank_account' => '1000000098',
+                'requested_amount' => '85000.00',
                 'status' => \App\Enums\ApplicationStatus::SUBMITTED,
                 'submitted_at' => now(),
             ]);
-            $app->budgetItems()->create(['description' => 'Khemah', 'quantity' => 10, 'unit' => 'unit', 'unit_cost' => '500.00', 'total' => '5000.00', 'sort_order' => 1]);
-            $app->budgetItems()->create(['description' => 'Makanan', 'quantity' => 500, 'unit' => 'pax', 'unit_cost' => '20.00', 'total' => '10000.00', 'sort_order' => 2]);
-            $app->budgetItems()->create(['description' => 'Logistik & lain-lain', 'quantity' => 1, 'unit' => 'pakej', 'unit_cost' => '70000.00', 'total' => '70000.00', 'sort_order' => 3]);
-            $app->recalculateRequestedAmount(); // 85,000.00
             \App\Models\ApplicationStatusHistory::create([
                 'application_id' => $app->id,
                 'from_status' => \App\Enums\ApplicationStatus::DRAFT->value,

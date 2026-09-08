@@ -15,14 +15,24 @@ class ForcePasswordChangeTest extends TestCase
         $user = User::factory()->create(['must_change_password' => true]);
 
         $this->actingAs($user)->get(route('dashboard'))
-            ->assertRedirect(route('password.change'));
+            ->assertRedirect(route('profile.edit').'#kata-laluan');
     }
 
-    public function test_user_can_reach_change_password_page_while_flagged(): void
+    public function test_user_can_reach_profile_page_while_flagged(): void
     {
         $user = User::factory()->create(['must_change_password' => true]);
 
-        $this->actingAs($user)->get(route('password.change'))->assertOk();
+        $this->actingAs($user)->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('Tukar Kata Laluan');
+    }
+
+    public function test_old_password_url_redirects_to_profile(): void
+    {
+        $user = User::factory()->create(['must_change_password' => true]);
+
+        $this->actingAs($user)->get(route('password.change'))
+            ->assertRedirect(route('profile.edit').'#kata-laluan');
     }
 
     public function test_changing_password_clears_the_flag(): void
@@ -36,7 +46,7 @@ class ForcePasswordChangeTest extends TestCase
             'current_password' => 'oldpass123',
             'password' => 'newpass456',
             'password_confirmation' => 'newpass456',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect(route('profile.edit').'#kata-laluan');
 
         $this->assertFalse($user->fresh()->must_change_password);
     }

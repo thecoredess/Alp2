@@ -71,6 +71,7 @@ final class Permissions
             ],
             'Permohonan' => [
                 'applications.create',    // ALP / Urus Setia ALP mencipta permohonan sendiri
+                'applications.create_on_behalf', // Admin JP isi borang bagi pihak ALP
                 'applications.view_all',  // staf DBKL melihat semua permohonan
             ],
             'Semakan & Kelulusan' => [
@@ -158,6 +159,10 @@ final class Permissions
                 // URS v1.2: Admin JP set peruntukan terus (Fasa 7.12).
                 'allocations.view', 'budget.view_all', 'allocations.manage',
                 'applications.view_all',
+                // Admin JP boleh isi Borang Penyaluran bagi pihak ALP (termasuk notis pendek < 2 bulan).
+                'applications.create_on_behalf',
+                // Keputusan Semakan JP (Disyorkan / Tidak Disyorkan / Pulangkan).
+                'applications.review.secretariat',
                 'approval_matrix.view', 'approval_matrix.manage',
                 'projects.view_all',
                 'expenses.documents.view', 'refunds.view', 'projects.closure-documents.view',

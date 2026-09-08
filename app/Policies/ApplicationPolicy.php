@@ -29,19 +29,30 @@ class ApplicationPolicy
         return $user->alp_id !== null && $user->alp_id === $application->alp_id;
     }
 
-    /** Cipta permohonan: mesti dikaitkan dengan ALP (ALP / Urus Setia ALP). */
+    /** Cipta permohonan: ALP sendiri, atau Admin JP bagi pihak ALP. */
     public function create(User $user): bool
     {
+        if ($user->canCreateApplicationOnBehalf()) {
+            return true;
+        }
+
         return $user->can('applications.create') && $user->alp_id !== null;
     }
 
-    /** Sunting draf: pemilik sahaja & masih DRAFT. */
+    /** Sunting draf: pemilik ALP, atau Admin JP (bagi pihak). */
     public function update(User $user, Application $application): bool
     {
+        if (! $application->isEditableByOwner()) {
+            return false;
+        }
+
+        if ($user->canCreateApplicationOnBehalf()) {
+            return true;
+        }
+
         return $user->can('applications.create')
             && $user->alp_id !== null
-            && $user->alp_id === $application->alp_id
-            && $application->isEditableByOwner();
+            && $user->alp_id === $application->alp_id;
     }
 
     /** Hantar permohonan: sama seperti sunting draf. */

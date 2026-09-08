@@ -43,7 +43,7 @@ class ApplicationSubmissionService
 
             // Muat semula keadaan terkini dalam transaksi.
             $application->refresh();
-            $application->load(['financialYear', 'budgetItems']);
+            $application->load(['financialYear']);
 
             // (3) Mesti DRAFT.
             if (! $application->isDraft()) {
@@ -56,17 +56,10 @@ class ApplicationSubmissionService
                 throw new ApplicationException('Tahun kewangan tidak sah atau telah ditutup — permohonan tidak boleh dihantar.');
             }
 
-            // (5) Kira semula jumlah dipohon dengan tepat dari item bajet.
-            $total = Money::zero();
-            foreach ($application->budgetItems as $item) {
-                // Sahkan semula setiap item (kuantiti × harga seunit).
-                $expected = Money::of((string) $item->unit_cost)->times((int) $item->quantity);
-                $total = $total->plus($expected);
-            }
+            $total = $application->requestedAmountMoney();
 
-            // (6) Jumlah > 0.
             if (! $total->isPositive()) {
-                throw new ApplicationException('Jumlah dipohon mesti melebihi RM0.00. Sila tambah item bajet.');
+                throw new ApplicationException('Jumlah sumbangan mesti melebihi RM0.00.');
             }
 
             // (7) Dokumen wajib mesti lengkap.
@@ -95,6 +88,17 @@ class ApplicationSubmissionService
                 throw new ApplicationException($error);
             }
 
+            if ($user->canCreateApplicationOnBehalf()) {
+                $maxApp = UrsContributionPolicy::maxPerApplication();
+                if ($total->greaterThan($maxApp)) {
+                    throw new ApplicationException(sprintf(
+                        'Jumlah permohonan (RM%s) melebihi had maksimum setiap permohonan (RM%s).',
+                        $total->format(),
+                        $maxApp->format(),
+                    ));
+                }
+            }
+
             foreach (UrsContributionPolicy::validatePeriodQuota(
                 $total,
                 $application->alp_id,
@@ -105,12 +109,11 @@ class ApplicationSubmissionService
                 throw new ApplicationException($error);
             }
 
-            $this->assertUrsRecipientRules($application);
+            $this->assertBorangLengkap($application);
+            $this->assertProgramLeadTime($application, $user);
 
-            // (11-13) Snapshot jumlah & tukar status.
             $from = $application->status;
             $application->requested_amount = $total->value();
-            $application->is_short_notice = UrsContributionPolicy::isShortNotice($application->proposed_start_date);
             $application->status = ApplicationStatus::SUBMITTED;
             $application->submitted_at = now();
             $application->updated_by = $user->id;
@@ -122,7 +125,9 @@ class ApplicationSubmissionService
                 'from_status' => $from->value,
                 'to_status' => ApplicationStatus::SUBMITTED->value,
                 'changed_by' => $user->id,
-                'remarks' => 'Permohonan dihantar',
+                'remarks' => $user->canWaiveProgramLeadTime()
+                    ? 'Permohonan dihantar oleh Admin JP kepada Pegawai JP'
+                    : 'Permohonan dihantar',
                 'created_at' => now(),
             ]);
 
@@ -155,7 +160,7 @@ class ApplicationSubmissionService
                 ->first();
 
             $application->refresh();
-            $application->load(['financialYear', 'budgetItems']);
+            $application->load(['financialYear']);
 
             if ($application->status !== ApplicationStatus::REVISION_REQUIRED) {
                 throw new ApplicationException('Hanya permohonan berstatus Perlu Pembetulan boleh dihantar semula.');
@@ -166,13 +171,9 @@ class ApplicationSubmissionService
                 throw new ApplicationException('Tahun kewangan tidak sah atau telah ditutup.');
             }
 
-            // Kira semula & sahkan.
-            $total = Money::zero();
-            foreach ($application->budgetItems as $item) {
-                $total = $total->plus(Money::of((string) $item->unit_cost)->times((int) $item->quantity));
-            }
+            $total = $application->requestedAmountMoney();
             if (! $total->isPositive()) {
-                throw new ApplicationException('Jumlah dipohon mesti melebihi RM0.00.');
+                throw new ApplicationException('Jumlah sumbangan mesti melebihi RM0.00.');
             }
 
             $missing = $this->missingRequiredDocuments($application);
@@ -194,6 +195,17 @@ class ApplicationSubmissionService
                 throw new ApplicationException($error);
             }
 
+            if ($user->canCreateApplicationOnBehalf()) {
+                $maxApp = UrsContributionPolicy::maxPerApplication();
+                if ($total->greaterThan($maxApp)) {
+                    throw new ApplicationException(sprintf(
+                        'Jumlah permohonan (RM%s) melebihi had maksimum setiap permohonan (RM%s).',
+                        $total->format(),
+                        $maxApp->format(),
+                    ));
+                }
+            }
+
             foreach (UrsContributionPolicy::validatePeriodQuota(
                 $total,
                 $application->alp_id,
@@ -204,7 +216,8 @@ class ApplicationSubmissionService
                 throw new ApplicationException($error);
             }
 
-            $this->assertUrsRecipientRules($application);
+            $this->assertBorangLengkap($application);
+            $this->assertProgramLeadTime($application, $user);
 
             // Tandakan rekod revisi pusingan semasa sebagai dihantar semula.
             $application->revisions()
@@ -214,8 +227,7 @@ class ApplicationSubmissionService
 
             $from = $application->status;
             $application->requested_amount = $total->value();
-            $application->is_short_notice = UrsContributionPolicy::isShortNotice($application->proposed_start_date);
-            $application->revision_number = $application->revision_number + 1; // pusingan baharu
+            $application->revision_number = $application->revision_number + 1;
             $application->status = ApplicationStatus::SUBMITTED;
             $application->submitted_at = now();
             $application->updated_by = $user->id;
@@ -249,7 +261,7 @@ class ApplicationSubmissionService
      */
     public function missingRequiredDocuments(Application $application): \Illuminate\Support\Collection
     {
-        $required = DocumentRequirement::requiredFor($application->application_type);
+        $required = DocumentRequirement::requiredFor();
 
         // Normalkan kepada nilai string (pluck mungkin memulangkan enum atau string).
         $uploadedValues = $application->documents()->pluck('document_type')
@@ -259,67 +271,31 @@ class ApplicationSubmissionService
         return $required->reject(fn ($type) => in_array($type->value, $uploadedValues, true))->values();
     }
 
-    /**
-     * BR-008 / BR-009 / BR-010 / BR-012 / BR-023.
-     */
-    private function assertUrsRecipientRules(Application $application): void
+    /** Medan Borang Penyaluran mesti lengkap sebelum hantar kepada JP. */
+    private function assertBorangLengkap(Application $application): void
     {
-        if (blank($application->recipient_name) || blank($application->recipient_ros_number)) {
-            throw new ApplicationException('Maklumat penerima sumbangan (nama & no. ROS) wajib diisi sebelum hantar.');
+        if (blank($application->recipient_name)
+            || blank($application->recipient_ros_number)
+            || blank($application->program_date)
+            || blank($application->program_category)
+            || blank($application->recipient_bank_account)
+            || blank($application->recipient_address)
+            || blank($application->purpose)) {
+            throw new ApplicationException('Sila lengkapkan Borang Penyaluran: nama persatuan, no. ROS, tarikh program, kategori program, tujuan, no. akaun dan alamat persatuan.');
         }
 
-        if (blank($application->program_category)) {
-            throw new ApplicationException('Jenis program URS wajib dipilih sebelum hantar.');
-        }
-
-        if (blank($application->compliance_declared_at)) {
-            throw new ApplicationException(
-                'Sila sahkan deklarasi pematuhan (bukan kos pentadbiran/politik/perayaan/keagamaan — BR-012) sebelum hantar.'
-            );
-        }
-
-        if (! UrsContributionPolicy::isKualaLumpurAddress(
-            $application->recipient_address,
-            $application->location,
-        )) {
-            throw new ApplicationException(
-                'Alamat persatuan / lokasi program mesti di Kuala Lumpur (BR-010).'
-            );
-        }
-
-        $ros = trim((string) $application->recipient_ros_number);
         $this->recipients->syncFromApplication($application);
         $application->refresh();
+    }
 
-        $duplicateQuery = Application::query()
-            ->where('financial_year_id', $application->financial_year_id)
-            ->where('id', '!=', $application->id)
-            ->whereIn('status', [
-                ApplicationStatus::SUBMITTED->value,
-                ApplicationStatus::UNDER_SECRETARIAT_REVIEW->value,
-                ApplicationStatus::UNDER_FINANCE_REVIEW->value,
-                ApplicationStatus::UNDER_TECHNICAL_REVIEW->value,
-                ApplicationStatus::PENDING_APPROVAL->value,
-                ApplicationStatus::REVISION_REQUIRED->value,
-                ApplicationStatus::APPROVED->value,
-                ApplicationStatus::IN_PROGRESS->value,
-                ApplicationStatus::COMPLETED->value,
-                ApplicationStatus::CLOSED->value,
-            ]);
-
-        if ($application->recipient_id) {
-            $duplicateQuery->where(function ($q) use ($application, $ros) {
-                $q->where('recipient_id', $application->recipient_id)
-                    ->orWhereRaw('LOWER(TRIM(recipient_ros_number)) = ?', [mb_strtolower($ros)]);
-            });
-        } else {
-            $duplicateQuery->whereRaw('LOWER(TRIM(recipient_ros_number)) = ?', [mb_strtolower($ros)]);
+    private function assertProgramLeadTime(Application $application, User $user): void
+    {
+        if ($user->canWaiveProgramLeadTime()) {
+            return;
         }
 
-        if ($duplicateQuery->exists()) {
-            throw new ApplicationException(
-                'Persatuan dengan no. ROS ini telah mempunyai permohonan dalam tahun kewangan semasa (BR-009 / BR-023).'
-            );
+        foreach (UrsContributionPolicy::validateProgramLeadTimeForSubmission($application->program_date) as $error) {
+            throw new ApplicationException($error);
         }
     }
 }

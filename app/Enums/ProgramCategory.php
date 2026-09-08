@@ -14,9 +14,9 @@ enum ProgramCategory: string
     {
         return match ($this) {
             self::KOMUNITI => 'Program komuniti',
-            self::SUKAN => 'Sukan',
-            self::PENDIDIKAN => 'Pendidikan',
-            self::KEMASYARAKATAN => 'Aktiviti kemasyarakatan',
+            self::SUKAN => 'Program sukan',
+            self::PENDIDIKAN => 'Program pendidikan',
+            self::KEMASYARAKATAN => 'Program aktiviti kemasyarakatan',
         };
     }
 

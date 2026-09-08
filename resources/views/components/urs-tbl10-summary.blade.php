@@ -44,14 +44,14 @@
     <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Ringkasan TBL-10 (Borang Penyaluran)</p>
     <dl class="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
         <div><dt class="text-gray-500">A · ALP</dt><dd>{{ $application->alp?->name ?? '—' }}</dd></div>
-        <div><dt class="text-gray-500">B · Penerima</dt><dd>{{ $application->recipient_name ?? '—' }}</dd></div>
-        <div><dt class="text-gray-500">C · Jumlah</dt><dd class="font-semibold"><x-money :value="$application->requested_amount" /></dd></div>
-        <div><dt class="text-gray-500">D · Tujuan</dt><dd>{{ $application->project_title }}</dd></div>
-        <div><dt class="text-gray-500">E · No. Akaun</dt><dd class="font-mono text-xs">{{ $application->recipient_bank_account ?? '—' }}</dd></div>
-        <div><dt class="text-gray-500">O · No. ROS</dt><dd class="font-mono text-xs">{{ $application->recipient_ros_number ?? '—' }}</dd></div>
-        <div><dt class="text-gray-500">N · Jenis Program</dt><dd>{{ $application->program_category?->label() ?? '—' }}</dd></div>
-        <div><dt class="text-gray-500">M · Tarikh Program</dt><dd>{{ $application->proposed_start_date?->format('d/m/Y') ?? '—' }}</dd></div>
-        <div class="sm:col-span-2"><dt class="text-gray-500">P · Alamat</dt><dd>{{ $application->recipient_address ?? '—' }}</dd></div>
+        <div><dt class="text-gray-500">B · Nama Persatuan</dt><dd>{{ $application->recipient_name ?? '—' }}</dd></div>
+        <div><dt class="text-gray-500">C · No. ROS</dt><dd class="font-mono text-xs">{{ $application->recipient_ros_number ?? '—' }}</dd></div>
+        <div><dt class="text-gray-500">D · Tarikh Program</dt><dd>{{ $application->program_date?->format('d/m/Y') ?? '—' }}</dd></div>
+        <div><dt class="text-gray-500">E · Jenis/Kategori Program</dt><dd>{{ $application->program_category?->label() ?? '—' }}</dd></div>
+        <div><dt class="text-gray-500">F · Jumlah</dt><dd class="font-semibold"><x-money :value="$application->requested_amount" /></dd></div>
+        <div><dt class="text-gray-500">G · Tujuan</dt><dd>{{ $application->purpose }}</dd></div>
+        <div><dt class="text-gray-500">H · No. Akaun</dt><dd class="font-mono text-xs">{{ $application->recipient_bank_account ?? '—' }}</dd></div>
+        <div><dt class="text-gray-500">I · Alamat Persatuan</dt><dd>{{ $application->recipient_address ?? '—' }}</dd></div>
     </dl>
 
     <p class="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">Ruang JP (F–J)</p>
@@ -90,7 +90,4 @@
         </dl>
     @endif
 
-    @if ($application->is_short_notice)
-        <p class="mt-3 text-xs text-amber-700">⚠ Short notice (BR-014/015): kurang 2 bulan sebelum program.</p>
-    @endif
 </div>

@@ -11,6 +11,7 @@ use App\Services\Application\ApplicationBudgetService;
 use App\Services\Application\ApplicationException;
 use App\Services\Application\ApprovalService;
 use App\Services\Budget\BudgetService;
+use App\Support\UrsContributionPolicy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -35,7 +36,8 @@ class ApprovalController extends Controller
             ->when($request->filled('jenis'), fn ($q) => $q->where('application_type', $request->string('jenis')))
             ->when($request->filled('cari'), fn ($q) => $q->where(fn ($s) => $s
                 ->where('application_number', 'like', '%'.$request->string('cari').'%')
-                ->orWhere('project_title', 'like', '%'.$request->string('cari').'%')))
+                ->orWhere('purpose', 'like', '%'.$request->string('cari').'%')
+                ->orWhere('recipient_name', 'like', '%'.$request->string('cari').'%')))
             ->with(['alp', 'financialYear'])
             ->latest('submitted_at')
             ->paginate(15)
@@ -55,21 +57,48 @@ class ApprovalController extends Controller
         abort_unless($request->user()->can('applications.approve'), 403);
         abort_if($application->status !== ApplicationStatus::PENDING_APPROVAL, 404, 'Permohonan tiada pada peringkat kelulusan.');
 
-        $application->load(['alp', 'financialYear', 'budgetItems', 'documents', 'reviews.reviewer', 'approvals.approver', 'approvals.approvalLevel']);
+        $application->load(['alp', 'financialYear', 'documents', 'reviews.reviewer', 'approvals.approver', 'approvals.approvalLevel']);
 
         $summary = $this->budget->summaryFor($application->alp_id, $application->financial_year_id);
         $progress = $this->approvals->progress($application);
-        $pending = $this->appBudget->pendingRequest($application->alp_id, $application->financial_year_id);
+        $thisRequest = $application->requestedAmountMoney();
+        $otherPending = $this->appBudget->pendingRequest($application->alp_id, $application->financial_year_id, $application->id);
+        $approvedApplications = $this->appBudget->approvedApplications($application->alp_id, $application->financial_year_id);
+        $pendingApplications = $this->appBudget->pendingApplications($application->alp_id, $application->financial_year_id, $application->id);
+
+        $periodSummary = null;
+        if (UrsContributionPolicy::enabled() && $application->financialYear) {
+            $period = UrsContributionPolicy::periodFor(now(), (int) $application->financialYear->year);
+            $used = UrsContributionPolicy::periodUsage(
+                $application->alp_id,
+                $application->financial_year_id,
+                $period['start'],
+                $period['end'],
+            );
+            $quota = UrsContributionPolicy::maxPeriodQuota();
+            $remaining = $quota->minus($used);
+            if ($remaining->isNegative()) {
+                $remaining = \App\Support\Money::zero();
+            }
+            $periodSummary = [
+                'label' => $period['label'],
+                'quota' => $quota,
+                'used' => $used,
+                'remaining' => $remaining,
+            ];
+        }
 
         return view('approvals.show', [
             'application' => $application,
             'summary' => $summary,
             'ledgerAvailable' => $summary->available(),
-            'pending' => $pending,
-            'tbl10Snapshot' => \App\Support\Tbl10BudgetSnapshot::from($application, $summary, $pending),
-            'afterCommitAvailable' => $summary->available()->minus($application->requestedAmountMoney()),
+            'otherPending' => $otherPending,
+            'approvedApplications' => $approvedApplications,
+            'pendingApplications' => $pendingApplications,
+            'periodSummary' => $periodSummary,
+            'afterCommitAvailable' => $summary->available()->minus($thisRequest),
             'progress' => $progress,
-            'thisRequest' => $application->requestedAmountMoney(),
+            'thisRequest' => $thisRequest,
         ]);
     }
 

@@ -58,6 +58,19 @@ class ApplicationDocumentController extends Controller
         return Storage::disk(self::DISK)->download($document->stored_path, $document->original_filename);
     }
 
+    public function view(Application $application, ApplicationDocument $document): StreamedResponse
+    {
+        $this->authorize('downloadDocument', $application);
+        abort_unless($document->application_id === $application->id, 404);
+        abort_unless(Storage::disk(self::DISK)->exists($document->stored_path), 404);
+
+        return Storage::disk(self::DISK)->response(
+            $document->stored_path,
+            $document->original_filename,
+            ['Content-Type' => $document->mime_type ?? 'application/octet-stream'],
+        );
+    }
+
     public function destroy(Application $application, ApplicationDocument $document): RedirectResponse
     {
         // Hanya semasa DRAFT & pemilik (authorize 'update').

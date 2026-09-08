@@ -75,6 +75,20 @@ class ApplicationDocumentTest extends TestCase
         $this->actingAs($this->user)->get(route('applications.documents.download', [$this->application, $doc]))->assertOk();
     }
 
+    public function test_owner_can_view_document_inline(): void
+    {
+        $file = UploadedFile::fake()->create('kertas.pdf', 100, 'application/pdf');
+        $this->actingAs($this->user)->post(route('applications.documents.store', $this->application), [
+            'document_type' => DocumentType::KERTAS_KERJA->value, 'file' => $file,
+        ]);
+        $doc = ApplicationDocument::first();
+
+        $this->actingAs($this->user)
+            ->get(route('applications.documents.view', [$this->application, $doc]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
     public function test_unauthorized_user_cannot_download_document(): void
     {
         $doc = ApplicationDocument::factory()->create(['application_id' => $this->application->id]);

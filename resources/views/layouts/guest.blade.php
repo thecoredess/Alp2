@@ -216,6 +216,7 @@
 
             <main class="guest-form">
                 <div class="guest-form-box">
+                    @include('partials.flash')
                     @yield('content')
                 </div>
             </main>

@@ -31,12 +31,17 @@ class ApplicationReportCardService
         return $application->status === ApplicationStatus::APPROVED;
     }
 
-    /** Tarikh akhir dikemukakan: 1 bulan selepas tamat program (BR-018). */
+    /** Tarikh akhir dikemukakan: 1 bulan selepas tarikh kelulusan (BR-018). */
     public function dueDate(Application $application): ?\Carbon\Carbon
     {
-        $end = $application->proposed_end_date ?? $application->proposed_start_date;
+        $approvedAt = $application->statusHistories()
+            ->where('to_status', ApplicationStatus::APPROVED->value)
+            ->latest('id')
+            ->value('created_at');
 
-        return $end ? $end->copy()->addMonthNoOverflow()->endOfDay() : null;
+        return $approvedAt
+            ? \Carbon\Carbon::parse($approvedAt)->addMonthNoOverflow()->endOfDay()
+            : null;
     }
 
     public function isOverdue(Application $application): bool
@@ -121,11 +126,7 @@ class ApplicationReportCardService
             ->where('status', ApplicationStatus::APPROVED->value)
             ->whereNull('report_card_submitted_at')
             ->when($financialYearId, fn ($q) => $q->where('financial_year_id', $financialYearId))
-            ->where(function ($q) {
-                $q->whereNotNull('proposed_end_date')
-                    ->orWhereNotNull('proposed_start_date');
-            })
-            ->orderBy('proposed_end_date')
+            ->orderBy('id')
             ->get()
             ->filter(fn (Application $app) => ! $this->hasReportCard($app));
     }

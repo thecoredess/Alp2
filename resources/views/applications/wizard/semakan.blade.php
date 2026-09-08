@@ -1,102 +1,124 @@
 @extends('layouts.app')
-@section('title', 'Semakan')
-@section('heading', 'Semakan Sebelum Hantar — '.$application->application_number)
-@section('subheading', $application->application_type->label().' · Draf')
+@section('title', 'Hantar kepada JP')
+@section('heading', 'Semakan sebelum hantar — '.$application->application_number)
+@section('subheading', 'Langkah 3 · Serahan kepada Jabatan Pentadbiran')
 
 @section('content')
     <x-wizard-steps :application="$application" :current="$step" />
 
-    {{-- Amaran --}}
-    @if ($missingDocuments->isNotEmpty())
-        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            <strong>DOKUMEN WAJIB BELUM LENGKAP:</strong>
-            {{ $missingDocuments->map(fn ($t) => $t->label())->implode(', ') }}.
-            Sila lengkapkan di <a href="{{ route('applications.wizard.dokumen', $application) }}" class="underline font-medium">langkah Dokumen</a>.
-        </div>
-    @endif
-    @unless ($position['sufficient'])
-        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            <strong>BAKI PERUNTUKAN TIDAK MENCUKUPI</strong> untuk jumlah permohonan ini.
-        </div>
-    @endunless
-    @if ($application->budgetItems->isEmpty())
-        <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Tiada item bajet. Jumlah dipohon mesti melebihi RM0.00.
-        </div>
-    @endif
+    @php
+        $jpIncomplete = $jpIncomplete ?? [];
+        $jpCard = fn (string ...$keys) => \App\Support\JpReviewChecklist::cardClasses($jpIncomplete, ...$keys);
+    @endphp
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div class="lg:col-span-2 space-y-4">
-            {{-- Ringkasan --}}
-            <div class="card p-6">
-                <h3 class="mb-4 text-sm font-semibold text-gray-900">Ringkasan Permohonan</h3>
-                <dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-                    <div><dt class="text-gray-500">No. Permohonan</dt><dd class="font-mono text-gray-900">{{ $application->application_number }}</dd></div>
-                    <div><dt class="text-gray-500">ALP</dt><dd class="text-gray-900">{{ $application->alp->ref_code }} — {{ $application->alp->name }}</dd></div>
-                    <div><dt class="text-gray-500">Tahun Kewangan</dt><dd class="text-gray-900">{{ $application->financialYear->year }}</dd></div>
-                    <div><dt class="text-gray-500">Jenis</dt><dd class="text-gray-900">{{ $application->application_type->label() }}</dd></div>
-                    <div class="sm:col-span-2"><dt class="text-gray-500">Nama Projek</dt><dd class="text-gray-900">{{ $application->project_title }}</dd></div>
-                    <div><dt class="text-gray-500">Lokasi</dt><dd class="text-gray-900">{{ $application->location ?? '—' }}</dd></div>
-                    <div><dt class="text-gray-500">Tarikh</dt><dd class="text-gray-900">{{ $application->proposed_start_date?->format('d/m/Y') ?? '—' }} – {{ $application->proposed_end_date?->format('d/m/Y') ?? '—' }}</dd></div>
-                    <div class="sm:col-span-2"><dt class="text-gray-500">Objektif</dt><dd class="text-gray-900 whitespace-pre-line">{{ $application->objectives ?? '—' }}</dd></div>
-                    <div class="sm:col-span-2"><dt class="text-gray-500">Skop</dt><dd class="text-gray-900 whitespace-pre-line">{{ $application->scope ?? '—' }}</dd></div>
-                    <div><dt class="text-gray-500">Kumpulan Sasaran</dt><dd class="text-gray-900">{{ $application->target_group ?? '—' }}</dd></div>
-                </dl>
-            </div>
+    <x-page-shell>
+        @include('applications.partials.program-date-warning')
+        @include('applications.partials.jp-incomplete-banner')
 
-            {{-- Bajet --}}
-            <div class="card overflow-x-auto">
-                <div class="px-4 pt-4 text-sm font-semibold text-gray-900">Pecahan Bajet</div>
-                <table class="mt-2 min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50">
-                        <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                            <th class="px-4 py-2">Item</th><th class="px-4 py-2 text-right">Qty</th>
-                            <th class="px-4 py-2 text-right">Harga</th><th class="px-4 py-2 text-right">Jumlah</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @foreach ($application->budgetItems as $item)
-                            <tr>
-                                <td class="px-4 py-2 text-gray-900">{{ $item->description }}</td>
-                                <td class="px-4 py-2 text-right text-gray-600">{{ $item->quantity }}</td>
-                                <td class="px-4 py-2 text-right text-gray-600"><x-money :value="$item->unit_cost" /></td>
-                                <td class="px-4 py-2 text-right font-medium"><x-money :value="$item->total" /></td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="bg-gray-50">
-                        <tr class="font-semibold"><td class="px-4 py-2" colspan="3">Jumlah Dipohon</td>
-                        <td class="px-4 py-2 text-right text-navy-700"><x-money :value="$application->budgetItemsTotal()" /></td></tr>
-                    </tfoot>
-                </table>
+        @if ($missingDocuments->isNotEmpty())
+            <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <strong>Lampiran belum lengkap:</strong>
+                {{ $missingDocuments->map(fn ($t) => $t->label())->implode(', ') }}.
+                <a href="{{ route('applications.wizard.dokumen', $application) }}" class="font-medium underline">Ke langkah Lampiran</a>.
             </div>
-
-            {{-- Dokumen --}}
-            <div class="card p-5">
-                <h3 class="mb-2 text-sm font-semibold text-gray-900">Dokumen</h3>
-                @if ($application->documents->isEmpty())
-                    <p class="text-sm text-gray-400">Tiada dokumen.</p>
-                @else
-                    <ul class="space-y-1 text-sm">
-                        @foreach ($application->documents as $doc)
-                            <li class="flex justify-between"><span class="text-gray-700">{{ $doc->document_type->label() }}</span><span class="text-gray-500">{{ $doc->original_filename }}</span></li>
-                        @endforeach
-                    </ul>
-                @endif
+        @endif
+        @unless ($position['sufficient'])
+            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                <strong>Baki peruntukan tidak mencukupi</strong> untuk jumlah permohonan ini.
             </div>
-        </div>
+        @endunless
 
         <div class="space-y-4">
-            <x-budget-position :position="$position" />
+            <x-page-card title="Borang Penyaluran Sumbangan" icon="clipboard">
+                <dl class="flex flex-col gap-4">
+                    <div class="rounded-xl border border-gray-100 p-4">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">a) Nama ALP</dt>
+                        <dd class="mt-1.5 font-medium text-gray-900">{{ $application->alp->name }}</dd>
+                    </div>
+                    <div class="{{ $jpCard('recipient') }}">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">b) Nama Persatuan</dt>
+                        <dd class="mt-1.5 font-medium text-gray-900">{{ $application->recipient_name }}</dd>
+                    </div>
+                    <div class="{{ $jpCard('recipient') }}">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">c) No. ROS</dt>
+                        <dd class="mt-1.5 font-mono font-medium text-gray-900">{{ $application->recipient_ros_number }}</dd>
+                    </div>
+                    <div class="{{ $jpCard('recipient') }}">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">d) Tarikh Program</dt>
+                        <dd class="mt-1.5 font-medium text-gray-900">{{ $application->program_date?->format('d/m/Y') }}</dd>
+                    </div>
+                    <div class="{{ $jpCard('recipient') }}">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">e) Jenis/Kategori Program</dt>
+                        <dd class="mt-1.5 font-medium text-gray-900">{{ $application->program_category?->label() ?? '—' }}</dd>
+                    </div>
+                    <div class="{{ \App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'bajet', 'program_syarat') ? 'rounded-xl border-2 border-red-400 bg-red-50 p-4 ring-1 ring-red-200' : 'rounded-xl border border-royal-100 bg-gradient-to-br from-royal-50 to-navy-50 p-4' }}">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-royal-600">f) Jumlah Sumbangan</dt>
+                        <dd class="mt-1 text-2xl font-bold text-navy-700"><x-money :value="$application->requested_amount" /></dd>
+                    </div>
+                    <div class="{{ $jpCard('program_syarat') }}">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">g) Tujuan</dt>
+                        <dd class="mt-1.5 whitespace-pre-line text-gray-900">{{ $application->purpose }}</dd>
+                    </div>
+                    <div class="{{ $jpCard('recipient') }}">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">h) No. Akaun</dt>
+                        <dd class="mt-1.5 font-mono font-medium text-gray-900">{{ $application->recipient_bank_account }}</dd>
+                    </div>
+                    <div class="{{ $jpCard('recipient') }}">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">i) Alamat Persatuan</dt>
+                        <dd class="mt-1.5 whitespace-pre-line text-gray-900">{{ $application->recipient_address ?? '—' }}</dd>
+                    </div>
+                </dl>
+            </x-page-card>
 
-            <div class="card p-5">
-                <form method="POST" action="{{ route('applications.submit', $application) }}"
-                      onsubmit="return confirm('Hantar permohonan ini? Selepas dihantar, ia tidak boleh disunting.')">
-                    @csrf
-                    <button type="submit" class="btn-navy w-full">Hantar Permohonan</button>
-                </form>
-                <a href="{{ route('applications.wizard.dokumen', $application) }}" class="mt-2 block text-center text-sm text-gray-500 hover:text-gray-700">← Sebelumnya</a>
+            <div @class([
+                'rounded-xl',
+                'ring-2 ring-red-400' => \App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'dokumen'),
+            ])>
+                <x-page-card title="Lampiran Senarai Semak" icon="paper-clip">
+                    @if ($application->documents->isEmpty())
+                        <p class="text-sm text-gray-400">Tiada lampiran.</p>
+                    @else
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            @foreach ($application->documents as $doc)
+                                <div @class([
+                                    'rounded-lg border px-3 py-2 text-sm',
+                                    'border-red-300 bg-red-50' => \App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'dokumen'),
+                                    'border-gray-100 bg-gray-50' => ! \App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'dokumen'),
+                                ])>
+                                    <p class="font-medium text-gray-900">{{ $doc->document_type->simpleLabel() }}</p>
+                                    <p class="truncate text-xs text-gray-500">{{ $doc->original_filename }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </x-page-card>
             </div>
+
+            <x-page-card title="Hantar Permohonan" description="Permohonan akan disemak oleh Jabatan Pentadbiran (JP) selepas dihantar">
+                <form method="POST" action="{{ route('applications.submit', $application) }}"
+                      data-swal-confirm="Adakah anda pasti mahu menghantar permohonan ini kepada Jabatan Pentadbiran (JP)? Selepas dihantar, permohonan tidak boleh dikemaskini."
+                      data-swal-title="Hantar Permohonan"
+                      data-swal-icon="warning">
+                    @csrf
+                    <div class="rounded-xl border border-navy-100 bg-navy-50/40 p-5">
+                        <p class="text-sm text-gray-600">
+                            Sila pastikan borang dan lampiran lengkap serta tepat. Permohonan yang telah dihantar tidak boleh dikemaskini.
+                        </p>
+                        <div class="mt-5 flex flex-wrap gap-3 border-t border-navy-100/80 pt-5">
+                            <a href="{{ route('applications.wizard.dokumen', $application) }}" class="btn-white">← Lampiran</a>
+                            @if (($programDateSubmitErrors ?? []) === [])
+                                <button type="submit" class="btn-navy">
+                                    {{ auth()->user()->canCreateApplicationOnBehalf() ? 'Hantar kepada Pegawai JP' : 'Hantar kepada JP' }}
+                                </button>
+                            @else
+                                <button type="button" class="btn-navy cursor-not-allowed opacity-50" disabled title="Kemaskini tarikh program terlebih dahulu">
+                                    {{ auth()->user()->canCreateApplicationOnBehalf() ? 'Hantar kepada Pegawai JP' : 'Hantar kepada JP' }}
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                </form>
+            </x-page-card>
         </div>
-    </div>
+    </x-page-shell>
 @endsection

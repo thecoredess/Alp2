@@ -96,7 +96,52 @@ class AllocationController extends Controller
         $pending = $year ? $this->appBudget->pendingRequest($alp->id, $year->id) : Money::zero();
         $projected = $summary->available()->minus($pending);
 
-        return view('allocations.my-budget', compact('alp', 'year', 'allocation', 'summary', 'statement', 'pending', 'projected'));
+        $policyEnabled = UrsContributionPolicy::enabled();
+        $periodSummary = null;
+        $policyLimits = null;
+
+        if ($year && $policyEnabled) {
+            $calendarYear = (int) $year->year;
+            $period = UrsContributionPolicy::periodFor(now(), $calendarYear);
+            $used = UrsContributionPolicy::periodUsage(
+                $alp->id,
+                $year->id,
+                $period['start'],
+                $period['end'],
+            );
+            $quota = UrsContributionPolicy::maxPeriodQuota();
+            $remaining = $quota->minus($used);
+            if ($remaining->isNegative()) {
+                $remaining = Money::zero();
+            }
+
+            $periodSummary = [
+                'label' => $period['label'],
+                'quota' => $quota,
+                'used' => $used,
+                'remaining' => $remaining,
+                'ends_at' => $period['end'],
+            ];
+
+            $policyLimits = [
+                'max_annual_policy' => UrsContributionPolicy::maxAnnualAllocation(),
+                'max_annual_entitlement' => UrsContributionPolicy::maxAnnualForAlp($alp, $calendarYear),
+                'entitlement_periods' => UrsContributionPolicy::eligiblePeriodCountForAlp($alp, $calendarYear),
+                'appointment_start' => $alp->appointment_start?->format('d/m/Y'),
+                'max_per_application' => UrsContributionPolicy::maxPerApplication(),
+                'period_quota' => UrsContributionPolicy::maxPeriodQuota(),
+                'periods' => [
+                    UrsContributionPolicy::periodByIndex(1, $calendarYear),
+                    UrsContributionPolicy::periodByIndex(2, $calendarYear),
+                    UrsContributionPolicy::periodByIndex(3, $calendarYear),
+                ],
+            ];
+        }
+
+        return view('allocations.my-budget', compact(
+            'alp', 'year', 'allocation', 'summary', 'statement', 'pending', 'projected',
+            'policyEnabled', 'periodSummary', 'policyLimits',
+        ));
     }
 
     public function create(Request $request): View

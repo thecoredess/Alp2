@@ -26,6 +26,8 @@ class ApplicationPaymentService
      * @param  array{
      *   payment_status: string,
      *   payment_voucher_no?: ?string,
+     *   payment_supplier_no?: ?string,
+     *   payment_voucher_date?: ?string,
      *   payment_reference?: ?string,
      *   payment_remarks?: ?string,
      *   paid_at?: ?string,
@@ -46,6 +48,18 @@ class ApplicationPaymentService
             $status = ApplicationPaymentStatus::from($data['payment_status']);
             $from = $application->payment_status;
 
+            if ($status === ApplicationPaymentStatus::VOUCHER_PREPARED) {
+                if (blank($data['payment_supplier_no'] ?? null) && blank($application->payment_supplier_no)) {
+                    throw new InvalidArgumentException('No. pembekal diperlukan untuk Baucar Disedia.');
+                }
+                if (blank($data['payment_voucher_no'] ?? null) && blank($application->payment_voucher_no)) {
+                    throw new InvalidArgumentException('No. baucar diperlukan untuk Baucar Disedia.');
+                }
+                if (blank($data['payment_voucher_date'] ?? null) && blank($application->payment_voucher_date)) {
+                    throw new InvalidArgumentException('Tarikh baucar diperlukan untuk Baucar Disedia.');
+                }
+            }
+
             if ($status === ApplicationPaymentStatus::PAID) {
                 if (blank($data['payment_voucher_no'] ?? null) && blank($application->payment_voucher_no)) {
                     throw new InvalidArgumentException('No. baucar diperlukan sebelum menanda sebagai Dibayar.');
@@ -60,6 +74,10 @@ class ApplicationPaymentService
 
             $application->payment_status = $status;
             $application->payment_voucher_no = $data['payment_voucher_no'] ?? $application->payment_voucher_no;
+            $application->payment_supplier_no = $data['payment_supplier_no'] ?? $application->payment_supplier_no;
+            $application->payment_voucher_date = array_key_exists('payment_voucher_date', $data)
+                ? $data['payment_voucher_date']
+                : $application->payment_voucher_date;
             $application->payment_reference = $data['payment_reference'] ?? $application->payment_reference;
             $application->payment_remarks = $data['payment_remarks'] ?? $application->payment_remarks;
             $application->payment_updated_by = $actor->id;
@@ -94,6 +112,8 @@ class ApplicationPaymentService
                 'from' => $from?->value,
                 'to' => $status->value,
                 'voucher_no' => $application->payment_voucher_no,
+                'supplier_no' => $application->payment_supplier_no,
+                'voucher_date' => $application->payment_voucher_date?->format('Y-m-d'),
                 'reference' => $application->payment_reference,
                 'sent_to_jkew_at' => $application->sent_to_jkew_at?->toDateTimeString(),
                 'jkew_crosscheck' => $application->jkew_crosscheck_status?->value,

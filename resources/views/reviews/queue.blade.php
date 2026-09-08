@@ -4,7 +4,7 @@
 
 @section('content')
     <form method="GET" class="mb-5 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-        <input type="text" name="cari" value="{{ request('cari') }}" placeholder="No. / tajuk…" class="inp sm:w-48">
+        <input type="text" name="cari" value="{{ request('cari') }}" placeholder="No. / tujuan / penerima…" class="inp sm:w-48">
         <select name="tahun" class="inp sm:w-auto">
             <option value="">Semua Tahun</option>
             @foreach ($years as $y)<option value="{{ $y->id }}" @selected(request('tahun') == $y->id)>{{ $y->year }}</option>@endforeach
@@ -25,7 +25,7 @@
             <thead class="bg-gray-50">
                 <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     <th class="px-4 py-3">No. Permohonan</th>
-                    <th class="px-4 py-3">Tajuk</th>
+                    <th class="px-4 py-3">Tujuan / Penerima</th>
                     <th class="px-4 py-3">Jenis</th>
                     <th class="px-4 py-3">ALP</th>
                     <th class="px-4 py-3 text-right">Jumlah</th>
@@ -37,7 +37,10 @@
                 @forelse ($applications as $app)
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-mono text-xs text-gray-700">{{ $app->application_number }}</td>
-                        <td class="px-4 py-3 text-gray-900">{{ $app->project_title }}</td>
+                        <td class="px-4 py-3 text-gray-900">
+                            <p>{{ $app->purpose }}</p>
+                            <p class="text-xs text-gray-500">{{ $app->recipient_name }}</p>
+                        </td>
                         <td class="px-4 py-3"><x-status-badge :label="$app->application_type->label()" :classes="$app->application_type->badgeClasses()" /></td>
                         <td class="px-4 py-3 text-gray-600">{{ $app->alp->ref_code }}</td>
                         <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$app->requested_amount" /></td>

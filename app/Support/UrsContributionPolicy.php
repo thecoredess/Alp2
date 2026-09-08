@@ -19,7 +19,7 @@ use Carbon\CarbonInterface;
  * - BR-002: 3 tempoh × kuota (lalai RM10,000) setiap 4 bulan
  * - BR-003: baki tempoh luput — tiada bawa ke hadapan
  * - BR-005: maks RM3,000 setiap permohonan
- * - BR-007: kelayakan ikut tarikh lantikan (proration)
+ * - BR-007: kelayakan ikut tarikh lantikan (bilangan tempoh 4-bulan × kuota tempoh)
  * - BR-010 / BR-014 / BR-015: alamat KL; lead time 2 bulan
  */
 final class UrsContributionPolicy
@@ -67,40 +67,50 @@ final class UrsContributionPolicy
     }
 
     /**
-     * BR-007: siling peruntukan tahunan mengikut tarikh mula lantikan dalam tahun.
-     * Formula linear: (bulan kekal dalam tahun kalendar, inklusif) / 12 × had tahunan.
-     * Contoh Jun → 7/12 × RM30,000 = RM17,500 (URS menyebut ≈RM20k sebagai contoh pemilik proses).
+     * BR-007: bilangan tempoh 4-bulan layak dari tarikh lantikan hingga akhir tahun kalendar.
+     * Tempoh lantikan dapat kuota penuh (tiada proration dalam tempoh).
+     * Contoh: lantikan 9/2/2026 (Tempoh 1) → 3 tempoh; lantikan Okt 2026 (Tempoh 3) → 1 tempoh.
      */
-    public static function maxAnnualForAlp(Alp $alp, int $calendarYear): Money
+    public static function eligiblePeriodCountForAlp(Alp $alp, int $calendarYear): int
     {
-        $full = self::maxAnnualAllocation();
-
         if (! $alp->appointment_start) {
-            return $full;
+            return 3;
         }
 
         $start = Carbon::parse($alp->appointment_start)->startOfDay();
 
         if ((int) $start->year > $calendarYear) {
-            return Money::zero();
+            return 0;
         }
 
         if ((int) $start->year < $calendarYear) {
-            return $full;
+            return 3;
         }
 
-        $monthsInclusive = 13 - (int) $start->month;
-        if ($monthsInclusive <= 0) {
+        $startPeriodIndex = self::periodFor($start, $calendarYear)['index'];
+
+        return max(0, 3 - $startPeriodIndex + 1);
+    }
+
+    /**
+     * BR-007: siling peruntukan tahunan = bilangan tempoh layak × kuota setiap tempoh (maks RM30,000).
+     */
+    public static function maxAnnualForAlp(Alp $alp, int $calendarYear): Money
+    {
+        $full = self::maxAnnualAllocation();
+        $periods = self::eligiblePeriodCountForAlp($alp, $calendarYear);
+
+        if ($periods <= 0) {
             return Money::zero();
         }
 
-        if ($monthsInclusive >= 12) {
+        if ($periods >= 3) {
             return $full;
         }
 
-        $prorated = bcdiv(bcmul($full->value(), (string) $monthsInclusive, 4), '12', 2);
+        $entitlement = self::maxPeriodQuota()->times($periods);
 
-        return Money::of($prorated);
+        return $entitlement->greaterThan($full) ? $full : $entitlement;
     }
 
     /**
@@ -154,6 +164,51 @@ final class UrsContributionPolicy
         return $at->greaterThan($deadline);
     }
 
+    /** BR-014: tarikh program paling awal = tarikh permohonan + 2 bulan. */
+    public static function minimumProgramDate(?CarbonInterface $appliedAt = null): Carbon
+    {
+        $appliedAt = ($appliedAt ? Carbon::instance($appliedAt) : now())->startOfDay();
+
+        return $appliedAt->copy()->addMonthsNoOverflow(self::PROGRAM_LEAD_MONTHS);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function validateProgramLeadTime(?CarbonInterface $programDate, ?CarbonInterface $appliedAt = null): array
+    {
+        if (! $programDate) {
+            return [];
+        }
+
+        $min = self::minimumProgramDate($appliedAt);
+        $program = Carbon::instance($programDate)->startOfDay();
+
+        if ($program->lessThan($min)) {
+            return [sprintf(
+                'Tarikh program mesti sekurang-kurangnya %d bulan dari tarikh hantar (tidak sebelum %s).',
+                self::PROGRAM_LEAD_MONTHS,
+                $min->format('d/m/Y'),
+            )];
+        }
+
+        return [];
+    }
+
+    /**
+     * @return list<string> ralat jika tarikh program tidak memenuhi BR-014 pada tarikh hantar.
+     */
+    public static function validateProgramLeadTimeForSubmission(?CarbonInterface $programDate, ?CarbonInterface $submitAt = null): array
+    {
+        return self::validateProgramLeadTime($programDate, $submitAt ?? now());
+    }
+
+    /** @return list<string> */
+    public static function programDateSubmitErrors(?CarbonInterface $programDate): array
+    {
+        return self::validateProgramLeadTimeForSubmission($programDate);
+    }
+
     /**
      * Tempoh 4-bulan bagi tarikh & tahun kalendar (biasanya tahun kewangan).
      *
@@ -182,9 +237,9 @@ final class UrsContributionPolicy
         $index = max(1, min(3, $index));
 
         [$startMd, $endMd, $label] = match ($index) {
-            1 => ['01-01 00:00:00', '04-30 23:59:59', 'Tempoh 1 (Jan–Apr)'],
-            2 => ['05-01 00:00:00', '08-31 23:59:59', 'Tempoh 2 (Mei–Ogos)'],
-            default => ['09-01 00:00:00', '12-31 23:59:59', 'Tempoh 3 (Sep–Dis)'],
+            1 => ['01-01 00:00:00', '04-30 23:59:59', 'Penggal 1 (Jan-Apr (4 bulan))'],
+            2 => ['05-01 00:00:00', '08-31 23:59:59', 'Penggal 2 (Mei-Ogos (4 bulan))'],
+            default => ['09-01 00:00:00', '12-31 23:59:59', 'Penggal 3 (Sep-Dis (4 bulan))'],
         };
 
         return [
@@ -212,6 +267,7 @@ final class UrsContributionPolicy
         );
 
         $sum = Application::query()
+            ->officialSumbangan()
             ->where('alp_id', $alpId)
             ->where('financial_year_id', $financialYearId)
             ->whereIn('status', $statuses)

@@ -16,8 +16,7 @@ use Tests\TestCase;
 
 /**
  * Matriks URS v1.2 (ApprovalLevelSeeder):
- * - ≤ RM3,000 → Aras 1 Peraku (pelulus) sahaja
- * - > RM3,000 → Aras 1 Peraku kemudian Aras 2 PEPU (pengurusan)
+ * Peraku (angkat ke PEPU) → PEPU (kelulusan akhir) untuk semua jumlah.
  */
 class FinalApprovalTest extends TestCase
 {
@@ -45,14 +44,29 @@ class FinalApprovalTest extends TestCase
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
     }
 
-    public function test_single_level_final_approval_creates_exactly_one_commitment(): void
+    public function test_peraku_only_keeps_pending_until_pepu_approves(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00')); // aras 1 sahaja
+        $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
 
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
+
+        $app->refresh();
+        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->status);
+        $this->assertSame(0, BudgetTransaction::where('application_id', $app->id)->where('type', BudgetTransactionType::COMMITMENT->value)->count());
+    }
+
+    public function test_two_level_final_approval_creates_exactly_one_commitment(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
+
+        $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
+        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         $app->refresh();
         $this->assertSame(ApplicationStatus::APPROVED, $app->status);
@@ -73,6 +87,7 @@ class FinalApprovalTest extends TestCase
         $this->assertSame('2500.00', $appBudget->pendingRequest($alp->id, $year->id)->value());
 
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
+        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         $summary = $budget->summaryFor($alp->id, $year->id);
         $this->assertSame('2500.00', $summary->committed->value());
@@ -119,12 +134,9 @@ class FinalApprovalTest extends TestCase
         $app = $this->toPendingApproval($this->submitted($alp, $year, '1999.99'));
 
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
+        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
-        $this->assertDatabaseHas('budget_transactions', [
-            'application_id' => $app->id,
-            'type' => 'commitment',
-            'amount' => '1999.99',
-        ]);
+        $this->assertSame('1999.99', BudgetTransaction::where('application_id', $app->id)->where('type', 'commitment')->value('amount'));
     }
 
     public function test_budget_recheck_does_not_double_subtract_own_pending(): void
@@ -151,6 +163,7 @@ class FinalApprovalTest extends TestCase
         $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
 
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
+        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         $this->assertDatabaseHas('application_approvals', ['application_id' => $app->id, 'decision' => 'approved']);
         $this->assertDatabaseHas('application_status_histories', ['application_id' => $app->id, 'to_status' => 'approved']);

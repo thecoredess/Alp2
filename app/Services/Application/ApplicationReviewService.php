@@ -156,23 +156,13 @@ class ApplicationReviewService
     /** Snapshot ringkas keadaan permohonan untuk rekod revisi. */
     private function snapshot(Application $application): array
     {
-        $application->loadMissing(['budgetItems', 'documents']);
+        $application->loadMissing(['documents']);
 
         return [
-            'project_title' => $application->project_title,
-            'project_summary' => $application->project_summary,
-            'objectives' => $application->objectives,
-            'scope' => $application->scope,
-            'target_group' => $application->target_group,
-            'location' => $application->location,
+            'purpose' => $application->purpose,
+            'recipient_name' => $application->recipient_name,
+            'recipient_bank_account' => $application->recipient_bank_account,
             'requested_amount' => $application->requested_amount,
-            'budget_items' => $application->budgetItems->map(fn ($i) => [
-                'description' => $i->description,
-                'quantity' => $i->quantity,
-                'unit' => $i->unit,
-                'unit_cost' => $i->unit_cost,
-                'total' => $i->total,
-            ])->all(),
             'documents' => $application->documents->map(fn ($d) => [
                 'document_type' => $d->document_type->value,
                 'original_filename' => $d->original_filename,

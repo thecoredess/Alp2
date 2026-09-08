@@ -41,6 +41,7 @@ class UrsSpineSmokeTest extends TestCase
         $owner = $this->userWithRole(RoleName::ALP->value, $alp);
         $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
         $peraku = $this->userWithRole(RoleName::PELULUS->value);
+        $pengurusan = $this->userWithRole(RoleName::PENGURUSAN->value);
         $kerani = $this->userWithRole(RoleName::PEGAWAI_KEWANGAN->value);
         $jkew = $this->userWithRole(RoleName::PEGAWAI_JKEW->value);
 
@@ -61,8 +62,9 @@ class UrsSpineSmokeTest extends TestCase
         $this->assertNotNull($app->recipient_id);
         $this->assertTrue(Recipient::whereKey($app->recipient_id)->exists());
 
-        // 3) Peraku lulus → COMMITMENT, tiada projek
+        // 3) Peraku + PEPU lulus → COMMITMENT, tiada projek
         app(ApprovalService::class)->approve($app, $peraku, 'Lulus UAT smoke');
+        app(ApprovalService::class)->approve($app->fresh(), $pengurusan, 'Lulus PEPU UAT smoke');
         $app->refresh();
         $this->assertSame(ApplicationStatus::APPROVED, $app->status);
         $this->assertSame(ApplicationPaymentStatus::PENDING_PAYMENT, $app->payment_status);

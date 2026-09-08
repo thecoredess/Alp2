@@ -4,11 +4,18 @@
 @section('subheading', $activeYear ? 'Tahun Kewangan '.$activeYear->year.' (Aktif)' : 'Tiada tahun kewangan aktif')
 
 @section('content')
-    <div class="mb-6">
-        <h2 class="text-lg font-semibold text-gray-900">Selamat datang, {{ auth()->user()->name }}</h2>
-        <p class="text-sm text-gray-500">
-            Peranan: {{ auth()->user()->roles->first()?->name ? \App\Enums\RoleName::from(auth()->user()->roles->first()->name)->label() : '—' }}
-        </p>
+    <div class="mb-8 rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
+        <div class="flex items-start gap-4">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-navy-600 to-royal-500 text-white shadow-sm">
+                <x-icon name="dashboard" class="h-6 w-6" />
+            </span>
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900">Selamat datang, {{ auth()->user()->name }}</h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Peranan: {{ auth()->user()->roles->first()?->name ? \App\Enums\RoleName::from(auth()->user()->roles->first()->name)->label() : '—' }}
+                </p>
+            </div>
+        </div>
     </div>
 
     @if (! $activeYear)
@@ -23,97 +30,118 @@
     {{-- Kad statistik pentadbir --}}
     @if ($stats)
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div class="card p-5">
-                <p class="text-sm text-gray-500">Ahli Lembaga Aktif</p>
-                <p class="mt-2 text-3xl font-semibold text-navy-700">{{ $stats['alp_count'] }}</p>
-            </div>
-            <div class="card p-5">
-                <p class="text-sm text-gray-500">Pengguna Aktif</p>
-                <p class="mt-2 text-3xl font-semibold text-navy-700">{{ $stats['user_count'] }}</p>
-            </div>
-            <div class="card p-5">
-                <p class="text-sm text-gray-500">Tahun Kewangan Aktif</p>
-                <p class="mt-2 text-3xl font-semibold text-navy-700">{{ $stats['financial_year'] ?? '—' }}</p>
+            <x-stat-card label="Ahli Lembaga Aktif" icon="users-group" tone="navy">{{ $stats['alp_count'] }}</x-stat-card>
+            <x-stat-card label="Pengguna Aktif" icon="user-cog" tone="royal">{{ $stats['user_count'] }}</x-stat-card>
+            <x-stat-card label="Tahun Kewangan Aktif" icon="calendar" tone="teal">{{ $stats['financial_year'] ?? '—' }}</x-stat-card>
+        </div>
+    @endif
+
+    {{-- Giliran pegawai — blok tindakan --}}
+    @if ($officerQueues)
+        <div class="mt-8">
+            <h3 class="dashboard-section-title">Tindakan Diperlukan</h3>
+            <div @class([
+                'grid gap-4',
+                'grid-cols-1' => count($officerQueues) === 1,
+                'grid-cols-1 sm:grid-cols-2' => count($officerQueues) === 2,
+                'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' => count($officerQueues) >= 3,
+            ])>
+                @foreach ($officerQueues as $q)
+                    <x-action-block
+                        :label="$q['label']"
+                        :description="$q['description'] ?? null"
+                        :icon="$q['icon'] ?? 'inbox'"
+                        :tone="$q['tone'] ?? 'royal'"
+                        :count="$q['count']"
+                        :href="route($q['route'])"
+                    />
+                @endforeach
             </div>
         </div>
     @endif
 
-    {{-- Giliran pegawai --}}
-    @if ($officerQueues)
-        <div class="mt-6">
-            <h3 class="mb-3 text-sm font-semibold text-gray-900">Tindakan Diperlukan</h3>
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                @foreach ($officerQueues as $q)
-                    <a href="{{ route($q['route']) }}" class="card p-5 hover:bg-gray-50">
-                        <p class="text-sm text-gray-500">{{ $q['label'] }}</p>
-                        <p class="mt-2 text-3xl font-semibold text-royal-600">{{ $q['count'] }}</p>
-                    </a>
-                @endforeach
+    {{-- Bajet tahunan ALP --}}
+    @if ($scope === 'own' && $annualAllocation)
+        <div class="mt-8">
+            <div class="mb-4 flex items-center justify-between">
+                <h3 class="dashboard-section-title mb-0">Bajet Tahunan @if($activeYear)<span class="font-normal text-gray-400">· {{ $activeYear->year }}</span>@endif</h3>
+                <a href="{{ route('budget.mine') }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">Lihat butiran →</a>
+            </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <x-stat-card label="Peruntukan Tahunan Semasa" icon="wallet" tone="navy">
+                    <x-money :value="$annualAllocation" />
+                </x-stat-card>
+                <x-stat-card label="Baki Tahunan Semasa" icon="sparkles" :tone="$annualAvailable->isNegative() ? 'red' : 'green'">
+                    <x-money :value="$annualAvailable" />
+                </x-stat-card>
             </div>
         </div>
     @endif
 
     {{-- Kuota tempoh URS (BR-003/004) — hanya jika polisi aktif & pengguna ALP --}}
     @if ($periodSummary)
-        <div class="mt-6">
-            <h3 class="mb-3 text-sm font-semibold text-gray-900">Kuota Tempoh URS · {{ $periodSummary['label'] }}</h3>
+        <div class="mt-8">
+            <h3 class="dashboard-section-title">Kuota Tempoh URS · {{ $periodSummary['label'] }}@if($activeYear)<span class="font-normal text-gray-400"> · {{ $activeYear->year }}</span>@endif</h3>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div class="card p-5">
-                    <p class="text-sm text-gray-500">Kuota tempoh</p>
-                    <p class="mt-2 text-2xl font-semibold text-navy-700"><x-money :value="$periodSummary['quota']" /></p>
-                </div>
-                <div class="card p-5">
-                    <p class="text-sm text-gray-500">Digunakan (pending + diluluskan)</p>
-                    <p class="mt-2 text-2xl font-semibold text-amber-600"><x-money :value="$periodSummary['used']" /></p>
-                </div>
-                <div class="card p-5">
-                    <p class="text-sm text-gray-500">Baki tempoh</p>
-                    <p class="mt-2 text-2xl font-semibold text-green-600"><x-money :value="$periodSummary['remaining']" /></p>
-                    <p class="mt-1 text-xs text-gray-400">Luput {{ $periodSummary['ends_at']->format('d/m/Y') }} · tiada bawa ke hadapan</p>
-                </div>
+                <x-stat-card label="Kuota tempoh" icon="banknotes" tone="navy">
+                    <x-money :value="$periodSummary['quota']" />
+                </x-stat-card>
+                <x-stat-card label="Digunakan (pending + diluluskan)" icon="arrow-path" tone="amber">
+                    <x-money :value="$periodSummary['used']" />
+                </x-stat-card>
+                <x-stat-card
+                    label="Baki tempoh"
+                    icon="sparkles"
+                    tone="green"
+                    :hint="'Luput '.$periodSummary['ends_at']->format('d/m/Y').' · tiada bawa ke hadapan'"
+                >
+                    <x-money :value="$periodSummary['remaining']" />
+                </x-stat-card>
             </div>
         </div>
     @endif
 
-    {{-- KPI 14 hari hingga JKEW (UR-M02-005) --}}
-    @if (($kpiWatchlist ?? collect())->isNotEmpty())
-        <div class="mt-6">
-            <h3 class="mb-3 text-sm font-semibold text-gray-900">Pemantauan KPI {{ $kpiDays ?? 14 }} hari · hingga JKEW</h3>
-            <div class="card overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50">
-                        <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                            <th class="px-4 py-3">Permohonan</th>
-                            <th class="px-4 py-3">ALP</th>
-                            <th class="px-4 py-3">Hari</th>
-                            <th class="px-4 py-3">Status KPI</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @foreach ($kpiWatchlist as $row)
-                            @php $app = $row['application']; $kpi = $row['kpi']; @endphp
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3">
-                                    <a href="{{ route('applications.show', $app) }}" class="font-mono text-xs text-royal-700 hover:underline">{{ $app->application_number }}</a>
-                                    <p class="line-clamp-1 text-xs text-gray-500">{{ $app->project_title }}</p>
-                                </td>
-                                <td class="px-4 py-3 text-gray-600">{{ $app->alp?->ref_code }}</td>
-                                <td class="px-4 py-3 font-semibold">{{ $kpi['days'] ?? '—' }}</td>
-                                <td class="px-4 py-3">
-                                    <span @class([
-                                        'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-                                        'bg-green-100 text-green-800' => $kpi['within_kpi'] === true,
-                                        'bg-red-100 text-red-800' => $kpi['within_kpi'] === false,
-                                        'bg-gray-100 text-gray-600' => $kpi['within_kpi'] === null,
-                                    ])>{{ $kpi['within_kpi'] === false ? 'Melebihi KPI' : ($kpi['within_kpi'] ? 'Dalam KPI' : '—') }}</span>
-                                </td>
+    {{-- Pemantauan KPI 14 hari — pegawai sahaja (bukan ALP) --}}
+    @can('applications.view_all')
+        @if (($kpiWatchlist ?? collect())->isNotEmpty())
+            <div class="mt-6">
+                <h3 class="mb-3 text-sm font-semibold text-gray-900">Pemantauan KPI {{ $kpiDays ?? 14 }} hari · hingga JKEW</h3>
+                <div class="card overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                <th class="px-4 py-3">Permohonan</th>
+                                <th class="px-4 py-3">ALP</th>
+                                <th class="px-4 py-3">Hari</th>
+                                <th class="px-4 py-3">Status KPI</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach ($kpiWatchlist as $row)
+                                @php $app = $row['application']; $kpi = $row['kpi']; @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3">
+                                        <a href="{{ route('applications.show', $app) }}" class="font-mono text-xs text-royal-700 hover:underline">{{ $app->application_number }}</a>
+                                        <p class="line-clamp-1 text-xs text-gray-500">{{ $app->project_title }}</p>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-600">{{ $app->alp?->ref_code }}</td>
+                                    <td class="px-4 py-3 font-semibold">{{ $kpi['days'] ?? '—' }}</td>
+                                    <td class="px-4 py-3">
+                                        <span @class([
+                                            'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+                                            'bg-green-100 text-green-800' => $kpi['within_kpi'] === true,
+                                            'bg-red-100 text-red-800' => $kpi['within_kpi'] === false,
+                                            'bg-gray-100 text-gray-600' => $kpi['within_kpi'] === null,
+                                        ])>{{ $kpi['within_kpi'] === false ? 'Melebihi KPI' : ($kpi['within_kpi'] ? 'Dalam KPI' : '—') }}</span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    @endif
+        @endif
+    @endcan
 
     {{-- Permohonan tertunggak --}}
     @if ($overdueApplications->isNotEmpty())
@@ -167,51 +195,85 @@
 
     {{-- Kad permohonan --}}
     @if ($appStats && $scope === 'own')
-        <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            <div class="card p-5"><p class="text-sm text-gray-500">Draf</p><p class="mt-2 text-3xl font-semibold text-gray-600">{{ $appStats['draft'] }}</p></div>
-            <div class="card p-5"><p class="text-sm text-gray-500">Dalam Proses</p><p class="mt-2 text-3xl font-semibold text-blue-600">{{ $appStats['in_process'] }}</p></div>
-            <div class="card p-5"><p class="text-sm text-gray-500">Perlu Pembetulan</p><p class="mt-2 text-3xl font-semibold text-orange-600">{{ $appStats['revision'] }}</p></div>
-            <div class="card p-5"><p class="text-sm text-gray-500">Diluluskan</p><p class="mt-2 text-3xl font-semibold text-green-600">{{ $appStats['approved'] }}</p></div>
-            <div class="card p-5"><p class="text-sm text-gray-500">Ditolak</p><p class="mt-2 text-3xl font-semibold text-danger">{{ $appStats['rejected'] }}</p></div>
+        <div class="mt-8">
+            <h3 class="dashboard-section-title">Ringkasan Permohonan</h3>
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                <x-stat-card label="Draf" icon="document" tone="gray">{{ $appStats['draft'] }}</x-stat-card>
+                <x-stat-card label="Dalam Proses" icon="arrow-path" tone="blue">{{ $appStats['in_process'] }}</x-stat-card>
+                <x-stat-card label="Perlu Pembetulan" icon="pencil-square" tone="orange">{{ $appStats['revision'] }}</x-stat-card>
+                <x-stat-card label="Diluluskan" icon="check" tone="green">{{ $appStats['approved'] }}</x-stat-card>
+                <x-stat-card label="Ditolak" icon="x-circle" tone="red">{{ $appStats['rejected'] }}</x-stat-card>
+            </div>
         </div>
+
+        @include('dashboard.partials.alp-charts')
     @elseif ($appStats && $scope === 'all')
-        <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            <div class="card p-5"><p class="text-sm text-gray-500">Jumlah Permohonan</p><p class="mt-2 text-3xl font-semibold text-navy-700">{{ $appStats['total'] }}</p></div>
-            <div class="card p-5"><p class="text-sm text-gray-500">Dalam Semakan</p><p class="mt-2 text-3xl font-semibold text-blue-600">{{ $appStats['under_review'] }}</p></div>
-            <div class="card p-5"><p class="text-sm text-gray-500">Menunggu Kelulusan</p><p class="mt-2 text-3xl font-semibold text-amber-600">{{ $appStats['pending_approval'] }}</p></div>
-            <div class="card p-5"><p class="text-sm text-gray-500">Diluluskan</p><p class="mt-2 text-3xl font-semibold text-green-600">{{ $appStats['approved'] }}</p></div>
-            <div class="card p-5"><p class="text-sm text-gray-500">Ditolak</p><p class="mt-2 text-3xl font-semibold text-danger">{{ $appStats['rejected'] }}</p></div>
+        <div class="mt-8">
+            <h3 class="dashboard-section-title">Ringkasan Permohonan</h3>
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                <x-stat-card label="Jumlah Permohonan" icon="clipboard" tone="navy">{{ $appStats['total'] }}</x-stat-card>
+                <x-stat-card label="Dalam Semakan" icon="search" tone="blue">{{ $appStats['under_review'] }}</x-stat-card>
+                <x-stat-card label="Menunggu Kelulusan" icon="scale" tone="amber">{{ $appStats['pending_approval'] }}</x-stat-card>
+                <x-stat-card label="Diluluskan" icon="check" tone="green">{{ $appStats['approved'] }}</x-stat-card>
+                <x-stat-card label="Ditolak" icon="x-circle" tone="red">{{ $appStats['rejected'] }}</x-stat-card>
+            </div>
         </div>
     @endif
 
     {{-- Modul projek diasingkan (URS v1.2) — kad projek tidak lagi dipaparkan --}}
 
-    {{-- Ringkasan bajet --}}
-    @if ($summary)
-        <div class="mt-6">
-            <div class="mb-3 flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-gray-900">
-                    {{ $scope === 'own' ? 'Bajet Saya' : 'Bajet Keseluruhan ALP' }}
-                    @if($activeYear) <span class="text-gray-400 font-normal">· {{ $activeYear->year }}</span> @endif
-                </h3>
-                @if($scope === 'own')
-                    <a href="{{ route('budget.mine') }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">Lihat butiran →</a>
-                @elseif($scope === 'all')
-                    <a href="{{ route('allocations.index') }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">Lihat peruntukan →</a>
-                @endif
+    {{-- Ringkasan bajet — pegawai sahaja (ALP guna halaman Bajet Saya) --}}
+    @if ($summary && $scope === 'all')
+        <div class="mt-8">
+            <div class="mb-4 flex items-center justify-between">
+                <h3 class="dashboard-section-title mb-0">Bajet Keseluruhan ALP @if($activeYear)<span class="font-normal text-gray-400">· {{ $activeYear->year }}</span>@endif</h3>
+                <a href="{{ route('allocations.index') }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">Lihat peruntukan →</a>
             </div>
-            <x-budget-cards :summary="$summary" />
-            <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div class="card p-4"><p class="text-xs text-gray-500">Pending Request (belum diluluskan — bukan Committed)</p><p class="mt-1 text-lg font-semibold text-orange-600"><x-money :value="$pending" /></p></div>
-                <div class="card p-4"><p class="text-xs text-gray-500">Projected Available (Ledger Available − Pending)</p><p class="mt-1 text-lg font-semibold {{ $projected->isNegative() ? 'text-danger' : 'text-green-600' }}"><x-money :value="$projected" /></p></div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <x-stat-card label="Peruntukan Tahunan" icon="banknotes" tone="navy">
+                    <x-money :value="$summary->allocation" />
+                </x-stat-card>
+                <x-stat-card label="Committed" icon="scale" tone="amber">
+                    <x-money :value="$summary->committed" />
+                </x-stat-card>
+                <x-stat-card label="Perbelanjaan Sebenar" icon="chart" tone="purple">
+                    <x-money :value="$summary->spent" />
+                </x-stat-card>
+                <x-stat-card label="Baki Tersedia" icon="wallet" :tone="$summary->available()->isNegative() ? 'red' : 'green'">
+                    <x-money :value="$summary->available()" />
+                </x-stat-card>
+            </div>
+            @if($summary->allocation->isPositive())
+                <div class="mt-4 card p-4">
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span class="flex items-center gap-1.5 font-medium"><x-icon name="chart" class="h-3.5 w-3.5" /> Penggunaan Bajet</span>
+                        <span class="font-semibold text-navy-700">{{ $summary->utilisationPercent() }}%</span>
+                    </div>
+                    <div class="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+                        <div class="h-full rounded-full bg-gradient-to-r from-royal-500 to-royal-400 transition-all" style="width: {{ min(100, $summary->utilisationPercent()) }}%"></div>
+                    </div>
+                </div>
+            @endif
+            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <x-stat-card label="Pending Request" icon="clock" tone="orange" hint="Belum diluluskan — bukan Committed">
+                    <x-money :value="$pending" />
+                </x-stat-card>
+                <x-stat-card label="Projected Available" icon="sparkles" :tone="$projected->isNegative() ? 'red' : 'green'" hint="Ledger Available − Pending">
+                    <x-money :value="$projected" />
+                </x-stat-card>
             </div>
         </div>
     @endif
 
-    <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div class="card overflow-hidden">
-            <div class="flex items-center justify-between border-b border-gray-100 px-5 py-3">
-                <h3 class="text-sm font-semibold text-gray-900">Notifikasi Terkini</h3>
+            <div class="flex items-center justify-between border-b border-gray-100 bg-gray-50/60 px-5 py-4">
+                <div class="flex items-center gap-2.5">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-royal-50 text-royal-600">
+                        <x-icon name="bell" class="h-4 w-4" />
+                    </span>
+                    <h3 class="text-sm font-semibold text-gray-900">Notifikasi Terkini</h3>
+                </div>
                 <a href="{{ route('notifications.index') }}" class="text-xs font-medium text-royal-600 hover:text-royal-700">Semua →</a>
             </div>
             <div class="divide-y divide-gray-100">
@@ -229,20 +291,31 @@
         </div>
 
         <div class="card p-6">
-            <h3 class="text-sm font-semibold text-gray-900">Capaian Pantas</h3>
-            <div class="mt-3 flex flex-wrap gap-2">
-                @can('reports.view')
-                    <a href="{{ route('reports.index') }}" class="btn-white text-sm">Laporan</a>
+            <div class="flex items-center gap-2.5">
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-navy-50 text-navy-600">
+                    <x-icon name="sparkles" class="h-4 w-4" />
+                </span>
+                <h3 class="text-sm font-semibold text-gray-900">Capaian Pantas</h3>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+                @can('create', \App\Models\Application::class)
+                    <a href="{{ route('applications.create') }}" class="btn-primary text-sm"><x-icon name="plus" class="h-4 w-4" /> Permohonan Baharu</a>
                 @endcan
-                <a href="{{ route('notifications.index') }}" class="btn-white text-sm">Notifikasi</a>
+                @if (auth()->user()->can('applications.create') || auth()->user()->canCreateApplicationOnBehalf())
+                    <a href="{{ route('association-guide.download') }}?v=3" class="btn-white text-sm"><x-icon name="download" class="h-4 w-4" /> Panduan Dokumen Persatuan (PDF)</a>
+                @endif
+                @can('reports.view')
+                    <a href="{{ route('reports.index') }}" class="btn-white text-sm"><x-icon name="chart" class="h-4 w-4" /> Laporan</a>
+                @endcan
+                <a href="{{ route('notifications.index') }}" class="btn-white text-sm"><x-icon name="bell" class="h-4 w-4" /> Notifikasi</a>
                 @can('payments.view')
-                    <a href="{{ route('payments.index') }}" class="btn-white text-sm">Pembayaran / Baucar</a>
+                    <a href="{{ route('payments.index') }}" class="btn-white text-sm"><x-icon name="receipt" class="h-4 w-4" /> Pembayaran / Baucar</a>
                 @endcan
                 @can('applications.review.secretariat')
-                    <a href="{{ route('reviews.secretariat') }}" class="btn-white text-sm">Semakan JP</a>
+                    <a href="{{ route('reviews.secretariat') }}" class="btn-white text-sm"><x-icon name="clipboard" class="h-4 w-4" /> Semakan JP</a>
                 @endcan
                 @can('applications.approve')
-                    <a href="{{ route('approvals.queue') }}" class="btn-white text-sm">Kelulusan</a>
+                    <a href="{{ route('approvals.queue') }}" class="btn-white text-sm"><x-icon name="shield-check" class="h-4 w-4" /> Kelulusan</a>
                 @endcan
             </div>
         </div>

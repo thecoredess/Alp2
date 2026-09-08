@@ -12,10 +12,15 @@ use App\Services\Application\ApplicationBudgetService;
 use App\Services\Application\ApplicationNumberGenerator;
 use App\Services\Application\ApplicationReportCardService;
 use App\Services\Application\ApplicationTimelineService;
+use App\Services\Application\RecipientRegistry;
 use App\Services\Audit\AuditService;
 use App\Services\Budget\BudgetService;
+use App\Services\Documents\ApprovalLetterService;
+use App\Support\ApplicationAmountValidator;
+use App\Support\UrsContributionPolicy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -27,6 +32,8 @@ class ApplicationController extends Controller
         private readonly ApplicationTimelineService $timeline,
         private readonly ApplicationReportCardService $reportCards,
         private readonly BudgetService $budget,
+        private readonly RecipientRegistry $recipients,
+        private readonly ApprovalLetterService $approvalLetters,
     ) {}
 
     /** Permohonan Saya (permohonan ALP pengguna). */
@@ -38,7 +45,7 @@ class ApplicationController extends Controller
         $applications = $this->filteredQuery($request)
             ->where('alp_id', $request->user()->alp_id)
             ->with(['financialYear', 'alp'])
-            ->latest()
+            ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
 
@@ -56,7 +63,7 @@ class ApplicationController extends Controller
         $applications = $this->filteredQuery($request)
             ->when($request->filled('alp'), fn ($q) => $q->where('alp_id', $request->integer('alp')))
             ->with(['financialYear', 'alp'])
-            ->latest()
+            ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
 
@@ -72,14 +79,45 @@ class ApplicationController extends Controller
     {
         $this->authorize('create', Application::class);
         $activeYear = FinancialYear::active();
+        $user = $request->user();
+        $onBehalf = $user->canCreateApplicationOnBehalf();
+
+        $alp = $onBehalf
+            ? ($request->filled('alp') || old('alp_id')
+                ? Alp::find($request->integer('alp') ?: (int) old('alp_id'))
+                : null)
+            : $user->alp;
+
+        $programDateMin = $user->canWaiveProgramLeadTime()
+            ? now()->toDateString()
+            : UrsContributionPolicy::minimumProgramDate()->format('Y-m-d');
+
+        $amountLimits = null;
+        if ($activeYear) {
+            if ($alp) {
+                $amountLimits = ApplicationAmountValidator::limitsFor(
+                    $alp,
+                    $activeYear,
+                    forceMaxPerApplication: $onBehalf,
+                );
+            } elseif ($onBehalf) {
+                // Admin JP: paparan amaran RM3,000 terus seperti modul ALP, walaupun ALP belum dipilih.
+                $amountLimits = ApplicationAmountValidator::limitsBaseline(forceMaxPerApplication: true);
+            }
+        }
 
         return view('applications.create', [
             'activeYear' => $activeYear,
-            'types' => ApplicationType::options(),
+            'alp' => $alp,
+            'alps' => $onBehalf ? Alp::orderBy('ref_code')->get() : collect(),
+            'onBehalf' => $onBehalf,
+            'amountLimits' => $amountLimits,
+            'programDateMin' => $programDateMin,
+            'waiveProgramLeadTime' => $user->canWaiveProgramLeadTime(),
         ]);
     }
 
-    /** Cipta draf (Langkah 1 → seterusnya Objektif). */
+    /** Cipta draf Borang Penyaluran, kemudian lampiran senarai semak. */
     public function store(ApplicationCreateRequest $request, ApplicationNumberGenerator $numbers): RedirectResponse
     {
         $this->authorize('create', Application::class);
@@ -88,35 +126,48 @@ class ApplicationController extends Controller
         abort_if($year === null, 422, 'Tiada tahun kewangan aktif.');
 
         $user = $request->user();
-        $type = ApplicationType::from($request->validated('application_type'));
+        $data = $request->validated();
+        $alpId = $user->canCreateApplicationOnBehalf()
+            ? (int) $data['alp_id']
+            : (int) $user->alp_id;
+        abort_if($alpId <= 0, 422, 'ALP tidak sah.');
 
-        $application = DB::transaction(function () use ($request, $numbers, $year, $user, $type) {
-            $number = $numbers->next($type, $year->year);
+        $application = DB::transaction(function () use ($data, $numbers, $year, $user, $alpId) {
+            $number = $numbers->next(ApplicationType::SUMBANGAN, $year->year);
 
             return Application::create([
                 'application_number' => $number,
                 'financial_year_id' => $year->id,
-                'alp_id' => $user->alp_id,
-                'application_type' => $type,
-                'project_title' => $request->validated('project_title'),
-                'project_summary' => $request->validated('project_summary'),
-                'location' => $request->validated('location'),
-                'proposed_start_date' => $request->validated('proposed_start_date'),
-                'proposed_end_date' => $request->validated('proposed_end_date'),
+                'alp_id' => $alpId,
+                'application_type' => ApplicationType::SUMBANGAN,
+                'purpose' => $data['purpose'],
+                'recipient_name' => $data['recipient_name'],
+                'recipient_ros_number' => $data['recipient_ros_number'],
+                'program_date' => $data['program_date'],
+                'program_category' => $data['program_category'],
+                'recipient_bank_account' => $data['recipient_bank_account'],
+                'recipient_address' => $data['recipient_address'],
+                'requested_amount' => number_format((float) $data['requested_amount'], 2, '.', ''),
                 'status' => ApplicationStatus::DRAFT,
-                'requested_amount' => '0.00',
                 'created_by' => $user->id,
                 'updated_by' => $user->id,
             ]);
         });
 
+        $this->recipients->syncFromApplication($application);
+
         $this->audit->log('APPLICATION_CREATED', $application, null, [
             'application_number' => $application->application_number,
-            'type' => $type->value,
+            'amount' => $application->requested_amount,
+            'on_behalf' => $user->canCreateApplicationOnBehalf(),
         ]);
 
-        return redirect()->route('applications.wizard.maklumat', $application)
-            ->with('status', 'Draf dicipta — lengkapkan maklumat penerima (TBL-10): '.$application->application_number);
+        $nextMsg = $user->canCreateApplicationOnBehalf()
+            ? 'Borang disimpan. Sila muat naik lampiran, kemudian hantar kepada Pegawai JP.'
+            : 'Borang disimpan. Sila muat naik lampiran senarai semak, kemudian hantar kepada Jabatan Pentadbiran.';
+
+        return redirect()->route('applications.wizard.dokumen', $application)
+            ->with('status', $nextMsg);
     }
 
     /** Halaman butiran permohonan (baca sahaja untuk yang telah dihantar). */
@@ -125,7 +176,7 @@ class ApplicationController extends Controller
         $this->authorize('view', $application);
 
         $application->load([
-            'financialYear', 'alp', 'budgetItems', 'documents.uploader',
+            'financialYear', 'alp', 'documents.uploader',
             'statusHistories.changedBy', 'creator',
             'reviews.reviewer', 'approvals.approver', 'approvals.approvalLevel',
             'revisions.returnedBy', 'commitmentTransaction',
@@ -140,40 +191,50 @@ class ApplicationController extends Controller
             ? $application->revisions->whereNull('resubmitted_at')->last()
             : null;
 
+        $user = auth()->user();
+        $isAlpView = $user->alp_id === $application->alp_id && ! $user->can('applications.view_all');
+
         return view('applications.show', [
             'application' => $application,
             'ledgerAvailable' => $budgetSummary->available(),
             'pending' => $pending,
             'tbl10Snapshot' => $tbl10,
             'activeRevision' => $activeRevision,
-            'timelineStages' => $this->timeline->stages($application),
-            'timelineKpi' => $this->timeline->kpi($application),
+            'jpIncomplete' => \App\Support\JpReviewChecklist::latestIncompleteFor($application),
+            'timelineStages' => $this->timeline->stages($application, $isAlpView),
+            'timelineKpi' => $isAlpView ? null : $this->timeline->kpi($application),
+            'isAlpView' => $isAlpView,
             'reportCardDue' => $this->reportCards->dueDate($application),
             'reportCardOverdue' => $this->reportCards->isOverdue($application),
             'hasReportCard' => $this->reportCards->hasReportCard($application),
         ]);
     }
 
-    /** Surat / ringkasan kelulusan untuk dicetak (UR-M05-006). */
+    /** Surat pemakluman keputusan (template DBKL — LULUS / TIDAK LULUS). */
     public function letter(Application $application): View
     {
         $this->authorize('view', $application);
+        $this->assertLetterAvailable($application);
 
+        return $this->approvalLetters->html($application);
+    }
+
+    /** Muat turun surat pemakluman sebagai PDF. */
+    public function letterPdf(Application $application): Response
+    {
+        $this->authorize('view', $application);
+        $this->assertLetterAvailable($application);
+
+        return $this->approvalLetters->pdf($application);
+    }
+
+    private function assertLetterAvailable(Application $application): void
+    {
         abort_unless(
-            $application->status === \App\Enums\ApplicationStatus::APPROVED,
+            in_array($application->status, [ApplicationStatus::APPROVED, ApplicationStatus::REJECTED], true),
             403,
-            'Surat kelulusan hanya untuk permohonan yang telah diluluskan.'
+            'Surat pemakluman hanya untuk permohonan yang telah diluluskan atau ditolak.'
         );
-
-        $application->load([
-            'financialYear', 'alp', 'approvals.approver', 'approvals.approvalLevel',
-            'commitmentTransaction',
-        ]);
-
-        return view('applications.letter', [
-            'application' => $application,
-            'templates' => \App\Support\UrsDocumentTemplates::all(),
-        ]);
     }
 
     /** Borang Penyaluran Sumbangan (BR-020 / TBL-10). */
@@ -182,7 +243,7 @@ class ApplicationController extends Controller
         $this->authorize('view', $application);
 
         $application->load([
-            'financialYear', 'alp', 'budgetItems', 'documents',
+            'financialYear', 'alp', 'documents',
             'reviews.reviewer', 'approvals.approver', 'approvals.approvalLevel',
         ]);
 
@@ -209,7 +270,8 @@ class ApplicationController extends Controller
                 $term = $request->string('cari');
                 $q->where(fn ($sub) => $sub
                     ->where('application_number', 'like', "%{$term}%")
-                    ->orWhere('project_title', 'like', "%{$term}%"));
+                    ->orWhere('purpose', 'like', "%{$term}%")
+                    ->orWhere('recipient_name', 'like', "%{$term}%"));
             });
     }
 
@@ -217,7 +279,6 @@ class ApplicationController extends Controller
     {
         return [
             'years' => FinancialYear::orderByDesc('year')->get(),
-            'typeOptions' => ApplicationType::options(),
             'statusOptions' => collect(ApplicationStatus::cases())
                 ->mapWithKeys(fn ($s) => [$s->value => $s->label()])->all(),
         ];

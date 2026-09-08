@@ -1,11 +1,16 @@
 @extends('layouts.app')
 @section('title', 'Manual Pengguna')
 @section('heading', 'Manual Pengguna / Kit Tatacara')
-@section('subheading', 'URS M11 — capaian tatacara mengikut peranan')
+@section('subheading', 'URS M11 — tatacara mengikut peranan anda')
 
 @section('content')
     <div class="mb-4 flex flex-wrap items-center gap-2 no-print">
         <button type="button" onclick="window.print()" class="btn-white">Cetak ringkasan</button>
+        @if ($audience === 'alp')
+            @can('applications.create')
+                <a href="{{ route('association-guide.download') }}?v=3" class="btn-primary">Panduan Dokumen Persatuan (PDF)</a>
+            @endcan
+        @endif
         @if ($hasOfficialPdf)
             <a href="{{ route('manual.download') }}" class="btn-primary">Muat turun PDF rasmi</a>
         @endif
@@ -45,48 +50,87 @@
     @endif
 
     <div class="mb-4 rounded-lg border border-royal-200 bg-royal-50 px-4 py-3 text-sm text-royal-900">
-        Dokumen ini merumuskan aliran URS v1.2. Kandungan penuh boleh disahkan/dikemas kini oleh pemilik proses.
-        Audiens semasa: <strong>{{ $audience === 'alp' ? 'ALP / Persatuan' : ($audience === 'jp' ? 'Pengguna JP / dalaman' : 'Umum') }}</strong>.
+        Dokumen ini merumuskan aliran URS v1.2 untuk peranan anda.
+        Kandungan penuh boleh disahkan/dikemas kini oleh pemilik proses.
+        Peranan semasa: <strong>{{ $audienceLabel }}</strong>.
     </div>
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    @if ($audience === 'alp')
         <div class="card p-6 space-y-3">
-            <h3 class="text-sm font-semibold text-gray-900">Untuk ALP / Persatuan</h3>
+            <h3 class="text-sm font-semibold text-gray-900">Tatacara ALP / Persatuan</h3>
+            <p class="text-sm text-gray-600">
+                Kongsi <a href="{{ route('association-guide.download') }}?v=3" class="font-medium text-royal-600 underline hover:text-royal-700">Panduan Dokumen Persatuan (PDF)</a>
+                kepada persatuan penerima — termasuk senarai semak 5 dokumen wajib, <strong>Format Laporan Program ALP</strong> (report card) dan <strong>Borang EFT rasmi DBKL 2026</strong>.
+            </p>
             <ol class="list-decimal space-y-2 pl-5 text-sm text-gray-700">
-                <li>Log masuk → semak <strong>Bajet Saya</strong> &amp; kuota tempoh.</li>
-                <li>Cipta permohonan → lengkapkan TBL-10 (penerima, ROS, akaun, alamat KL).</li>
-                <li>Muat naik dokumen wajib TBL-9 (ROS, EFT, bank, kertas kerja).</li>
-                <li>Hantar → pantau status &amp; notifikasi.</li>
-                <li>Selepas lulus &amp; program selesai → muat naik <strong>report card</strong> dalam 1 bulan (BR-018).</li>
+                <li>Log masuk → semak <strong>Bajet Saya</strong> &amp; kuota penggal.</li>
+                <li>Cipta permohonan → lengkapkan borang penyaluran (penerima, ROS, akaun, alamat KL).</li>
+                <li>Muat naik dokumen wajib senarai semak (ROS, EFT, bank, kertas kerja).</li>
+                <li>Hantar → pantau status permohonan.</li>
+                <li>Selepas lulus &amp; program selesai → lengkapkan <strong>Format Laporan Program ALP</strong> (dilampir dalam panduan PDF) dan muat naik dalam 1 bulan (BR-018).</li>
                 <li>Cetak <strong>Borang Penyaluran</strong> / surat kelulusan bila perlu (BR-020).</li>
             </ol>
         </div>
+    @elseif ($audience === 'jp')
+        <div class="card p-6 space-y-4">
+            <h3 class="text-sm font-semibold text-gray-900">Tatacara Pegawai Dalaman</h3>
 
-        <div class="card p-6 space-y-3">
-            <h3 class="text-sm font-semibold text-gray-900">Untuk JP / PEPU / Kewangan</h3>
-            <ol class="list-decimal space-y-2 pl-5 text-sm text-gray-700">
-                <li><strong>Pegawai JP</strong>: senarai semak UR-M04-001 → syorkan / kembalikan.</li>
-                <li><strong>Peraku</strong> (≤ RM3,000) / <strong>PEPU</strong> (> RM3,000): lulus atau tolak.</li>
-                <li><strong>Kerani Kewangan / JKEW</strong>: baucar, tarikh hantar JKEW, semakan silang, status bayaran.</li>
-                <li>Pantau dashboard KPI <strong>14 hari</strong> hingga JKEW.</li>
-                <li>Semak senarai <strong>Laporan Aktiviti</strong> untuk report card tertunggak.</li>
-            </ol>
+            @can('applications.review.secretariat')
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                        {{ auth()->user()->canMakeFullJpReviewDecision() ? 'Admin JP' : 'Pegawai JP' }}
+                    </p>
+                    <ol class="mt-2 list-decimal space-y-2 pl-5 text-sm text-gray-700">
+                        @if (auth()->user()->canMakeFullJpReviewDecision())
+                            <li>Semak permohonan di <strong>Semakan Admin JP</strong>.</li>
+                            <li>Lengkapkan senarai semak UR-M04-001 → buat keputusan (Disyorkan / Tidak Disyorkan / Kembalikan).</li>
+                        @else
+                            <li>Semak permohonan di <strong>Semakan Pegawai JP</strong>.</li>
+                            <li>Isikan <strong>ulasan</strong> dan <strong>syor kepada Pengarah JP</strong> (perakuan), atau kembalikan untuk pembetulan.</li>
+                        @endif
+                    </ol>
+                </div>
+            @endcan
+
+            @can('applications.approve')
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Peraku / PEPU</p>
+                    <ol class="mt-2 list-decimal space-y-2 pl-5 text-sm text-gray-700">
+                        <li><strong>Peraku</strong> (≤ RM3,000) / <strong>PEPU</strong> (&gt; RM3,000): lulus atau tolak permohonan.</li>
+                        <li>Pastikan baki peruntukan ALP mencukupi sebelum kelulusan akhir.</li>
+                    </ol>
+                </div>
+            @endcan
+
+            @can('payments.view')
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Kerani Kewangan / JKEW</p>
+                    <ol class="mt-2 list-decimal space-y-2 pl-5 text-sm text-gray-700">
+                        <li>Kemas kini baucar, tarikh hantar JKEW, semakan silang, dan status bayaran.</li>
+                        <li>Pantau dashboard KPI <strong>14 hari</strong> hingga JKEW.</li>
+                    </ol>
+                </div>
+            @endcan
+
+            @if (auth()->user()->can('applications.view_all') || auth()->user()->can('applications.review.secretariat'))
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Laporan Aktiviti</p>
+                    <p class="mt-2 text-sm text-gray-700">Semak senarai <strong>Laporan Aktiviti</strong> untuk report card tertunggak.</p>
+                </div>
+            @endif
+
+            @if (! auth()->user()->can('applications.review.secretariat')
+                && ! auth()->user()->can('applications.approve')
+                && ! auth()->user()->can('payments.view')
+                && ! auth()->user()->can('applications.view_all'))
+                <p class="text-sm text-gray-600">Tiada tatacara khusus untuk peranan anda. Sila rujuk pentadbir sistem.</p>
+            @endif
         </div>
-    </div>
-
-    <div class="mt-6 card p-6">
-        <h3 class="mb-2 text-sm font-semibold text-gray-900">Rujukan pantas peraturan wang</h3>
-        <ul class="list-disc space-y-1 pl-5 text-sm text-gray-700">
-            <li>BR-001: maks RM30,000 / ALP / tahun (boleh diprorata BR-007 mengikut lantikan)</li>
-            <li>BR-002 / BR-003: 3 tempoh × kuota; baki tempoh luput</li>
-            <li>BR-005: maks RM3,000 setiap permohonan</li>
-            <li>BR-009 / BR-023: satu persatuan (ROS) sekali setahun</li>
-        </ul>
-        <p class="mt-4 text-xs text-gray-500">
-            Fail panduan projek tambahan: <code class="font-mono">docs/PANDUAN_LOGIN.md</code>,
-            <code class="font-mono">docs/PANDUAN_ANALISIS_URS_v1.2.md</code>.
-        </p>
-    </div>
+    @else
+        <div class="card p-6">
+            <p class="text-sm text-gray-600">Manual khusus peranan tidak tersedia. Sila hubungi pentadbir sistem untuk bantuan.</p>
+        </div>
+    @endif
 
     <style>
         @media print {

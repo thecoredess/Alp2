@@ -59,15 +59,15 @@ class UrsPeriodAndOverdueTest extends TestCase
         $app = Application::factory()->create([
             'alp_id' => $this->alp->id,
             'financial_year_id' => $this->year->id,
-            'application_type' => ApplicationType::CSR,
+            'application_type' => ApplicationType::SUMBANGAN,
             'status' => ApplicationStatus::DRAFT,
+            'requested_amount' => $amount,
+            'purpose' => 'Tujuan ujian',
+            'recipient_name' => 'Persatuan Ujian',
+            'recipient_bank_account' => '1234567890',
         ]);
-        $app->budgetItems()->create([
-            'description' => 'Item', 'quantity' => 1, 'unit_cost' => $amount, 'total' => $amount, 'sort_order' => 1,
-        ]);
-        $app->recalculateRequestedAmount();
 
-        foreach (DocumentRequirement::requiredFor(ApplicationType::CSR) as $t) {
+        foreach (DocumentRequirement::requiredFor() as $t) {
             ApplicationDocument::factory()->type($t)->create(['application_id' => $app->id]);
         }
 
@@ -96,6 +96,37 @@ class UrsPeriodAndOverdueTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertSame(ApplicationStatus::DRAFT, $blocked->fresh()->status);
+    }
+
+    public function test_legacy_application_numbers_do_not_count_toward_period_quota(): void
+    {
+        SystemSetting::set(UrsContributionPolicy::KEY_ENABLED, true);
+        SystemSetting::set(UrsContributionPolicy::KEY_PERIOD_QUOTA, '10000.00');
+        $this->allocate('30000.00');
+
+        Application::factory()->submitted()->create([
+            'alp_id' => $this->alp->id,
+            'financial_year_id' => $this->year->id,
+            'application_number' => 'ALP/CSR/2026/0099',
+            'application_type' => ApplicationType::SUMBANGAN,
+            'requested_amount' => '85000.00',
+            'submitted_at' => now(),
+        ]);
+
+        $period = UrsContributionPolicy::periodFor(now(), (int) $this->year->year);
+        $used = UrsContributionPolicy::periodUsage(
+            $this->alp->id,
+            $this->year->id,
+            $period['start'],
+            $period['end'],
+        );
+
+        $this->assertSame('0.00', $used->value());
+        $this->assertSame('10000.00', UrsContributionPolicy::periodRemaining(
+            $this->alp->id,
+            $this->year->id,
+            calendarYear: (int) $this->year->year,
+        )->value());
     }
 
     public function test_period_quota_does_not_carry_forward_from_prior_period(): void

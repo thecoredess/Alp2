@@ -42,15 +42,14 @@
 
     <table class="form">
         <tr><th>A · Nama ALP</th><td>{{ $application->alp->ref_code }} — {{ $application->alp->name }}</td></tr>
-        <tr><th>B · Nama Penerima</th><td>{{ $application->recipient_name ?? '—' }}</td></tr>
-        <tr><th>C · Jumlah Sumbangan</th><td><strong>RM {{ number_format((float) $application->requested_amount, 2) }}</strong></td></tr>
-        <tr><th>D · Tujuan Sumbangan</th><td>{{ $application->project_title }}</td></tr>
-        <tr><th>E · No. Akaun Penerima</th><td>{{ $application->recipient_bank_account ?? '—' }}</td></tr>
-        <tr><th>O · No. ROS</th><td>{{ $application->recipient_ros_number ?? '—' }}</td></tr>
-        <tr><th>N · Jenis Program</th><td>{{ $application->program_category?->label() ?? '—' }}</td></tr>
-        <tr><th>M · Tarikh Program</th><td>{{ $application->proposed_start_date?->format('d/m/Y') ?? '—' }} – {{ $application->proposed_end_date?->format('d/m/Y') ?? '—' }}</td></tr>
-        <tr><th>P · Alamat Persatuan</th><td>{{ $application->recipient_address ?? '—' }}</td></tr>
-        <tr><th>Lokasi Program</th><td>{{ $application->location ?? '—' }}</td></tr>
+        <tr><th>B · Nama Persatuan</th><td>{{ $application->recipient_name ?? '—' }}</td></tr>
+        <tr><th>C · No. ROS</th><td>{{ $application->recipient_ros_number ?? '—' }}</td></tr>
+        <tr><th>D · Tarikh Program</th><td>{{ $application->program_date?->format('d/m/Y') ?? '—' }}</td></tr>
+        <tr><th>E · Jenis/Kategori Program</th><td>{{ $application->program_category?->label() ?? '—' }}</td></tr>
+        <tr><th>F · Jumlah Sumbangan</th><td><strong>RM {{ number_format((float) $application->requested_amount, 2) }}</strong></td></tr>
+        <tr><th>G · Tujuan Sumbangan</th><td>{{ $application->purpose }}</td></tr>
+        <tr><th>H · No. Akaun Penerima</th><td>{{ $application->recipient_bank_account ?? '—' }}</td></tr>
+        <tr><th>I · Alamat Persatuan</th><td>{{ $application->recipient_address ?? '—' }}</td></tr>
     </table>
 
     <p class="section">Ruang kegunaan JP (F–J)</p>
@@ -60,7 +59,7 @@
         <tr><th>H · Baki peruntukan</th><td>RM {{ number_format((float) $tbl10->balance->value(), 2) }}</td></tr>
         <tr><th>I · Permohonan semasa</th><td>RM {{ number_format((float) $tbl10->currentRequest->value(), 2) }}</td></tr>
         <tr><th>J · Baki selepas pending / permohonan</th><td>RM {{ number_format((float) $tbl10->balanceAfter->value(), 2) }}</td></tr>
-        <tr><th>Status sistem</th><td>{{ $application->status->label() }}@if($application->is_short_notice) · Short notice (BR-014/015)@endif</td></tr>
+        <tr><th>Status sistem</th><td>{{ $application->status->label() }}</td></tr>
     </table>
 
     <p class="section">Perakuan / Keputusan (K–L)</p>

@@ -1,36 +1,55 @@
-@props(['application', 'current'])
+@props(['application' => null, 'current'])
 
 @php
     $steps = [
-        1 => ['Maklumat Projek', 'applications.wizard.maklumat'],
-        2 => ['Objektif & Skop', 'applications.wizard.objektif'],
-        3 => ['Pecahan Bajet', 'applications.wizard.bajet'],
-        4 => ['Dokumen', 'applications.wizard.dokumen'],
-        5 => ['Semakan', 'applications.wizard.semakan'],
-        6 => ['Hantar', null],
+        1 => ['Borang Penyaluran', 'applications.wizard.maklumat'],
+        2 => ['Muat Naik Dokumen', 'applications.wizard.dokumen'],
+        3 => ['Hantar kepada JP', 'applications.wizard.semakan'],
     ];
 @endphp
 
-<ol class="mb-6 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
-    @foreach ($steps as $n => [$label, $route])
-        @php
-            $isCurrent = $n === $current;
-            $isDone = $n < $current;
-        @endphp
-        <li class="flex items-center gap-2">
-            @if ($route)
-                <a href="{{ route($route, $application) }}"
-                   class="flex items-center gap-2 rounded-lg px-3 py-1.5 {{ $isCurrent ? 'bg-navy-700 text-white' : ($isDone ? 'text-navy-700 hover:bg-navy-50' : 'text-gray-400 hover:bg-gray-50') }}">
-                    <span class="grid h-5 w-5 place-items-center rounded-full text-xs {{ $isCurrent ? 'bg-white text-navy-700' : ($isDone ? 'bg-navy-100 text-navy-700' : 'bg-gray-200 text-gray-500') }}">{{ $n }}</span>
-                    {{ $label }}
+<div class="card mb-6 overflow-hidden">
+    <div class="grid grid-cols-1 divide-y divide-gray-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        @foreach ($steps as $n => [$label, $route])
+            @php
+                $isCurrent = $n === $current;
+                $isDone = $application !== null && $n < $current;
+                $isDisabled = ! $isCurrent && ! $isDone;
+                $useLink = $application !== null && ! $isDisabled;
+                $wrapperClass = \Illuminate\Support\Arr::toCssClasses([
+                    'group flex items-center gap-3 px-4 py-4 transition sm:px-5',
+                    'bg-navy-700 text-white' => $isCurrent,
+                    'bg-white hover:bg-navy-50' => ! $isCurrent && $isDone,
+                    'bg-gray-50/50 text-gray-400 pointer-events-none' => $isDisabled,
+                ]);
+            @endphp
+
+            @if ($useLink)
+                <a href="{{ route($route, $application) }}" class="{{ $wrapperClass }}">
+            @else
+                <div class="{{ $wrapperClass }}" @if ($isCurrent) aria-current="step" @endif>
+            @endif
+                <span @class([
+                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold',
+                    'bg-white text-navy-700' => $isCurrent,
+                    'bg-green-100 text-green-700' => $isDone && ! $isCurrent,
+                    'bg-gray-200 text-gray-500' => $isDisabled,
+                ])>
+                    @if ($isDone && ! $isCurrent)
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                    @else
+                        {{ $n }}
+                    @endif
+                </span>
+                <span class="min-w-0">
+                    <span @class(['block text-xs uppercase tracking-wide', $isCurrent ? 'text-navy-200' : 'text-gray-400'])>Langkah {{ $n }}</span>
+                    <span @class(['block truncate text-sm font-semibold', $isCurrent ? 'text-white' : ($isDone ? 'text-navy-800' : 'text-gray-500')])>{{ $label }}</span>
+                </span>
+            @if ($useLink)
                 </a>
             @else
-                <span class="flex items-center gap-2 rounded-lg px-3 py-1.5 {{ $isCurrent ? 'bg-navy-700 text-white' : 'text-gray-400' }}">
-                    <span class="grid h-5 w-5 place-items-center rounded-full text-xs {{ $isCurrent ? 'bg-white text-navy-700' : 'bg-gray-200 text-gray-500' }}">{{ $n }}</span>
-                    {{ $label }}
-                </span>
+                </div>
             @endif
-            @if (! $loop->last)<span class="text-gray-300">›</span>@endif
-        </li>
-    @endforeach
-</ol>
+        @endforeach
+    </div>
+</div>

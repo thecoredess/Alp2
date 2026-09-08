@@ -24,7 +24,7 @@
                     <td class="px-4 py-3 text-gray-600 font-mono text-xs">{{ $txn->reference_no ?? '—' }}</td>
                     <td class="px-4 py-3 text-gray-600">{{ $txn->description ?? '—' }}</td>
                     <td class="px-4 py-3 text-right font-medium {{ $isNegative ? 'text-danger' : 'text-gray-900' }}">
-                        <x-money :value="$txn->amount" :signed="true" />
+                        <x-money :value="$txn->amount" />
                     </td>
                     <td class="px-4 py-3 text-right text-gray-900">
                         <x-money :value="$row['running_available']" />

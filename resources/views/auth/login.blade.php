@@ -6,18 +6,6 @@
     <h2 class="text-2xl font-semibold tracking-tight text-navy-800">Log Masuk</h2>
     <p class="mt-1.5 text-sm text-gray-500">Masukkan e-mel dan kata laluan anda.</p>
 
-    @if (session('status'))
-        <div class="mt-5 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    @error('email')
-        <div class="mt-5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-            {{ $message }}
-        </div>
-    @enderror
-
     <form method="POST" action="{{ route('login') }}" class="mt-7 space-y-4" id="login-form">
         @csrf
 
@@ -60,7 +48,7 @@
                 ['label' => 'Pegawai JP', 'email' => 'urussetia@dbkl.test'],
                 ['label' => 'Kerani Kewangan JP', 'email' => 'kewangan@dbkl.test'],
                 ['label' => 'JKEW (skop dihantar)', 'email' => 'jkew@dbkl.test'],
-                ['label' => 'Peraku (Pelulus)', 'email' => 'pelulus@dbkl.test'],
+                ['label' => 'TP / Pengarah JP', 'email' => 'pelulus@dbkl.test'],
                 ['label' => 'PEPU / Pengurusan', 'email' => 'pengurusan@dbkl.test'],
             ]);
         @endphp

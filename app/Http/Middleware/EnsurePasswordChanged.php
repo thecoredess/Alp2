@@ -18,8 +18,8 @@ class EnsurePasswordChanged
         $user = Auth::user();
 
         if ($user && $user->must_change_password
-            && ! $request->routeIs('password.change', 'password.change.update', 'logout')) {
-            return redirect()->route('password.change')
+            && ! $request->routeIs('profile.edit', 'profile.update', 'password.change', 'password.change.update', 'logout')) {
+            return redirect()->to(route('profile.edit').'#kata-laluan')
                 ->with('warning', 'Anda perlu menetapkan kata laluan baharu sebelum meneruskan.');
         }
 
