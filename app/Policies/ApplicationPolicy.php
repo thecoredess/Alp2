@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Application;
 use App\Models\User;
+use App\Services\Application\ApplicationReportCardService;
 
 class ApplicationPolicy
 {
@@ -70,7 +71,7 @@ class ApplicationPolicy
     /** Muat naik report card / laporan aktiviti (M07) selepas diluluskan. */
     public function uploadReportCard(User $user, Application $application): bool
     {
-        if ($application->status !== \App\Enums\ApplicationStatus::APPROVED) {
+        if (! app(ApplicationReportCardService::class)->canUpload($application)) {
             return false;
         }
 

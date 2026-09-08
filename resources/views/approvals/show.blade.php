@@ -73,26 +73,7 @@
                 </x-page-card>
 
                 <x-page-card title="Lampiran" icon="paper-clip">
-                    @if ($application->documents->isEmpty())
-                        <p class="text-sm text-gray-400">Tiada lampiran.</p>
-                    @else
-                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            @foreach ($application->documents as $doc)
-                                <div class="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50/80 px-4 py-3 text-sm">
-                                    <div class="min-w-0">
-                                        <p class="font-medium text-gray-900">{{ $doc->document_type->simpleLabel() }}</p>
-                                        <p class="truncate text-xs text-gray-500" title="{{ $doc->original_filename }}">{{ $doc->original_filename }}</p>
-                                    </div>
-                                    <a href="{{ route('applications.documents.view', [$application, $doc]) }}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="btn-white shrink-0 !px-3 !py-2 text-xs">
-                                        Lihat
-                                    </a>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
+                    <x-document-preview-list :application="$application" :documents="$application->documents" />
                 </x-page-card>
 
                 @if ($currentReviews->isNotEmpty())

@@ -42,7 +42,7 @@ class ApplicationWizardController extends Controller
                 $application->alp,
                 $application->financialYear,
                 $application->id,
-                forceMaxPerApplication: $request->user()->canCreateApplicationOnBehalf(),
+                forceMaxPerApplication: auth()->user()?->canCreateApplicationOnBehalf() ?? false,
             ),
             'jpIncomplete' => \App\Support\JpReviewChecklist::latestIncompleteFor($application),
             ...$this->programDateContext($application),

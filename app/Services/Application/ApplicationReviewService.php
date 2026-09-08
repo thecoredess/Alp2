@@ -12,12 +12,14 @@ use App\Models\ApplicationStatusHistory;
 use App\Models\User;
 use App\Services\Audit\AuditService;
 use App\Services\Notification\ApplicationNotifier;
+use App\Support\JpReviewChecklist;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Semakan Pegawai JP (Urus Setia) kemudian terus ke kelulusan (URS v1.2 M04→M05).
- * Semakan Kewangan/Teknikal pra-kelulusan diasingkan ke legacy — tidak lagi dalam aliran aktif.
- * Pemulangan untuk pembetulan kekal. Rekod semakan bersifat append-only.
+ * Aliran semakan JP (URS):
+ * Admin JP (checklist + keputusan) → Pegawai JP (perakuan/syor) → PENDING_APPROVAL (Pengarah/PEPU).
+ * Semakan Kewangan/Teknikal pra-kelulusan diasingkan ke legacy.
+ * Rekod semakan bersifat append-only.
  */
 class ApplicationReviewService
 {
@@ -52,11 +54,17 @@ class ApplicationReviewService
                 throw new ApplicationException('Permohonan ini tiada pada peringkat semakan '.$type->label().'.');
             }
 
-            if ($decision === ReviewDecision::RECOMMEND && $type === ReviewType::SECRETARIAT) {
-                if (! is_array($checklist) || ! \App\Support\JpReviewChecklist::allLengkap($checklist)) {
-                    throw new ApplicationException(
-                        'Semua item senarai semak mesti lengkap sebelum hantar ke perakuan (UR-M04-001).'
-                    );
+            $isAdminJp = $user->canMakeFullJpReviewDecision();
+
+            if ($type === ReviewType::SECRETARIAT) {
+                $this->assertSecretariatActor($application, $isAdminJp);
+
+                if ($decision === ReviewDecision::RECOMMEND && $isAdminJp) {
+                    if (! is_array($checklist) || ! JpReviewChecklist::allLengkap($checklist)) {
+                        throw new ApplicationException(
+                            'Semua item senarai semak mesti lengkap sebelum hantar kepada Pegawai JP (UR-M04-001).'
+                        );
+                    }
                 }
             }
 
@@ -79,29 +87,57 @@ class ApplicationReviewService
                 return $application;
             }
 
-            // Maju ke peringkat seterusnya.
-            $next = $this->nextStatusAfterReview($application, $type);
-            $this->transition($application, $next, $user, $type->label().' selesai');
+            $next = $this->nextStatusAfterReview($type, $isAdminJp);
+            $remarks = $isAdminJp && $type === ReviewType::SECRETARIAT
+                ? 'Keputusan Admin JP — menunggu perakuan Pegawai JP'
+                : $type->label().' selesai';
+
+            $this->transition($application, $next, $user, $remarks);
 
             $this->audit->log(strtoupper($type->value).'_REVIEW_COMPLETED', $application, null, [
                 'decision' => $decision->value,
                 'revision_number' => $application->revision_number,
+                'actor' => $isAdminJp ? 'admin_jp' : 'pegawai_jp',
             ]);
 
-            if ($next === ApplicationStatus::PENDING_APPROVAL) {
-                $this->notifier->awaitingNextApprover($application->fresh());
+            $fresh = $application->fresh();
+            if ($next === ApplicationStatus::UNDER_SECRETARIAT_REVIEW) {
+                $this->notifier->awaitingPegawaiJp($fresh);
+            } elseif ($next === ApplicationStatus::PENDING_APPROVAL) {
+                $this->notifier->awaitingNextApprover($fresh);
             }
 
             return $application;
         });
     }
 
-    /** Status seterusnya selepas sesuatu semakan diluluskan/dimajukan. */
-    private function nextStatusAfterReview(Application $application, ReviewType $type): ApplicationStatus
+    /** Admin JP hanya pada SUBMITTED; Pegawai JP hanya selepas keputusan Admin JP. */
+    private function assertSecretariatActor(Application $application, bool $isAdminJp): void
+    {
+        if ($isAdminJp) {
+            if ($application->status !== ApplicationStatus::SUBMITTED) {
+                throw new ApplicationException(
+                    'Keputusan Admin JP hanya untuk permohonan yang menunggu semakan Admin JP.'
+                );
+            }
+
+            return;
+        }
+
+        if ($application->status !== ApplicationStatus::UNDER_SECRETARIAT_REVIEW) {
+            throw new ApplicationException(
+                'Pegawai JP hanya boleh membuat pengesyoran selepas keputusan Admin JP.'
+            );
+        }
+    }
+
+    /** Status seterusnya selepas semakan diluluskan/dimajukan. */
+    private function nextStatusAfterReview(ReviewType $type, bool $isAdminJp): ApplicationStatus
     {
         return match ($type) {
-            // URS v1.2: Pegawai JP → terus Peraku/Pelulus (tiada semakan kewangan/teknikal pra-kelulusan).
-            ReviewType::SECRETARIAT => ApplicationStatus::PENDING_APPROVAL,
+            ReviewType::SECRETARIAT => $isAdminJp
+                ? ApplicationStatus::UNDER_SECRETARIAT_REVIEW
+                : ApplicationStatus::PENDING_APPROVAL,
             // Laluan legacy (route dinyahaktif) — kekal selamat jika dipanggil ujian lama.
             ReviewType::FINANCE, ReviewType::TECHNICAL => ApplicationStatus::PENDING_APPROVAL,
         };

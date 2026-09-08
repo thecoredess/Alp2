@@ -21,14 +21,42 @@ class ApplicationNotifier
     {
         $application->loadMissing('alp.users');
 
-        $recipients = $this->usersWithPermission('applications.review.secretariat');
+        // Giliran pertama: Admin JP (checklist + keputusan).
+        $recipients = $this->usersWithPermission('applications.review.secretariat')
+            ->filter(fn (User $u) => $u->canMakeFullJpReviewDecision())
+            ->values();
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
 
         Notification::send(
             $recipients,
             new ApplicationWorkflowNotification(
                 $application,
                 'submitted',
-                'Permohonan baharu telah dihantar dan menunggu semakan Urus Setia.',
+                'Permohonan baharu telah dihantar dan menunggu semakan Admin JP.',
+            ),
+        );
+    }
+
+    /** Selepas keputusan Admin JP — giliran Pegawai JP membuat pengesyoran ke Pengarah. */
+    public function awaitingPegawaiJp(Application $application): void
+    {
+        $recipients = $this->usersWithPermission('applications.review.secretariat')
+            ->reject(fn (User $u) => $u->canMakeFullJpReviewDecision())
+            ->values();
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Notification::send(
+            $recipients,
+            new ApplicationWorkflowNotification(
+                $application,
+                'awaiting_pegawai_jp',
+                'Permohonan telah disemak Admin JP dan menunggu pengesyoran Pegawai JP kepada Pengarah JP.',
             ),
         );
     }
@@ -104,6 +132,29 @@ class ApplicationNotifier
         );
     }
 
+    /**
+     * Selepas kelulusan aras akhir (PEPU) — giliran Kewangan JP menyediakan baucar.
+     * Penerima ialah pemegang `payments.manage` (Kerani baucar), bukan skop JKEW.
+     */
+    public function awaitingPayment(Application $application): void
+    {
+        $recipients = $this->usersWithPermission('payments.manage');
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Notification::send(
+            $recipients,
+            new ApplicationWorkflowNotification(
+                $application,
+                'awaiting_payment',
+                'Permohonan telah diluluskan PEPU dan sedia untuk proses bayaran. Sila sediakan baucar (jumlah: RM'
+                    .$application->requestedAmountMoney()->format().').',
+            ),
+        );
+    }
+
     public function rejected(Application $application, string $reason = ''): void
     {
         $application->loadMissing('alp.users');
@@ -122,12 +173,16 @@ class ApplicationNotifier
         $application->loadMissing('alp.users');
         $owners = $application->alp?->users ?? collect();
 
+        $due = $application->payment_voucher_date
+            ? $application->payment_voucher_date->copy()->addMonthNoOverflow()
+            : now()->addMonthNoOverflow();
+
         Notification::send(
             $owners,
             new ApplicationWorkflowNotification(
                 $application,
                 'payment_voucher',
-                'Baucar pembayaran untuk permohonan anda sedang disediakan / telah direkod.',
+                'Baucar telah disedia. Sila muat naik laporan aktiviti dalam 1 bulan (akhir: '.$due->format('d/m/Y').').',
             ),
         );
     }
@@ -162,7 +217,81 @@ class ApplicationNotifier
             new ApplicationWorkflowNotification(
                 $application,
                 'report_card_reminder',
-                'Peringatan: sila muat naik laporan aktiviti / report card untuk permohonan ini (BR-018 / NT-007). Tempoh rujukan: 1 bulan selepas aktiviti.',
+                'Peringatan: sila muat naik laporan aktiviti untuk permohonan ini. Tempoh: 1 bulan selepas baucar disedia.',
+            ),
+        );
+    }
+
+    /** Selepas ALP muat naik — giliran Admin JP semak. */
+    public function reportCardSubmitted(Application $application): void
+    {
+        $recipients = $this->usersWithPermission('applications.review.secretariat')
+            ->filter(fn (User $u) => $u->canMakeFullJpReviewDecision())
+            ->values();
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Notification::send(
+            $recipients,
+            new ApplicationWorkflowNotification(
+                $application,
+                'report_card_submitted',
+                'Laporan aktiviti telah dimuat naik oleh ALP dan menunggu semakan Admin JP.',
+            ),
+        );
+    }
+
+    /** Selepas Admin JP semak — giliran Pegawai JP sahkan. */
+    public function reportCardAwaitingPegawaiJp(Application $application): void
+    {
+        $recipients = $this->usersWithPermission('applications.review.secretariat')
+            ->reject(fn (User $u) => $u->canMakeFullJpReviewDecision())
+            ->values();
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Notification::send(
+            $recipients,
+            new ApplicationWorkflowNotification(
+                $application,
+                'report_card_awaiting_pegawai_jp',
+                'Laporan aktiviti telah disemak Admin JP dan menunggu pengesahan Pegawai JP.',
+            ),
+        );
+    }
+
+    public function reportCardApproved(Application $application): void
+    {
+        $application->loadMissing('alp.users');
+        $owners = $application->alp?->users ?? collect();
+
+        Notification::send(
+            $owners,
+            new ApplicationWorkflowNotification(
+                $application,
+                'report_card_approved',
+                'Laporan aktiviti anda telah disahkan Pegawai JP.',
+            ),
+        );
+    }
+
+    public function reportCardReturned(Application $application, string $reason = ''): void
+    {
+        $application->loadMissing('alp.users');
+        $owners = $application->alp?->users ?? collect();
+
+        $msg = 'Laporan aktiviti dikembalikan untuk pembetulan.'.($reason !== '' ? ' Sebab: '.$reason : '');
+
+        Notification::send(
+            $owners,
+            new ApplicationWorkflowNotification(
+                $application,
+                'report_card_returned',
+                $msg,
             ),
         );
     }

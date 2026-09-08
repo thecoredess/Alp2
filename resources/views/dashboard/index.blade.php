@@ -60,8 +60,12 @@
         </div>
     @endif
 
+    @if ($contributionAnalytics)
+        @include('dashboard.partials.contribution-analytics')
+    @endif
+
     {{-- Bajet tahunan ALP --}}
-    @if ($scope === 'own' && $annualAllocation)
+    @if (! $contributionAnalytics && $scope === 'own' && $annualAllocation)
         <div class="mt-8">
             <div class="mb-4 flex items-center justify-between">
                 <h3 class="dashboard-section-title mb-0">Bajet Tahunan @if($activeYear)<span class="font-normal text-gray-400">· {{ $activeYear->year }}</span>@endif</h3>
@@ -79,7 +83,7 @@
     @endif
 
     {{-- Kuota tempoh URS (BR-003/004) — hanya jika polisi aktif & pengguna ALP --}}
-    @if ($periodSummary)
+    @if (! $contributionAnalytics && $periodSummary)
         <div class="mt-8">
             <h3 class="dashboard-section-title">Kuota Tempoh URS · {{ $periodSummary['label'] }}@if($activeYear)<span class="font-normal text-gray-400"> · {{ $activeYear->year }}</span>@endif</h3>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -194,7 +198,7 @@
     @endif
 
     {{-- Kad permohonan --}}
-    @if ($appStats && $scope === 'own')
+    @if (! $contributionAnalytics && $appStats && $scope === 'own')
         <div class="mt-8">
             <h3 class="dashboard-section-title">Ringkasan Permohonan</h3>
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -207,7 +211,7 @@
         </div>
 
         @include('dashboard.partials.alp-charts')
-    @elseif ($appStats && $scope === 'all')
+    @elseif (! $contributionAnalytics && $appStats && $scope === 'all')
         <div class="mt-8">
             <h3 class="dashboard-section-title">Ringkasan Permohonan</h3>
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -223,7 +227,7 @@
     {{-- Modul projek diasingkan (URS v1.2) — kad projek tidak lagi dipaparkan --}}
 
     {{-- Ringkasan bajet — pegawai sahaja (ALP guna halaman Bajet Saya) --}}
-    @if ($summary && $scope === 'all')
+    @if (! $contributionAnalytics && $summary && $scope === 'all')
         <div class="mt-8">
             <div class="mb-4 flex items-center justify-between">
                 <h3 class="dashboard-section-title mb-0">Bajet Keseluruhan ALP @if($activeYear)<span class="font-normal text-gray-400">· {{ $activeYear->year }}</span>@endif</h3>

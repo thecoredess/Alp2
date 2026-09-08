@@ -190,6 +190,8 @@ final class Permissions
             RoleName::PEGAWAI_URUSSETIA->value => [ // PROJECT OPERATOR
                 'dashboard.view',
                 'alps.view',
+                // Ringkasan peruntukan (baca sahaja) — rujukan baki ALP semasa membuat pengesyoran.
+                'allocations.view',
                 'applications.view_all',
                 'applications.review.secretariat',
                 'projects.view_all', 'projects.update', 'projects.progress', 'projects.milestones',

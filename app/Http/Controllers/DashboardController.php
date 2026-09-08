@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ApplicationStatus;
+use App\Enums\ApplicationType;
 use App\Enums\RoleName;
 use App\Models\Alp;
 use App\Models\Application;
@@ -17,6 +18,7 @@ use App\Services\Reports\FinancialReportService;
 use App\Services\Reports\ProjectReportService;
 use App\Support\Money;
 use App\Support\UrsContributionPolicy;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -31,6 +33,17 @@ class DashboardController extends Controller
         private readonly DataQualityService $dataQuality,
         private readonly ApplicationTimelineService $timeline,
     ) {}
+
+    /**
+     * Pratonton reka bentuk dashboard analisa sumbangan.
+     * Data contoh sahaja — untuk semakan susun atur sebelum dibina penuh.
+     */
+    public function templates(Request $request): View
+    {
+        abort_unless($request->user()->can('dashboard.view'), 403);
+
+        return view('dashboard.templates');
+    }
 
     /** Dashboard Eksekutif (pengurusan) — KPI kewangan menyeluruh. */
     public function executive(Request $request): View
@@ -168,10 +181,17 @@ class DashboardController extends Controller
         if ($user->canAny(['applications.review.secretariat', 'applications.approve', 'payments.view'])) {
             $officerQueues = [];
             if ($user->can('applications.review.secretariat')) {
+                $isAdminJp = $user->canMakeFullJpReviewDecision();
                 $officerQueues[] = [
-                    'label' => 'Menunggu Semakan JP',
-                    'description' => 'Permohonan dihantar ALP — perlu semakan & senarai semak JP',
-                    'count' => $this->count($activeYear?->id, [ApplicationStatus::SUBMITTED->value]),
+                    'label' => $isAdminJp ? 'Menunggu Semakan Admin JP' : 'Menunggu Perakuan Pegawai JP',
+                    'description' => $isAdminJp
+                        ? 'Permohonan dihantar — perlu senarai semak & keputusan Admin JP'
+                        : 'Selepas Admin JP — perlu pengesyoran Pegawai JP kepada Pengarah JP',
+                    'count' => $this->count($activeYear?->id, [
+                        $isAdminJp
+                            ? ApplicationStatus::SUBMITTED->value
+                            : ApplicationStatus::UNDER_SECRETARIAT_REVIEW->value,
+                    ]),
                     'route' => 'reviews.secretariat',
                     'icon' => 'clipboard',
                     'tone' => 'blue',
@@ -246,6 +266,10 @@ class DashboardController extends Controller
             ? $this->kpiWatchlist($activeYear?->id, null)
             : collect();
 
+        $contributionAnalytics = $activeYear && ($user->alp_id || $user->can('applications.view_all'))
+            ? $this->contributionAnalytics($request, $activeYear, $user->alp_id)
+            : null;
+
         return view('dashboard.index', [
             'activeYear' => $activeYear,
             'stats' => $stats,
@@ -264,7 +288,165 @@ class DashboardController extends Controller
             'kpiDays' => ApplicationTimelineService::KPI_DAYS,
             'annualAllocation' => $annualAllocation,
             'annualAvailable' => $annualAvailable,
+            'contributionAnalytics' => $contributionAnalytics,
         ]);
+    }
+
+    /**
+     * Data Templat A — diskop kepada ALP sendiri atau semua ALP untuk pegawai.
+     *
+     * @return array<string, mixed>
+     */
+    private function contributionAnalytics(Request $request, FinancialYear $year, ?int $alpId): array
+    {
+        $yearStart = Carbon::create((int) $year->year, 1, 1)->startOfDay();
+        $yearEnd = Carbon::create((int) $year->year, 12, 31)->endOfDay();
+
+        try {
+            $from = $request->filled('dari')
+                ? Carbon::createFromFormat('Y-m-d', (string) $request->input('dari'))->startOfDay()
+                : $yearStart->copy();
+            $to = $request->filled('hingga')
+                ? Carbon::createFromFormat('Y-m-d', (string) $request->input('hingga'))->endOfDay()
+                : $yearEnd->copy();
+        } catch (\Throwable) {
+            $from = $yearStart->copy();
+            $to = $yearEnd->copy();
+        }
+
+        $from = $from->max($yearStart);
+        $to = $to->min($yearEnd);
+        if ($from->greaterThan($to)) {
+            [$from, $to] = [$to->copy()->startOfDay(), $from->copy()->endOfDay()];
+        }
+
+        $base = Application::query()
+            ->where('financial_year_id', $year->id)
+            ->where('application_type', ApplicationType::SUMBANGAN->value)
+            ->when($alpId, fn ($query) => $query->where('alp_id', $alpId))
+            ->whereNotNull('submitted_at')
+            ->whereBetween('submitted_at', [$from, $to]);
+
+        $inProcess = [
+            ...UrsContributionPolicy::inProcessStatusValues(),
+            ApplicationStatus::REVISION_REQUIRED->value,
+        ];
+        $analysedStatuses = [
+            ...$inProcess,
+            ApplicationStatus::APPROVED->value,
+            ApplicationStatus::REJECTED->value,
+        ];
+
+        $amountFor = fn (array $statuses): float => (float) (clone $base)
+            ->whereIn('status', $statuses)
+            ->sum('requested_amount');
+
+        $processAmount = $amountFor($inProcess);
+        $approvedAmount = $amountFor([ApplicationStatus::APPROVED->value]);
+        $rejectedAmount = $amountFor([ApplicationStatus::REJECTED->value]);
+
+        $monthlyRows = (clone $base)
+            ->whereIn('status', $analysedStatuses)
+            ->selectRaw('MONTH(submitted_at) as month_no, SUM(requested_amount) as total')
+            ->groupByRaw('MONTH(submitted_at)')
+            ->pluck('total', 'month_no');
+        $monthly = collect(range(1, 12))
+            ->map(fn (int $month) => (float) ($monthlyRows[$month] ?? 0))
+            ->all();
+
+        $allocation = $alpId
+            ? $this->budget->summaryFor($alpId, $year->id)->allocation
+            : $this->budget->totalsForYear($year->id)->allocation;
+        $allocationValue = (float) $allocation->value();
+
+        $alpCount = $alpId
+            ? 1
+            : max(1, Alp::query()->where('status', 'active')->count());
+        $periodCapacity = UrsContributionPolicy::enabled()
+            ? (float) UrsContributionPolicy::maxPeriodQuota()->value() * $alpCount
+            : $allocationValue / 3;
+
+        $periodBalances = [];
+        foreach (range(1, 3) as $index) {
+            $period = UrsContributionPolicy::periodByIndex($index, (int) $year->year);
+            $usage = (float) Application::query()
+                ->where('financial_year_id', $year->id)
+                ->where('application_type', ApplicationType::SUMBANGAN->value)
+                ->when($alpId, fn ($query) => $query->where('alp_id', $alpId))
+                ->whereIn('status', [...$inProcess, ApplicationStatus::APPROVED->value])
+                ->whereBetween('submitted_at', [$period['start'], $period['end']])
+                ->sum('requested_amount');
+
+            $periodBalances[] = [
+                'label' => 'Penggal '.$index,
+                'value' => max(0, $periodCapacity - $usage),
+                'used' => $usage,
+            ];
+        }
+
+        $applications = (clone $base)
+            ->with('alp:id,ref_code,name')
+            ->whereIn('status', $analysedStatuses)
+            ->orderByDesc('submitted_at')
+            ->get();
+
+        $rows = $applications
+            ->groupBy('alp_id')
+            ->map(function ($items) use ($year) {
+                /** @var Application $latest */
+                $latest = $items->first();
+                $latestPayment = $items
+                    ->filter(fn (Application $app) => $app->payment_supplier_no
+                        || $app->payment_voucher_no
+                        || $app->paid_at)
+                    ->sortByDesc(fn (Application $app) => $app->paid_at ?? $app->payment_updated_at)
+                    ->first();
+
+                $sum = fn (array $statuses): float => (float) $items
+                    ->whereIn('status', $statuses)
+                    ->sum(fn (Application $app) => (float) $app->requested_amount);
+
+                return [
+                    'alp' => $latest->alp,
+                    'in_process' => $sum([
+                        ...UrsContributionPolicy::inProcessStatusValues(),
+                        ApplicationStatus::REVISION_REQUIRED->value,
+                    ]),
+                    'approved' => $sum([ApplicationStatus::APPROVED->value]),
+                    'rejected' => $sum([ApplicationStatus::REJECTED->value]),
+                    'remaining' => (float) $this->budget
+                        ->summaryFor((int) $latest->alp_id, $year->id)
+                        ->available()
+                        ->value(),
+                    'total' => (float) $items->sum(fn (Application $app) => (float) $app->requested_amount),
+                    'supplier_no' => $latestPayment?->payment_supplier_no,
+                    'payment_no' => $latestPayment?->payment_voucher_no
+                        ?: $latestPayment?->payment_reference,
+                    'payment_date' => $latestPayment?->paid_at
+                        ?: $latestPayment?->payment_voucher_date,
+                ];
+            })
+            ->sortBy(fn (array $row) => $row['alp']?->ref_code)
+            ->values();
+
+        return [
+            'from' => $from,
+            'to' => $to,
+            'kpi' => [
+                'total' => $processAmount + $approvedAmount + $rejectedAmount,
+                'in_process' => $processAmount,
+                'approved' => $approvedAmount,
+            ],
+            'status' => [
+                'in_process' => $processAmount,
+                'approved' => $approvedAmount,
+                'rejected' => $rejectedAmount,
+            ],
+            'periods' => $periodBalances,
+            'monthly' => $monthly,
+            'rows' => $rows,
+            'scope_label' => $alpId ? 'ALP sendiri' : 'Keseluruhan ALP',
+        ];
     }
 
     /**

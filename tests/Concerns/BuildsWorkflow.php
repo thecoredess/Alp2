@@ -118,12 +118,37 @@ trait BuildsWorkflow
     {
         $reviews = app(ApplicationReviewService::class);
 
+        // Admin JP → Pegawai JP → Pengarah.
+        $reviews->review(
+            $app->fresh(),
+            ReviewType::SECRETARIAT,
+            $this->userWithRole(RoleName::SYSTEM_ADMIN->value),
+            ReviewDecision::RECOMMEND,
+            'Disyorkan Admin JP',
+            $this->lengkapChecklist(),
+        );
+
         $reviews->review(
             $app->fresh(),
             ReviewType::SECRETARIAT,
             $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value),
             ReviewDecision::RECOMMEND,
-            null,
+            'Syor kepada Pengarah JP',
+            $this->lengkapChecklist(),
+        );
+
+        return $app->fresh();
+    }
+
+    /** Hanya semakan Admin JP (status → UNDER_SECRETARIAT_REVIEW). */
+    protected function afterAdminJpReview(Application $app): Application
+    {
+        app(ApplicationReviewService::class)->review(
+            $app->fresh(),
+            ReviewType::SECRETARIAT,
+            $this->userWithRole(RoleName::SYSTEM_ADMIN->value),
+            ReviewDecision::RECOMMEND,
+            'Disyorkan Admin JP',
             $this->lengkapChecklist(),
         );
 

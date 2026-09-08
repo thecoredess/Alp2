@@ -49,11 +49,22 @@ class UrsSpineSmokeTest extends TestCase
         $app = $this->submitted($alp, $year, '2500.00');
         $this->assertSame(ApplicationStatus::SUBMITTED, $app->status);
 
-        // 2) Semakan JP + checklist lengkap (HTTP)
-        $this->actingAs($jp)
+        // 2) Admin JP → Pegawai JP
+        $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
+        $this->actingAs($admin)
             ->post(route('reviews.store', [$app, 'secretariat']), [
                 'decision' => 'recommend',
                 'checklist' => $this->lengkapChecklist(),
+            ])
+            ->assertRedirect(route('reviews.secretariat'));
+
+        $app->refresh();
+        $this->assertSame(ApplicationStatus::UNDER_SECRETARIAT_REVIEW, $app->status);
+
+        $this->actingAs($jp)
+            ->post(route('reviews.store', [$app, 'secretariat']), [
+                'decision' => 'recommend',
+                'comments' => 'Syor kepada Pengarah JP',
             ])
             ->assertRedirect(route('reviews.secretariat'));
 

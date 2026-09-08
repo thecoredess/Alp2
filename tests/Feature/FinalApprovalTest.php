@@ -7,10 +7,12 @@ use App\Enums\BudgetTransactionType;
 use App\Enums\RoleName;
 use App\Models\Alp;
 use App\Models\BudgetTransaction;
+use App\Notifications\ApplicationWorkflowNotification;
 use App\Services\Application\ApplicationException;
 use App\Services\Application\ApprovalService;
 use App\Services\Budget\BudgetService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\Concerns\BuildsWorkflow;
 use Tests\TestCase;
 
@@ -169,5 +171,57 @@ class FinalApprovalTest extends TestCase
         $this->assertDatabaseHas('application_status_histories', ['application_id' => $app->id, 'to_status' => 'approved']);
         $this->assertDatabaseHas('audit_logs', ['action' => 'APPLICATION_APPROVED', 'entity_id' => $app->id]);
         $this->assertDatabaseHas('audit_logs', ['action' => 'BUDGET_COMMITMENT_CREATED']);
+    }
+
+    public function test_pepu_approval_notifies_kewangan_jp_for_payment(): void
+    {
+        Notification::fake();
+
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
+
+        $kewangan = $this->userWithRole(RoleName::PEGAWAI_KEWANGAN->value);
+        $owner = $this->userWithRole(RoleName::ALP->value, $alp);
+        $peraku = $this->userWithRole(RoleName::PELULUS->value);
+        $pepu = $this->userWithRole(RoleName::PENGURUSAN->value);
+
+        // Aras Peraku sahaja — belum sedia untuk kewangan.
+        $this->approvals()->approve($app, $peraku, null);
+        Notification::assertNotSentTo($kewangan, ApplicationWorkflowNotification::class);
+
+        // Aras akhir PEPU.
+        $this->approvals()->approve($app->fresh(), $pepu, null);
+
+        Notification::assertSentTo(
+            $kewangan,
+            ApplicationWorkflowNotification::class,
+            fn (ApplicationWorkflowNotification $n) => $n->event === 'awaiting_payment'
+                && $n->application->is($app),
+        );
+
+        // Pemilik ALP hanya menerima makluman 'approved', bukan tugasan kewangan.
+        Notification::assertSentTo(
+            $owner,
+            ApplicationWorkflowNotification::class,
+            fn (ApplicationWorkflowNotification $n) => $n->event !== 'awaiting_payment',
+        );
+    }
+
+    public function test_rejected_application_does_not_notify_kewangan_jp(): void
+    {
+        Notification::fake();
+
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
+
+        $kewangan = $this->userWithRole(RoleName::PEGAWAI_KEWANGAN->value);
+
+        $this->approvals()->reject($app, $this->userWithRole(RoleName::PELULUS->value), 'Tidak lengkap');
+
+        Notification::assertNotSentTo($kewangan, ApplicationWorkflowNotification::class);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\NotificationTarget;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,7 +16,11 @@ class NotificationController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('notifications.index', compact('notifications'));
+        $actions = $notifications->mapWithKeys(fn ($n) => [
+            $n->id => NotificationTarget::for($n->data ?? [], $request->user())->action,
+        ]);
+
+        return view('notifications.index', compact('notifications', 'actions'));
     }
 
     public function markRead(Request $request, string $id): RedirectResponse
@@ -23,9 +28,9 @@ class NotificationController extends Controller
         $notification = $request->user()->notifications()->whereKey($id)->firstOrFail();
         $notification->markAsRead();
 
-        $url = $notification->data['url'] ?? route('notifications.index');
-
-        return redirect($url);
+        return redirect(
+            NotificationTarget::for($notification->data ?? [], $request->user())->url
+        );
     }
 
     public function markAllRead(Request $request): RedirectResponse

@@ -66,12 +66,16 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Pratonton reka bentuk dashboard analisa sumbangan (data contoh — untuk semakan sahaja).
+    Route::get('dashboard/templat', [DashboardController::class, 'templates'])->name('dashboard.templates');
+
     // Laporan URS (M08) — tanpa laporan projek / maker-checker / CSR projek
     Route::middleware('throttle:60,1')->group(function () {
         Route::get('laporan', [ReportController::class, 'index'])->name('reports.index');
         Route::get('laporan/kewangan/peruntukan', [ReportController::class, 'allocation'])->name('reports.allocation');
         Route::get('laporan/kewangan/ledger', [ReportController::class, 'ledger'])->name('reports.ledger');
         Route::get('laporan/permohonan', [ReportController::class, 'applications'])->name('reports.applications');
+        Route::get('laporan/program', [ReportController::class, 'programs'])->name('reports.programs');
         Route::get('laporan/audit', [ReportController::class, 'auditTrail'])->name('reports.audit');
     });
 
@@ -126,6 +130,9 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     Route::post('permohonan/{application}/report-card', [ReportCardController::class, 'store'])->name('applications.report-card.store');
 
     Route::get('laporan-aktiviti', [ReportCardController::class, 'index'])->name('report-cards.index');
+    Route::get('laporan-aktiviti/semak', [ReportCardController::class, 'reviewQueue'])->name('report-cards.review.index');
+    Route::get('permohonan/{application}/laporan-aktiviti/semak', [ReportCardController::class, 'reviewShow'])->name('report-cards.review.show');
+    Route::post('permohonan/{application}/laporan-aktiviti/semak', [ReportCardController::class, 'reviewStore'])->name('report-cards.review.store');
     Route::get('manual', [ManualController::class, 'show'])->name('manual.show');
     Route::get('manual/pdf', [ManualController::class, 'download'])->name('manual.download');
     Route::get('panduan-dokumen-persatuan/pdf', [AssociationGuideController::class, 'download'])->name('association-guide.download');

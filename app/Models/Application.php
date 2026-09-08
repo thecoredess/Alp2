@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\ApplicationType;
 use App\Enums\ApplicationPaymentStatus;
 use App\Enums\ProgramCategory;
+use App\Enums\ReportCardStatus;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -49,6 +50,7 @@ class Application extends Model
         'jkew_crosscheck_status',
         'jkew_crosscheck_remarks',
         'report_card_submitted_at',
+        'report_card_status',
         'report_card_reminder_sent_at',
         'report_card_remarks',
         'created_by',
@@ -72,6 +74,7 @@ class Application extends Model
             'payment_updated_at' => 'datetime',
             'sent_to_jkew_at' => 'datetime',
             'report_card_submitted_at' => 'datetime',
+            'report_card_status' => ReportCardStatus::class,
             'report_card_reminder_sent_at' => 'datetime',
         ];
     }
@@ -106,6 +109,11 @@ class Application extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(ApplicationReview::class)->orderBy('id');
+    }
+
+    public function reportCardReviews(): HasMany
+    {
+        return $this->hasMany(ReportCardReview::class)->orderBy('id');
     }
 
     public function approvals(): HasMany
@@ -170,6 +178,20 @@ class Application extends Model
     public function isEditableByOwner(): bool
     {
         return $this->status->isEditableByOwner();
+    }
+
+    /** Baucar sudah disedia (atau peringkat seterusnya). Jam laporan aktiviti bermula di sini. */
+    public function hasVoucherPrepared(): bool
+    {
+        if ($this->payment_voucher_date || filled($this->payment_voucher_no)) {
+            return true;
+        }
+
+        return in_array($this->payment_status, [
+            ApplicationPaymentStatus::VOUCHER_PREPARED,
+            ApplicationPaymentStatus::SENT_TO_JKEW,
+            ApplicationPaymentStatus::PAID,
+        ], true);
     }
 
     /** Jumlah dipohon sebagai Money. */

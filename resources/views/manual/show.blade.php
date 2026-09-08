@@ -67,7 +67,7 @@
                 <li>Cipta permohonan → lengkapkan borang penyaluran (penerima, ROS, akaun, alamat KL).</li>
                 <li>Muat naik dokumen wajib senarai semak (ROS, EFT, bank, kertas kerja).</li>
                 <li>Hantar → pantau status permohonan.</li>
-                <li>Selepas lulus &amp; program selesai → lengkapkan <strong>Format Laporan Program ALP</strong> (dilampir dalam panduan PDF) dan muat naik dalam 1 bulan (BR-018).</li>
+                <li>Selepas baucar disedia → lengkapkan <strong>Format Laporan Program ALP</strong> dan muat naik dalam 1 bulan.</li>
                 <li>Cetak <strong>Borang Penyaluran</strong> / surat kelulusan bila perlu (BR-020).</li>
             </ol>
         </div>

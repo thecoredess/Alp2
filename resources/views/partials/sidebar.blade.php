@@ -73,6 +73,12 @@
                             Pembayaran / Baucar
                         </a>
                     @endif
+                    @if($canReviewJp)
+                        <a href="{{ route('report-cards.review.index') }}" class="{{ $link(request()->routeIs('report-cards.review.*')) }}">
+                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('report-cards.review.*') ? 'text-white' : 'text-navy-300' }}">5b</span>
+                            Semak Laporan
+                        </a>
+                    @endif
                     @if($canReportCards)
                         <a href="{{ route('report-cards.index') }}" class="{{ $link(request()->routeIs('report-cards.*')) }}">
                             <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('report-cards.*') ? 'text-white' : 'text-navy-300' }}">5</span>

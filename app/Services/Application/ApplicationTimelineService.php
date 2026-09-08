@@ -4,6 +4,7 @@ namespace App\Services\Application;
 
 use App\Enums\ApplicationStatus;
 use App\Enums\ApprovalDecision;
+use App\Enums\ReportCardStatus;
 use App\Enums\ReviewDecision;
 use App\Enums\ReviewType;
 use App\Models\Application;
@@ -11,7 +12,7 @@ use App\Support\UrsContributionPolicy;
 use Carbon\Carbon;
 
 /**
- * Garis masa proses URS v1.2 (UR-M02-003…005) hingga hantar ke JKEW.
+ * Garis masa proses URS v1.2 (UR-M02-003…005) hingga laporan aktiviti (M07).
  */
 class ApplicationTimelineService
 {
@@ -19,12 +20,16 @@ class ApplicationTimelineService
 
     public const ALP_VOUCHER_PAYMENT_HINT = 'Semakan bayaran boleh disemak melalui https://dbayar.dbkl.gov.my';
 
+    public function __construct(
+        private readonly ApplicationReportCardService $reportCards,
+    ) {}
+
     /**
      * @return list<array{key: string, label: string, at: ?Carbon, done: bool, skipped: bool, hint: ?string, days_from_submit: ?int, status_label: ?string}>
      */
     public function stages(Application $application, bool $forAlpView = false): array
     {
-        $application->loadMissing(['statusHistories', 'reviews', 'approvals.approvalLevel']);
+        $application->loadMissing(['statusHistories', 'reviews', 'approvals.approvalLevel', 'reportCardReviews']);
 
         $submittedAt = $application->submitted_at ? Carbon::parse($application->submitted_at) : null;
 
@@ -120,7 +125,73 @@ class ApplicationTimelineService
             }, $stages);
         }
 
+        $stages[] = $this->reportStage($application, $submittedAt, $voucherAt ? Carbon::parse($voucherAt) : null);
+
         return $stages;
+    }
+
+    /**
+     * @return array{key: string, label: string, at: ?Carbon, done: bool, skipped: bool, hint: ?string, days_from_submit: ?int, status_label: ?string}
+     */
+    private function reportStage(Application $application, ?Carbon $submittedAt, ?Carbon $voucherAt): array
+    {
+        $needsReport = $application->status === ApplicationStatus::APPROVED;
+        $status = $application->report_card_status;
+
+        $approvedAt = $application->reportCardReviews
+            ->where('stage', 'pegawai_jp')
+            ->sortByDesc('reviewed_at')
+            ->first()?->reviewed_at;
+
+        $latestReturn = $application->reportCardReviews
+            ->where('decision', ReviewDecision::RETURN_FOR_REVISION)
+            ->sortByDesc('reviewed_at')
+            ->first();
+
+        $at = null;
+        $done = false;
+        $statusLabel = null;
+        $hint = null;
+
+        if ($status === ReportCardStatus::APPROVED && $approvedAt) {
+            $at = Carbon::parse($approvedAt);
+            $done = true;
+            $hint = 'Disahkan Pegawai JP';
+        } elseif ($needsReport && $voucherAt) {
+            if ($status === ReportCardStatus::RETURNED) {
+                $statusLabel = 'Dikembalikan';
+                $hint = $latestReturn?->comments
+                    ? $latestReturn->comments.' — sila muat naik semula'
+                    : 'Sila muat naik semula';
+            } elseif (in_array($status, [ReportCardStatus::AWAITING_ADMIN_JP, ReportCardStatus::AWAITING_PEGAWAI_JP], true)) {
+                $statusLabel = 'Dalam semakan JP';
+                if ($application->report_card_submitted_at) {
+                    $hint = 'Dimuat naik '.Carbon::parse($application->report_card_submitted_at)->format('d/m/Y H:i');
+                }
+            } else {
+                $statusLabel = 'Menunggu muat naik';
+                $due = $this->reportCards->dueDate($application);
+                if ($due) {
+                    $hint = 'Tarikh akhir: '.$due->format('d/m/Y');
+                    if ($this->reportCards->isOverdue($application)) {
+                        $hint .= ' · Tertunggak';
+                    }
+                }
+            }
+        }
+
+        $days = ($submittedAt && $at) ? (int) $submittedAt->diffInDays($at) : null;
+
+        return [
+            'key' => 'report',
+            'label' => 'Laporan aktiviti',
+            'at' => $at,
+            'done' => $done,
+            'skipped' => ! $needsReport,
+            'hint' => $hint,
+            'days_from_submit' => $days,
+            'status_label' => $statusLabel,
+        ];
     }
 
     /**

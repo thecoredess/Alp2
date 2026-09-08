@@ -33,7 +33,7 @@ Legenda: ✅ = ada kebenaran penuh · 👁 = lihat sahaja · — = tiada · (own
 | Urus Pengguna | ✅ | ✅ | — | — | — | — | — | — | — |
 | Urus ALP | ✅ | ✅ | — | 👁 | 👁 | 👁 | 👁 | 👁 | 👁 |
 | Tahun Kewangan (urus) | ✅ | ✅ | — | — | — | — | — | — | 👁 |
-| Peruntukan (lihat) | ✅ | 👁 | (own) | (own) | — | 👁 | — | 👁 | 👁 |
+| Peruntukan (lihat) | ✅ | 👁 | (own) | (own) | 👁 | 👁 | — | 👁 | 👁 |
 | Cadangan bajet — MAKER | ✅ | — | — | — | — | ✅ | — | — | — |
 | Kelulusan bajet — CHECKER | ✅ | — | — | — | — | — | — | ✅ | — |
 | Cipta permohonan | ✅ | — | ✅ | ✅ | — | — | — | — | — |
@@ -74,7 +74,7 @@ Legenda: ✅ = ada kebenaran penuh · 👁 = lihat sahaja · — = tiada · (own
 
 **URUSSETIA_ALP** — `alps.view, applications.create, dashboard.view, projects.view, reports.export, reports.view`
 
-**PEGAWAI_URUSSETIA** (Urus Setia DBKL / operator projek) — `alps.view, applications.review.secretariat, applications.view_all, dashboard.view, expenses.documents.view, expenses.view, project-reports.create, projects.closure-documents.manage, projects.closure-documents.view, projects.complete, projects.milestones, projects.progress, projects.update, projects.view_all, refunds.view, reports.applications, reports.csr, reports.export, reports.projects, reports.view`
+**PEGAWAI_URUSSETIA** (Urus Setia DBKL / operator projek) — `allocations.view, alps.view, applications.review.secretariat, applications.view_all, dashboard.view, expenses.documents.view, expenses.view, project-reports.create, projects.closure-documents.manage, projects.closure-documents.view, projects.complete, projects.milestones, projects.progress, projects.update, projects.view_all, refunds.view, reports.applications, reports.csr, reports.export, reports.projects, reports.view`
 
 **PEGAWAI_KEWANGAN** (Finance Maker) — `adjustments.request.create/submit/update, allocations.request.create/submit/update, allocations.view, alps.view, applications.review.finance, applications.view_all, budget.view_all, dashboard.finance, dashboard.view, expenses.create/submit/update/view, expenses.documents.manage/view, projects.closure-documents.view, projects.view_all, refunds.create/submit/update/view, reports.export, reports.financial, reports.projects, reports.view`
 → **Maker sahaja** — tiada `*.approve` / `*.verify`.

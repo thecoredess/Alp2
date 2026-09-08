@@ -64,10 +64,20 @@ class ApplicationDocumentController extends Controller
         abort_unless($document->application_id === $application->id, 404);
         abort_unless(Storage::disk(self::DISK)->exists($document->stored_path), 404);
 
+        $filename = $document->original_filename;
+        $mime = (string) ($document->mime_type ?: 'application/octet-stream');
+        if (str_ends_with(strtolower($filename), '.pdf') || $mime === 'application/pdf') {
+            $mime = 'application/pdf';
+        }
+
         return Storage::disk(self::DISK)->response(
             $document->stored_path,
-            $document->original_filename,
-            ['Content-Type' => $document->mime_type ?? 'application/octet-stream'],
+            $filename,
+            [
+                'Content-Type' => $mime,
+                'X-Content-Type-Options' => 'nosniff',
+            ],
+            'inline',
         );
     }
 

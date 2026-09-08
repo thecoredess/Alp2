@@ -119,13 +119,23 @@ class ApplicationPaymentService
                 'jkew_crosscheck' => $application->jkew_crosscheck_status?->value,
             ]);
 
-            if ($status === ApplicationPaymentStatus::VOUCHER_PREPARED) {
+            if ($application->hasVoucherPrepared() && ! $this->alreadyHadVoucher($from)) {
                 $this->notifier->paymentVoucherPrepared($application);
-            } elseif ($status === ApplicationPaymentStatus::PAID) {
+            }
+            if ($status === ApplicationPaymentStatus::PAID) {
                 $this->notifier->paymentPaid($application);
             }
 
             return $application;
         });
+    }
+
+    private function alreadyHadVoucher(?ApplicationPaymentStatus $from): bool
+    {
+        return in_array($from, [
+            ApplicationPaymentStatus::VOUCHER_PREPARED,
+            ApplicationPaymentStatus::SENT_TO_JKEW,
+            ApplicationPaymentStatus::PAID,
+        ], true);
     }
 }

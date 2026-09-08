@@ -102,7 +102,7 @@ class ApplicationTimelineTest extends TestCase
         $this->assertNotNull($staffStages->firstWhere('key', 'pepu'));
         $this->assertNull($alpStages->firstWhere('key', 'peraku'));
         $this->assertNull($alpStages->firstWhere('key', 'pepu'));
-        $this->assertSame(['submitted', 'jp_review', 'voucher'], $alpStages->pluck('key')->all());
+        $this->assertSame(['submitted', 'jp_review', 'voucher', 'report'], $alpStages->pluck('key')->all());
 
         $jpStage = $alpStages->firstWhere('key', 'jp_review');
         $this->assertFalse($jpStage['done']);
@@ -140,5 +140,93 @@ class ApplicationTimelineTest extends TestCase
         $voucherStage = collect($this->timeline()->stages($app->fresh(), forAlpView: true))
             ->firstWhere('key', 'voucher');
         $this->assertSame(ApplicationTimelineService::ALP_VOUCHER_PAYMENT_HINT, $voucherStage['hint']);
+    }
+
+    public function test_report_stage_skipped_when_not_approved(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->submitted($alp, $year, '2500.00');
+
+        $report = collect($this->timeline()->stages($app))->firstWhere('key', 'report');
+
+        $this->assertTrue($report['skipped']);
+        $this->assertFalse($report['done']);
+    }
+
+    public function test_report_stage_waiting_upload_after_voucher(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2500.00')));
+
+        $app->update([
+            'payment_status' => \App\Enums\ApplicationPaymentStatus::VOUCHER_PREPARED,
+            'payment_voucher_date' => '2026-08-05',
+            'payment_updated_at' => now(),
+        ]);
+
+        $report = collect($this->timeline()->stages($app->fresh()))->firstWhere('key', 'report');
+
+        $this->assertFalse($report['skipped']);
+        $this->assertFalse($report['done']);
+        $this->assertSame('Menunggu muat naik', $report['status_label']);
+        $this->assertStringContainsString('Tarikh akhir: 05/09/2026', $report['hint']);
+    }
+
+    public function test_report_stage_in_review_when_submitted(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2500.00')));
+
+        $app->update([
+            'payment_status' => \App\Enums\ApplicationPaymentStatus::VOUCHER_PREPARED,
+            'payment_voucher_date' => now()->toDateString(),
+            'payment_updated_at' => now(),
+            'report_card_submitted_at' => now(),
+            'report_card_status' => \App\Enums\ReportCardStatus::AWAITING_ADMIN_JP,
+        ]);
+
+        $staffReport = collect($this->timeline()->stages($app->fresh()))->firstWhere('key', 'report');
+        $alpReport = collect($this->timeline()->stages($app->fresh(), forAlpView: true))->firstWhere('key', 'report');
+
+        $this->assertSame('Dalam semakan JP', $staffReport['status_label']);
+        $this->assertSame('Dalam semakan JP', $alpReport['status_label']);
+        $this->assertStringContainsString('Dimuat naik', $staffReport['hint']);
+    }
+
+    public function test_report_stage_done_when_approved_by_pegawai_jp(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2500.00')));
+
+        $approvedAt = now()->subDay();
+        $app->update([
+            'payment_status' => \App\Enums\ApplicationPaymentStatus::VOUCHER_PREPARED,
+            'payment_updated_at' => now()->subWeek(),
+            'report_card_submitted_at' => now()->subDays(2),
+            'report_card_status' => \App\Enums\ReportCardStatus::APPROVED,
+        ]);
+
+        $app->reportCardReviews()->create([
+            'reviewer_id' => $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value)->id,
+            'stage' => 'pegawai_jp',
+            'decision' => \App\Enums\ReviewDecision::RECOMMEND,
+            'comments' => 'OK',
+            'reviewed_at' => $approvedAt,
+            'created_at' => $approvedAt,
+        ]);
+
+        $report = collect($this->timeline()->stages($app->fresh()))->firstWhere('key', 'report');
+
+        $this->assertTrue($report['done']);
+        $this->assertSame('Disahkan Pegawai JP', $report['hint']);
+        $this->assertSame($approvedAt->format('Y-m-d H:i'), $report['at']->format('Y-m-d H:i'));
     }
 }

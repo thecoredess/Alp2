@@ -15,6 +15,11 @@
     }
     $tabs['perjalanan'] = 'Status';
 
+    // ?tab=report membolehkan notifikasi mendarat terus pada tugasan berkenaan.
+    $initialTab = array_key_exists(request()->query('tab'), $tabs)
+        ? request()->query('tab')
+        : 'ringkasan';
+
     $attachmentDocs = $application->documents->reject(fn ($d) => in_array($d->document_type, [
         \App\Enums\DocumentType::REPORT_CARD,
         \App\Enums\DocumentType::LAPORAN_AKTIVITI,
@@ -64,7 +69,7 @@
 
     @include('applications.partials.jp-incomplete-banner')
 
-    <div x-data="{ tab: 'ringkasan' }">
+    <div x-data="{ tab: '{{ $initialTab }}' }">
         <nav class="mb-6 flex gap-1 rounded-xl border border-gray-200 bg-gray-100 p-1" aria-label="Tab permohonan">
             @foreach ($tabs as $key => $label)
                 <button type="button"
@@ -395,15 +400,23 @@
                         <div class="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <h3 class="text-base font-semibold text-gray-900">Laporan Aktiviti</h3>
-                                <p class="mt-1 text-sm text-gray-500">Muat naik selepas program diluluskan dan selesai.</p>
+                                <p class="mt-1 text-sm text-gray-500">Muat naik dalam 1 bulan selepas baucar disedia.</p>
                             </div>
                             @if ($application->status === \App\Enums\ApplicationStatus::APPROVED)
                                 @if ($hasReportCard ?? false)
-                                    <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">Diterima ✓</span>
+                                    <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">Disahkan ✓</span>
+                                @elseif ($application->report_card_status === \App\Enums\ReportCardStatus::RETURNED)
+                                    <span class="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-800">Dikembalikan — sila muat naik semula</span>
+                                @elseif ($application->report_card_status instanceof \App\Enums\ReportCardStatus)
+                                    <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $application->report_card_status->badgeClasses() }}">
+                                        {{ $application->report_card_status->label() }}
+                                    </span>
                                 @elseif ($reportCardOverdue ?? false)
                                     <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800">Tertunggak</span>
                                 @elseif ($reportCardDue ?? null)
                                     <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Akhir: {{ $reportCardDue->format('d/m/Y') }}</span>
+                                @elseif (! $application->hasVoucherPrepared())
+                                    <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">Menunggu baucar</span>
                                 @endif
                             @endif
                         </div>
@@ -441,8 +454,12 @@
                                            onchange="if(this.files.length) this.form.requestSubmit()">
                                 </label>
                             </form>
+                        @elseif ($application->report_card_status === \App\Enums\ReportCardStatus::AWAITING_ADMIN_JP || $application->report_card_status === \App\Enums\ReportCardStatus::AWAITING_PEGAWAI_JP)
+                            <p class="text-center text-sm text-gray-500">Laporan aktiviti dalam semakan JP. Anda akan dimaklumkan selepas pengesahan.</p>
                         @elseif ($application->status !== \App\Enums\ApplicationStatus::APPROVED)
                             <p class="text-center text-sm text-gray-400">Laporan aktiviti boleh dimuat naik selepas permohonan diluluskan.</p>
+                        @elseif (! $application->hasVoucherPrepared())
+                            <p class="text-center text-sm text-gray-400">Menunggu Kewangan JP menyediakan baucar. Tempoh 1 bulan bermula selepas baucar disedia.</p>
                         @endcan
                     </div>
                 </div>

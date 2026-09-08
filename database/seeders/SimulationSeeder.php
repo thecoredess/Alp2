@@ -26,8 +26,10 @@ use App\Services\Application\ApprovalService;
 use App\Services\Budget\BudgetService;
 use App\Support\JpReviewChecklist;
 use App\Support\Money;
+use App\Support\PlaceholderPdf;
 use App\Support\UrsContributionPolicy;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Data simulasi UAT — permohonan sumbangan ALP dalam pelbagai status.
@@ -305,7 +307,13 @@ class SimulationSeeder extends Seeder
     {
         foreach (DocumentRequirement::requiredFor() as $type) {
             $storedPath = "simulation/{$application->id}/sim-{$type->value}.pdf";
-            $content = "%PDF-1.4\n% Simulasi — {$type->value}\n";
+            $content = PlaceholderPdf::make($type->label(), [
+                'Dokumen simulasi UAT - bukan dokumen sebenar.',
+                'Permohonan: '.$application->application_number,
+            ]);
+
+            // Tulis fail sebenar supaya pratonton lampiran berfungsi.
+            Storage::disk('local')->put($storedPath, $content);
 
             ApplicationDocument::create([
                 'application_id' => $application->id,

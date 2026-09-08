@@ -31,8 +31,8 @@ enum ApplicationStatus: string
     {
         return match ($this) {
             self::DRAFT => 'Draf',
-            self::SUBMITTED => 'Dihantar',
-            self::UNDER_SECRETARIAT_REVIEW => 'Semakan Pegawai JP',
+            self::SUBMITTED => 'Menunggu Semakan Admin JP',
+            self::UNDER_SECRETARIAT_REVIEW => 'Menunggu Perakuan Pegawai JP',
             self::UNDER_FINANCE_REVIEW => 'Semakan Kewangan (legacy)',
             self::UNDER_TECHNICAL_REVIEW => 'Semakan Teknikal (legacy)',
             self::PENDING_APPROVAL => 'Menunggu Peraku / PEPU',

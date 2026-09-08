@@ -54,8 +54,8 @@ class RejectionAndRevisionTest extends TestCase
         $this->allocate($alp, $year, '500000.00');
         $app = $this->submitted($alp, $year, '85000.00');
 
-        // Urus setia kembalikan untuk pembetulan.
-        app(ApplicationReviewService::class)->review($app, ReviewType::SECRETARIAT, $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value), ReviewDecision::RETURN_FOR_REVISION, 'Betulkan bajet');
+        // Admin JP kembalikan untuk pembetulan.
+        app(ApplicationReviewService::class)->review($app, ReviewType::SECRETARIAT, $this->userWithRole(RoleName::SYSTEM_ADMIN->value), ReviewDecision::RETURN_FOR_REVISION, 'Betulkan bajet', $this->lengkapChecklist());
         $app->refresh();
         $this->assertSame(ApplicationStatus::REVISION_REQUIRED, $app->status);
 
@@ -86,7 +86,7 @@ class RejectionAndRevisionTest extends TestCase
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
         $app = $this->submitted($alp, $year, '85000.00');
-        app(ApplicationReviewService::class)->review($app, ReviewType::SECRETARIAT, $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value), ReviewDecision::RETURN_FOR_REVISION, 'Betulkan');
+        app(ApplicationReviewService::class)->review($app, ReviewType::SECRETARIAT, $this->userWithRole(RoleName::SYSTEM_ADMIN->value), ReviewDecision::RETURN_FOR_REVISION, 'Betulkan', $this->lengkapChecklist());
 
         $owner = $this->userWithRole(RoleName::ALP->value, $alp);
 

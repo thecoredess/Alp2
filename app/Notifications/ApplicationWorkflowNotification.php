@@ -55,10 +55,15 @@ class ApplicationWorkflowNotification extends Notification
             'awaiting_peraku' => 'Menunggu perakuan',
             'awaiting_pepu' => 'Menunggu kelulusan PEPU',
             'approved' => 'Permohonan diluluskan',
+            'awaiting_payment' => 'Sedia untuk proses bayaran',
             'rejected' => 'Permohonan ditolak',
             'payment_voucher' => 'Baucar pembayaran',
             'payment_paid' => 'Pembayaran selesai',
-            'report_card_reminder' => 'Peringatan report card',
+            'report_card_reminder' => 'Peringatan laporan aktiviti',
+            'report_card_submitted' => 'Laporan aktiviti menunggu semakan',
+            'report_card_awaiting_pegawai_jp' => 'Laporan menunggu pengesahan Pegawai JP',
+            'report_card_approved' => 'Laporan aktiviti disahkan',
+            'report_card_returned' => 'Laporan aktiviti dikembalikan',
             default => 'Kemaskini permohonan',
         };
     }

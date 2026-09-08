@@ -90,4 +90,32 @@ class BudgetAuthorizationTest extends TestCase
 
         $this->actingAs($user)->get(route('allocations.index'))->assertOk();
     }
+
+    public function test_pegawai_jp_can_view_allocation_summary(): void
+    {
+        $alp = Alp::factory()->create();
+        $allocation = $this->makeAllocation($alp);
+        $user = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA);
+
+        $this->actingAs($user)
+            ->get(route('allocations.index'))
+            ->assertOk()
+            ->assertSee('Peruntukan (Ringkasan)')   // pautan sidebar
+            ->assertDontSee('Set Peruntukan');
+
+        $this->actingAs($user)->get(route('allocations.show', $allocation))->assertOk();
+    }
+
+    public function test_pegawai_jp_cannot_set_or_adjust_allocation(): void
+    {
+        $allocation = $this->makeAllocation(Alp::factory()->create());
+        $user = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA);
+
+        $this->actingAs($user)->get(route('allocations.create'))->assertForbidden();
+        $this->actingAs($user)->get(route('allocations.adjust', $allocation))->assertForbidden();
+        $this->actingAs($user)->post(route('allocations.adjust.store', $allocation), [
+            'direction' => 'increase',
+            'amount' => '1000.00',
+        ])->assertForbidden();
+    }
 }

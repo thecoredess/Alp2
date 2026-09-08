@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Enums\ApplicationStatus;
-use App\Enums\ApplicationType;
 use App\Enums\ReviewDecision;
 use App\Enums\ReviewType;
 use App\Enums\RoleName;
@@ -15,7 +14,7 @@ use Tests\Concerns\BuildsWorkflow;
 use Tests\TestCase;
 
 /**
- * Aliran semakan URS v1.2: Pegawai JP (secretariat) → terus PENDING_APPROVAL.
+ * Aliran semakan: Admin JP → Pegawai JP → PENDING_APPROVAL (Pengarah/PEPU).
  */
 class ReviewWorkflowTest extends TestCase
 {
@@ -32,7 +31,7 @@ class ReviewWorkflowTest extends TestCase
         $this->seedWorkflow();
     }
 
-    public function test_secretariat_recommend_advances_to_pending_approval(): void
+    public function test_admin_jp_recommend_goes_to_pegawai_jp_not_pengarah(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
@@ -42,14 +41,55 @@ class ReviewWorkflowTest extends TestCase
         $this->reviews()->review(
             $app,
             ReviewType::SECRETARIAT,
+            $this->userWithRole(RoleName::SYSTEM_ADMIN->value),
+            ReviewDecision::RECOMMEND,
+            'OK Admin',
+            $this->lengkapChecklist(),
+        );
+
+        $this->assertSame(ApplicationStatus::UNDER_SECRETARIAT_REVIEW, $app->fresh()->status);
+        $this->assertDatabaseHas('application_reviews', [
+            'application_id' => $app->id,
+            'review_type' => 'secretariat',
+            'decision' => 'recommend',
+        ]);
+    }
+
+    public function test_pegawai_jp_syor_after_admin_advances_to_pending_approval(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->afterAdminJpReview($this->submitted($alp, $year, '85000.00'));
+
+        $this->reviews()->review(
+            $app,
+            ReviewType::SECRETARIAT,
             $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value),
             ReviewDecision::RECOMMEND,
-            'OK',
+            'Syor Pengarah',
             $this->lengkapChecklist(),
         );
 
         $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
-        $this->assertDatabaseHas('application_reviews', ['application_id' => $app->id, 'review_type' => 'secretariat', 'decision' => 'recommend']);
+    }
+
+    public function test_pegawai_jp_cannot_review_before_admin_jp(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->submitted($alp, $year, '85000.00');
+
+        $this->expectException(ApplicationException::class);
+        $this->reviews()->review(
+            $app,
+            ReviewType::SECRETARIAT,
+            $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value),
+            ReviewDecision::RECOMMEND,
+            'Awal',
+            $this->lengkapChecklist(),
+        );
     }
 
     public function test_secretariat_can_return_for_revision(): void
@@ -59,7 +99,14 @@ class ReviewWorkflowTest extends TestCase
         $this->allocate($alp, $year, '500000.00');
         $app = $this->submitted($alp, $year, '85000.00');
 
-        $this->reviews()->review($app, ReviewType::SECRETARIAT, $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value), ReviewDecision::RETURN_FOR_REVISION, 'Sila betulkan');
+        $this->reviews()->review(
+            $app,
+            ReviewType::SECRETARIAT,
+            $this->userWithRole(RoleName::SYSTEM_ADMIN->value),
+            ReviewDecision::RETURN_FOR_REVISION,
+            'Sila betulkan',
+            $this->lengkapChecklist(),
+        );
 
         $this->assertSame(ApplicationStatus::REVISION_REQUIRED, $app->fresh()->status);
         $this->assertDatabaseHas('application_revisions', ['application_id' => $app->id, 'return_stage' => 'secretariat']);
@@ -79,29 +126,29 @@ class ReviewWorkflowTest extends TestCase
         $this->reviews()->review(
             $app,
             ReviewType::SECRETARIAT,
-            $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value),
+            $this->userWithRole(RoleName::SYSTEM_ADMIN->value),
             ReviewDecision::RECOMMEND,
             'OK',
             $incomplete,
         );
     }
 
-    public function test_http_recommend_requires_full_checklist(): void
+    public function test_http_admin_recommend_requires_full_checklist(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
         $app = $this->submitted($alp, $year, '2500.00');
-        $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
+        $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
 
-        $this->actingAs($jp)
+        $this->actingAs($admin)
             ->post(route('reviews.store', [$app, 'secretariat']), [
                 'decision' => 'recommend',
                 'checklist' => $this->lengkapChecklist(),
             ])
             ->assertRedirect(route('reviews.secretariat'));
 
-        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
+        $this->assertSame(ApplicationStatus::UNDER_SECRETARIAT_REVIEW, $app->fresh()->status);
     }
 
     public function test_finance_review_not_accepted_while_awaiting_secretariat(): void
@@ -109,63 +156,34 @@ class ReviewWorkflowTest extends TestCase
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->submitted($alp, $year, '85000.00');
+        $app = $this->submitted($alp, $year, '2500.00');
 
         $this->expectException(ApplicationException::class);
-        $this->reviews()->review($app, ReviewType::FINANCE, $this->userWithRole(RoleName::PEGAWAI_KEWANGAN->value), ReviewDecision::RECOMMEND, null);
-    }
-
-    public function test_development_also_skips_to_pending_approval_after_secretariat(): void
-    {
-        $alp = Alp::factory()->create();
-        $year = $this->makeYear();
-        $this->allocate($alp, $year, '500000.00');
-        $app = $this->submitted($alp, $year, '85000.00', ApplicationType::DEVELOPMENT);
-
         $this->reviews()->review(
-            $app->fresh(),
-            ReviewType::SECRETARIAT,
-            $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value),
+            $app,
+            ReviewType::FINANCE,
+            $this->userWithRole(RoleName::PEGAWAI_KEWANGAN->value),
             ReviewDecision::RECOMMEND,
-            null,
-            $this->lengkapChecklist(),
+            'OK',
         );
-
-        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
     }
 
-    public function test_alp_cannot_perform_review(): void
+    public function test_development_also_skips_to_pending_approval_after_pegawai(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->submitted($alp, $year, '85000.00');
+        $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
 
-        $alpUser = $this->userWithRole(RoleName::ALP->value, $alp);
-
-        $this->actingAs($alpUser)
-            ->post(route('reviews.store', [$app, 'secretariat']), ['decision' => 'recommend'])
-            ->assertForbidden();
+        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->status);
     }
 
-    public function test_technical_review_route_store_is_not_active(): void
+    public function test_secretariat_show_includes_alp_budget_detail_for_pegawai_after_admin(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->submitted($alp, $year, '85000.00', ApplicationType::DEVELOPMENT);
-
-        $this->actingAs($this->userWithRole(RoleName::PEGAWAI_TEKNIKAL->value))
-            ->post(route('reviews.store', [$app, 'technical']), ['decision' => 'recommend'])
-            ->assertNotFound();
-    }
-
-    public function test_secretariat_show_includes_alp_budget_detail(): void
-    {
-        $alp = Alp::factory()->create();
-        $year = $this->makeYear();
-        $this->allocate($alp, $year, '500000.00');
-        $app = $this->submitted($alp, $year, '2500.00');
+        $app = $this->afterAdminJpReview($this->submitted($alp, $year, '2500.00'));
         $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
 
         $this->actingAs($jp)
@@ -191,7 +209,7 @@ class ReviewWorkflowTest extends TestCase
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->submitted($alp, $year, '2500.00');
+        $app = $this->afterAdminJpReview($this->submitted($alp, $year, '2500.00'));
         $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
 
         $this->actingAs($jp)
@@ -203,7 +221,7 @@ class ReviewWorkflowTest extends TestCase
             ->assertRedirect(route('reviews.show', [$app, 'secretariat']))
             ->assertSessionHasErrors('decision');
 
-        $this->assertSame(ApplicationStatus::SUBMITTED, $app->fresh()->status);
+        $this->assertSame(ApplicationStatus::UNDER_SECRETARIAT_REVIEW, $app->fresh()->status);
     }
 
     public function test_pegawai_jp_can_recommend_without_checklist_fields(): void
@@ -211,7 +229,7 @@ class ReviewWorkflowTest extends TestCase
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->submitted($alp, $year, '2500.00');
+        $app = $this->afterAdminJpReview($this->submitted($alp, $year, '2500.00'));
         $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
 
         $this->actingAs($jp)
@@ -224,7 +242,7 @@ class ReviewWorkflowTest extends TestCase
         $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
     }
 
-    public function test_admin_jp_sees_full_decision_and_can_not_recommend(): void
+    public function test_admin_jp_sees_full_decision_and_not_recommended_goes_to_pegawai(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
@@ -248,10 +266,34 @@ class ReviewWorkflowTest extends TestCase
             ])
             ->assertRedirect(route('reviews.secretariat'));
 
-        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
+        $this->assertSame(ApplicationStatus::UNDER_SECRETARIAT_REVIEW, $app->fresh()->status);
         $this->assertDatabaseHas('application_reviews', [
             'application_id' => $app->id,
             'decision' => ReviewDecision::NOT_RECOMMENDED->value,
         ]);
+    }
+
+    public function test_admin_queue_only_submitted_pegawai_queue_only_after_admin(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $submitted = $this->submitted($alp, $year, '1000.00');
+        $awaitingPegawai = $this->afterAdminJpReview($this->submitted($alp, $year, '1100.00'));
+
+        $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
+        $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
+
+        $this->actingAs($admin)
+            ->get(route('reviews.secretariat'))
+            ->assertOk()
+            ->assertSee($submitted->application_number)
+            ->assertDontSee($awaitingPegawai->application_number);
+
+        $this->actingAs($jp)
+            ->get(route('reviews.secretariat'))
+            ->assertOk()
+            ->assertSee($awaitingPegawai->application_number)
+            ->assertDontSee($submitted->application_number);
     }
 }

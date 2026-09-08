@@ -114,18 +114,24 @@ class UrsPolicyAndNotificationTest extends TestCase
         $this->assertSame(ApplicationStatus::SUBMITTED, $app->fresh()->status);
     }
 
-    public function test_submission_notifies_secretariat(): void
+    public function test_submission_notifies_admin_jp(): void
     {
         Notification::fake();
         $this->allocate('500000.00');
         $app = $this->makeDraft('1000.00');
+        $admin = User::factory()->create()->assignRole(RoleName::SYSTEM_ADMIN->value);
 
         app(ApplicationSubmissionService::class)->submit($app, $this->alpUser);
 
         Notification::assertSentTo(
-            $this->secretariat,
+            $admin,
             ApplicationWorkflowNotification::class,
             fn (ApplicationWorkflowNotification $n) => $n->event === 'submitted'
+        );
+
+        Notification::assertNotSentTo(
+            $this->secretariat,
+            ApplicationWorkflowNotification::class,
         );
     }
 

@@ -27,13 +27,6 @@ class ReviewController extends Controller
         private readonly BudgetService $budget,
     ) {}
 
-    /** Peta jenis semakan → status giliran. */
-    private const QUEUE_STATUS = [
-        'secretariat' => ApplicationStatus::SUBMITTED,
-        'finance' => ApplicationStatus::UNDER_FINANCE_REVIEW,
-        'technical' => ApplicationStatus::UNDER_TECHNICAL_REVIEW,
-    ];
-
     public function secretariat(Request $request): View
     {
         return $this->queue($request, ReviewType::SECRETARIAT);
@@ -49,11 +42,23 @@ class ReviewController extends Controller
         abort(404, 'Semakan Teknikal telah dinyahaktif (URS v1.2).');
     }
 
+    /** Admin JP: SUBMITTED · Pegawai JP: UNDER_SECRETARIAT_REVIEW. */
+    private function secretariatQueueStatus(\App\Models\User $user): ApplicationStatus
+    {
+        return $user->canMakeFullJpReviewDecision()
+            ? ApplicationStatus::SUBMITTED
+            : ApplicationStatus::UNDER_SECRETARIAT_REVIEW;
+    }
+
     private function queue(Request $request, ReviewType $type): View
     {
         abort_unless($request->user()->can($type->permission()), 403);
 
-        $status = self::QUEUE_STATUS[$type->value];
+        $status = match ($type) {
+            ReviewType::SECRETARIAT => $this->secretariatQueueStatus($request->user()),
+            ReviewType::FINANCE => ApplicationStatus::UNDER_FINANCE_REVIEW,
+            ReviewType::TECHNICAL => ApplicationStatus::UNDER_TECHNICAL_REVIEW,
+        };
 
         $applications = Application::query()
             ->where('status', $status->value)
@@ -79,15 +84,28 @@ class ReviewController extends Controller
     }
 
     /** Papar borang semakan untuk satu permohonan. */
-    public function show(Request $request, Application $application, string $type): View
+    public function show(Request $request, Application $application, string $type): View|RedirectResponse
     {
         $reviewType = ReviewType::from($type);
         // URS v1.2: hanya semakan Pegawai JP (secretariat) dalam aliran aktif.
         abort_unless($reviewType === ReviewType::SECRETARIAT, 404, 'Jenis semakan ini telah dinyahaktif.');
         abort_unless($request->user()->can($reviewType->permission()), 403);
 
-        $expected = $this->reviews->expectedReviewType($application);
-        abort_if($expected !== $reviewType, 404, 'Permohonan tiada pada peringkat semakan ini.');
+        // Permohonan sudah melepasi peringkat semakan — bawa pengguna ke halaman permohonan.
+        if ($this->reviews->expectedReviewType($application) !== $reviewType) {
+            return redirect()
+                ->route('applications.show', $application)
+                ->with('error', 'Permohonan '.$application->application_number.' tiada pada peringkat semakan JP. Status semasa: '.$application->status->label().'.');
+        }
+
+        // Masih dalam semakan JP, tetapi bukan giliran pengguna ini.
+        if ($application->status !== $this->secretariatQueueStatus($request->user())) {
+            return redirect()
+                ->route('reviews.secretariat')
+                ->with('error', $request->user()->canMakeFullJpReviewDecision()
+                    ? 'Permohonan '.$application->application_number.' sudah disemak Admin JP dan kini menunggu perakuan Pegawai JP.'
+                    : 'Permohonan '.$application->application_number.' masih menunggu semakan Admin JP.');
+        }
 
         $application->load(['alp', 'financialYear', 'documents', 'reviews.reviewer']);
 

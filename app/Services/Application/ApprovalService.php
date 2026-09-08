@@ -168,6 +168,7 @@ class ApprovalService
         ]);
 
         $this->notifier->approved($application);
+        $this->notifier->awaitingPayment($application);
     }
 
     /** Tolak permohonan pada peringkat kelulusan. Tiada komitmen dicipta. */

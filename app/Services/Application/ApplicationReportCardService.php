@@ -4,6 +4,7 @@ namespace App\Services\Application;
 
 use App\Enums\ApplicationStatus;
 use App\Enums\DocumentType;
+use App\Enums\ReportCardStatus;
 use App\Models\Application;
 use App\Models\ApplicationDocument;
 use App\Models\User;
@@ -28,25 +29,36 @@ class ApplicationReportCardService
 
     public function canUpload(Application $application): bool
     {
-        return $application->status === ApplicationStatus::APPROVED;
+        if ($application->status !== ApplicationStatus::APPROVED || ! $application->hasVoucherPrepared()) {
+            return false;
+        }
+
+        $status = $application->report_card_status;
+
+        return $status === null
+            || $status === ReportCardStatus::RETURNED;
     }
 
-    /** Tarikh akhir dikemukakan: 1 bulan selepas tarikh kelulusan (BR-018). */
+    /**
+     * Tarikh akhir dikemukakan: 1 bulan selepas baucar disedia.
+     * Tiada tarikh akhir sebelum baucar wujud — jangan tandakan tertunggak.
+     */
     public function dueDate(Application $application): ?\Carbon\Carbon
     {
-        $approvedAt = $application->statusHistories()
-            ->where('to_status', ApplicationStatus::APPROVED->value)
-            ->latest('id')
-            ->value('created_at');
+        if (! $application->hasVoucherPrepared()) {
+            return null;
+        }
 
-        return $approvedAt
-            ? \Carbon\Carbon::parse($approvedAt)->addMonthNoOverflow()->endOfDay()
-            : null;
+        $start = $application->payment_voucher_date
+            ?? $application->payment_updated_at
+            ?? $application->updated_at;
+
+        return $start?->copy()->startOfDay()->addMonthNoOverflow()->endOfDay();
     }
 
     public function isOverdue(Application $application): bool
     {
-        if ($application->report_card_submitted_at) {
+        if ($application->report_card_submitted_at || $application->report_card_status !== null) {
             return false;
         }
 
@@ -56,6 +68,12 @@ class ApplicationReportCardService
     }
 
     public function hasReportCard(Application $application): bool
+    {
+        return $application->report_card_status === ReportCardStatus::APPROVED;
+    }
+
+    /** Ada fail dimuat naik (belum semestinya disahkan JP). */
+    public function hasUploadedReportDocument(Application $application): bool
     {
         if ($application->report_card_submitted_at) {
             return true;
@@ -77,7 +95,9 @@ class ApplicationReportCardService
         ?string $remarks = null,
     ): ApplicationDocument {
         if (! $this->canUpload($application)) {
-            throw new ApplicationException('Report card hanya untuk permohonan yang telah diluluskan.');
+            throw new ApplicationException(
+                'Laporan aktiviti hanya boleh dimuat naik selepas baucar disedia oleh Kewangan JP.'
+            );
         }
 
         if (! in_array($type, [DocumentType::REPORT_CARD, DocumentType::LAPORAN_AKTIVITI], true)) {
@@ -99,6 +119,7 @@ class ApplicationReportCardService
             ]);
 
             $application->report_card_submitted_at = now();
+            $application->report_card_status = ReportCardStatus::AWAITING_ADMIN_JP;
             if ($remarks !== null) {
                 $application->report_card_remarks = $remarks;
             }
@@ -109,6 +130,8 @@ class ApplicationReportCardService
                 'document_type' => $type->value,
                 'original_filename' => $file->getClientOriginalName(),
             ]);
+
+            $this->notifier->reportCardSubmitted($application->fresh());
 
             return $doc;
         });
