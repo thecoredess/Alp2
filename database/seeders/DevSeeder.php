@@ -62,6 +62,7 @@ class DevSeeder extends Seeder
 
         // 3. Akaun pengguna mengikut peranan.
         $this->makeUser('Super Admin', 'superadmin@dbkl.test', RoleName::SUPER_ADMIN);
+        $this->makeUser('Admin JP', 'adminjp@dbkl.test', RoleName::SYSTEM_ADMIN);
         $this->makeUser('Pentadbir Sistem', 'sysadmin@dbkl.test', RoleName::SYSTEM_ADMIN);
 
         // ALP + akaun log masuk mereka.

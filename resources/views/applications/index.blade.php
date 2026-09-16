@@ -67,11 +67,13 @@
                         <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$app->requested_amount" /></td>
                         <td class="px-4 py-3"><x-status-badge :label="$app->status->label()" :classes="$app->status->badgeClasses()" /></td>
                         <td class="px-4 py-3 text-right">
-                            @if ($app->isDraft() && auth()->user()->can('update', $app))
-                                <a href="{{ route('applications.wizard.maklumat', $app) }}" class="text-royal-600 hover:text-royal-700 font-medium">Sambung Draf</a>
-                            @else
-                                <a href="{{ route('applications.show', $app) }}" class="text-royal-600 hover:text-royal-700 font-medium">Lihat</a>
-                            @endif
+                            <x-table-actions>
+                                @if ($app->isDraft() && auth()->user()->can('update', $app))
+                                    <x-table-action href="{{ route('applications.wizard.maklumat', $app) }}" icon="pencil-square" label="Sambung Draf" variant="primary" />
+                                @else
+                                    <x-table-action href="{{ route('applications.show', $app) }}" icon="eye" label="Lihat" variant="primary" />
+                                @endif
+                            </x-table-actions>
                         </td>
                     </tr>
                 @empty

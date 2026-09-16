@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', 'Sunting Aras Kelulusan')
-@section('heading', 'Sunting: '.$level->name)
+@section('title', 'Kemaskini Aras Kelulusan')
+@section('heading', 'Kemaskini: '.$level->name)
 
 @section('content')
     <div class="max-w-2xl">

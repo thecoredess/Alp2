@@ -108,7 +108,7 @@ class NotificationRoutingTest extends TestCase
         $app = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2500.00')));
 
         $owner = $this->userWithRole(RoleName::ALP->value, $alp);
-        $id = $this->notify($owner, $app, 'report_card_reminder');
+        $id = $this->notify($owner, $app, 'report_card_reminder_upcoming');
 
         $this->click($owner, $id)
             ->assertRedirect(route('applications.show', [$app, 'tab' => 'report']));

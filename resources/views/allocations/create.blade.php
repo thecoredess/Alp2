@@ -6,7 +6,7 @@
 @section('content')
     <div class="mb-4 max-w-xl rounded-lg border border-royal-200 bg-royal-50 px-4 py-3 text-sm text-royal-900">
         Tiada maker-checker. Transaksi <strong>INITIAL_ALLOCATION</strong> dicipta terus.
-        Polisi URS (BR-001 / BR-007) dikuatkuasakan jika diaktifkan.
+        Polisi sumbangan dikuatkuasakan jika diaktifkan.
     </div>
 
     <form method="POST" action="{{ route('allocations.store') }}" class="card max-w-xl space-y-5 p-6">
@@ -31,7 +31,7 @@
                             @selected(old('alp_id', $selectedAlpId) == $alp->id)>
                         {{ $alp->ref_code }} — {{ $alp->name }}
                         @if(isset($entitlements[$alp->id]))
-                            (siling BR-007: RM {{ number_format((float) $entitlements[$alp->id], 2) }})
+                            (siling kelayakan: RM {{ number_format((float) $entitlements[$alp->id], 2) }})
                         @endif
                     </option>
                 @endforeach
@@ -68,7 +68,7 @@
             function sync() {
                 var opt = sel.options[sel.selectedIndex];
                 var cap = opt && opt.getAttribute('data-cap');
-                hint.textContent = cap ? ('Kelayakan mengikut lantikan (BR-007): RM ' + Number(cap).toLocaleString('en-MY', {minimumFractionDigits: 2})) : '';
+                hint.textContent = cap ? ('Kelayakan mengikut lantikan: RM ' + Number(cap).toLocaleString('en-MY', {minimumFractionDigits: 2})) : '';
             }
             sel?.addEventListener('change', sync);
             sync();

@@ -135,6 +135,22 @@ class UrsPolicyAndNotificationTest extends TestCase
         );
     }
 
+    public function test_submission_notifies_alp_with_acknowledgment(): void
+    {
+        Notification::fake();
+        $this->allocate('500000.00');
+        $app = $this->makeDraft('1000.00');
+        User::factory()->create()->assignRole(RoleName::SYSTEM_ADMIN->value);
+
+        app(ApplicationSubmissionService::class)->submit($app, $this->alpUser);
+
+        Notification::assertSentTo(
+            $this->alpUser,
+            ApplicationWorkflowNotification::class,
+            fn (ApplicationWorkflowNotification $n) => $n->event === 'submission_acknowledged',
+        );
+    }
+
     public function test_approved_application_letter_is_printable(): void
     {
         $this->allocate('500000.00');
@@ -168,7 +184,7 @@ class UrsPolicyAndNotificationTest extends TestCase
         $this->actingAs($admin)
             ->get(route('settings.edit'))
             ->assertOk()
-            ->assertSee('Polisi URS')
+            ->assertSee('Polisi Sumbangan')
             ->assertSee('Templat dokumen');
     }
 }

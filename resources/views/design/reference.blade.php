@@ -198,7 +198,11 @@
                         <td class="px-4 py-3"><x-status-badge label="CSR" classes="bg-purple-100 text-purple-700" /></td>
                         <td class="px-4 py-3 text-right text-gray-900">RM 45,000.00</td>
                         <td class="px-4 py-3"><x-status-badge label="Diluluskan" classes="bg-green-100 text-green-700" /></td>
-                        <td class="px-4 py-3 text-right"><a href="#" class="font-medium text-royal-600 hover:text-royal-700" onclick="return false">Lihat</a></td>
+                        <td class="px-4 py-3 text-right">
+                            <x-table-actions>
+                                <x-table-action href="#" icon="eye" label="Lihat" variant="primary" onclick="return false" />
+                            </x-table-actions>
+                        </td>
                     </tr>
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-mono text-xs text-gray-700">ALP-2026-00002</td>
@@ -206,7 +210,11 @@
                         <td class="px-4 py-3"><x-status-badge label="Infrastruktur" classes="bg-blue-100 text-blue-700" /></td>
                         <td class="px-4 py-3 text-right text-gray-900">RM 120,000.00</td>
                         <td class="px-4 py-3"><x-status-badge label="Dalam Semakan" classes="bg-amber-100 text-amber-800" /></td>
-                        <td class="px-4 py-3 text-right"><a href="#" class="font-medium text-royal-600 hover:text-royal-700" onclick="return false">Lihat</a></td>
+                        <td class="px-4 py-3 text-right">
+                            <x-table-actions>
+                                <x-table-action href="#" icon="eye" label="Lihat" variant="primary" onclick="return false" />
+                            </x-table-actions>
+                        </td>
                     </tr>
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-mono text-xs text-gray-700">ALP-2026-00003</td>
@@ -214,7 +222,11 @@
                         <td class="px-4 py-3"><x-status-badge label="Pendidikan" classes="bg-teal-100 text-teal-700" /></td>
                         <td class="px-4 py-3 text-right text-gray-900">RM 15,500.00</td>
                         <td class="px-4 py-3"><x-status-badge label="Perlu Pembetulan" classes="bg-orange-100 text-orange-700" /></td>
-                        <td class="px-4 py-3 text-right"><a href="#" class="font-medium text-royal-600 hover:text-royal-700" onclick="return false">Lihat</a></td>
+                        <td class="px-4 py-3 text-right">
+                            <x-table-actions>
+                                <x-table-action href="#" icon="eye" label="Lihat" variant="primary" onclick="return false" />
+                            </x-table-actions>
+                        </td>
                     </tr>
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-mono text-xs text-gray-700">ALP-2026-00004</td>
@@ -222,7 +234,11 @@
                         <td class="px-4 py-3"><x-status-badge label="Sukan" classes="bg-indigo-100 text-indigo-700" /></td>
                         <td class="px-4 py-3 text-right text-gray-900">RM 8,200.00</td>
                         <td class="px-4 py-3"><x-status-badge label="Ditolak" classes="bg-red-100 text-red-700" /></td>
-                        <td class="px-4 py-3 text-right"><a href="#" class="font-medium text-royal-600 hover:text-royal-700" onclick="return false">Lihat</a></td>
+                        <td class="px-4 py-3 text-right">
+                            <x-table-actions>
+                                <x-table-action href="#" icon="eye" label="Lihat" variant="primary" onclick="return false" />
+                            </x-table-actions>
+                        </td>
                     </tr>
                 </tbody>
             </table>

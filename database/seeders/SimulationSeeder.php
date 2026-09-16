@@ -37,7 +37,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class SimulationSeeder extends Seeder
 {
-    private const PREFIX = '[SIM] ';
+    private const PREFIX = Application::SIMULATION_PREFIX;
 
     /** @var list<array{label: string, number: string, status: string, url: string, login?: string}> */
     private array $guide = [];
@@ -360,7 +360,8 @@ class SimulationSeeder extends Seeder
         $this->command->line('  Kata laluan semua akaun : password');
         $this->command->newLine();
         $this->command->line('  ALP demo : alp01@dbkl.test ('.$alp->ref_code.' — '.$alp->name.')');
-        $this->command->line('  JP       : urussetia@dbkl.test');
+        $this->command->line('  Admin JP : adminjp@dbkl.test');
+        $this->command->line('  Pegawai JP : urussetia@dbkl.test');
         $this->command->line('  Peraku   : pelulus@dbkl.test');
         $this->command->line('  PEPU     : pengurusan@dbkl.test');
         $this->command->newLine();

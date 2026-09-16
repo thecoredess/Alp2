@@ -38,7 +38,9 @@
                         </td>
                         <td class="px-4 py-3 text-xs text-gray-600">{{ $app->report_card_submitted_at?->format('d/m/Y H:i') ?? '—' }}</td>
                         <td class="px-4 py-3 text-right">
-                            <a href="{{ route('report-cards.review.show', $app) }}" class="btn-primary !py-1 !px-3 text-xs">Semak</a>
+                            <x-table-actions>
+                                <x-table-action href="{{ route('report-cards.review.show', $app) }}" icon="clipboard" label="Semak" variant="primary" />
+                            </x-table-actions>
                         </td>
                     </tr>
                 @empty

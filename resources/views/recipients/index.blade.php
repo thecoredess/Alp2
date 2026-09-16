@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Penerima / Persatuan')
 @section('heading', 'Penerima Sumbangan')
-@section('subheading', 'Entiti persatuan (ROS) — BR-008 / BR-009')
+@section('subheading', 'Entiti persatuan berdaftar (ROS)')
 
 @section('content')
     <form method="GET" class="mb-5 flex flex-wrap items-center gap-2">
@@ -28,7 +28,9 @@
                         <td class="px-4 py-3 font-mono text-xs text-gray-600">{{ $r->bank_account ?? '—' }}</td>
                         <td class="px-4 py-3 text-right text-gray-700">{{ $r->applications_count }}</td>
                         <td class="px-4 py-3 text-right">
-                            <a href="{{ route('recipients.show', $r) }}" class="btn-primary !py-1 !px-3 text-xs">Buka</a>
+                            <x-table-actions>
+                                <x-table-action href="{{ route('recipients.show', $r) }}" icon="eye" label="Buka" variant="primary" />
+                            </x-table-actions>
                         </td>
                     </tr>
                 @empty

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Laporan Aktiviti / Report Card')
 @section('heading', 'Laporan Aktiviti & Report Card')
-@section('subheading', 'Pemantauan penerimaan laporan — 1 bulan selepas baucar disedia')
+@section('subheading', 'Pemantauan penerimaan laporan — 1 bulan selepas tarikh program')
 
 @section('content')
     @if ($canReview ?? false)
@@ -36,7 +36,7 @@
                     <th class="px-4 py-3">No.</th>
                     <th class="px-4 py-3">ALP</th>
                     <th class="px-4 py-3">Program</th>
-                    <th class="px-4 py-3">Tarikh Akhir (BR-018)</th>
+                    <th class="px-4 py-3">Tarikh Akhir</th>
                     <th class="px-4 py-3">Status</th>
                     <th class="px-4 py-3 text-right">Tindakan</th>
                 </tr>
@@ -73,7 +73,9 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <a href="{{ route('applications.show', [$app, 'tab' => 'report']) }}" class="btn-primary !py-1 !px-3 text-xs">Buka</a>
+                            <x-table-actions>
+                                <x-table-action href="{{ route('applications.show', [$app, 'tab' => 'report']) }}" icon="eye" label="Buka" variant="primary" />
+                            </x-table-actions>
                         </td>
                     </tr>
                 @empty

@@ -39,13 +39,18 @@
                         </td>
                         <td class="px-4 py-3 text-right">
                             @can('approval_matrix.manage')
-                                <div class="flex items-center justify-end gap-3">
-                                    <a href="{{ route('approval-matrix.edit', $level) }}" class="text-royal-600 hover:text-royal-700 font-medium">Sunting</a>
-                                    <form method="POST" action="{{ route('approval-matrix.toggle', $level) }}">
+                                <x-table-actions>
+                                    <x-table-action href="{{ route('approval-matrix.edit', $level) }}" icon="pencil-square" label="Kemaskini" variant="primary" />
+                                    <form method="POST" action="{{ route('approval-matrix.toggle', $level) }}" class="inline">
                                         @csrf
-                                        <button class="text-gray-500 hover:text-gray-700 font-medium">{{ $level->active ? 'Nyahaktif' : 'Aktif' }}</button>
+                                        <x-table-action
+                                            :icon="$level->active ? 'x-circle' : 'check'"
+                                            :label="$level->active ? 'Nyahaktif' : 'Aktifkan'"
+                                            :variant="$level->active ? 'muted' : 'success'"
+                                            type="submit"
+                                        />
                                     </form>
-                                </div>
+                                </x-table-actions>
                             @endcan
                         </td>
                     </tr>

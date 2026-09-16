@@ -68,7 +68,7 @@
                 <li>Muat naik dokumen wajib senarai semak (ROS, EFT, bank, kertas kerja).</li>
                 <li>Hantar → pantau status permohonan.</li>
                 <li>Selepas baucar disedia → lengkapkan <strong>Format Laporan Program ALP</strong> dan muat naik dalam 1 bulan.</li>
-                <li>Cetak <strong>Borang Penyaluran</strong> / surat kelulusan bila perlu (BR-020).</li>
+                <li>Cetak <strong>Borang Penyaluran</strong> / surat kelulusan bila perlu.</li>
             </ol>
         </div>
     @elseif ($audience === 'jp')

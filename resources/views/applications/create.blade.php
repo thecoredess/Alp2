@@ -56,8 +56,9 @@
                         <input id="recipient_name" name="recipient_name" type="text" value="{{ old('recipient_name') }}" required class="inp">
                     </x-field>
 
-                    <x-field label="c) No. ROS" name="recipient_ros_number" :required="true">
-                        <input id="recipient_ros_number" name="recipient_ros_number" type="text" value="{{ old('recipient_ros_number') }}" required class="inp">
+                    <x-field label="c) No. ROS (PPM-0XX-XX-XXXXXXXX)" name="recipient_ros_number" :required="true" hint="Contoh: PPM-060-01-12345678">
+                        <input id="recipient_ros_number" name="recipient_ros_number" type="text" value="{{ old('recipient_ros_number') }}"
+                               placeholder="PPM-060-01-12345678" required class="inp font-mono uppercase">
                     </x-field>
 
                     <x-field

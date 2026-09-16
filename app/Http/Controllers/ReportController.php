@@ -208,6 +208,7 @@ class ReportController extends Controller
                 'year' => $year, 'listing' => $listing, 'filters' => $filters,
                 'counts' => $this->applications->statusCounts($filters), 'amounts' => $this->applications->amounts($filters),
                 'pipeline' => $this->applications->pipeline($filters), 'byType' => $this->applications->byType($filters),
+                'statusFilterOptions' => ApplicationReportService::statusFilterOptions(),
             ], 'permohonan', true);
     }
 

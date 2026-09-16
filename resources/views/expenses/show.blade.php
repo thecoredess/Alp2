@@ -95,7 +95,7 @@
             {{-- Tindakan maker --}}
             @can('update', $expense)
                 <div class="card p-5 space-y-2">
-                    <a href="{{ route('expenses.edit', $expense) }}" class="btn-white w-full">Sunting</a>
+                    <a href="{{ route('expenses.edit', $expense) }}" class="btn-white w-full">Kemaskini</a>
                     <form method="POST" action="{{ route('expenses.submit', $expense) }}" onsubmit="return confirm('Hantar untuk pengesahan?')">@csrf<button class="btn-navy w-full">Hantar Untuk Pengesahan</button></form>
                 </div>
             @endcan

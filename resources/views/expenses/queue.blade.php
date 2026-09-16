@@ -17,7 +17,11 @@
                         <td class="px-4 py-3 text-gray-600">{{ $e->project->alp->ref_code }}</td>
                         <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$e->amount" /></td>
                         <td class="px-4 py-3 text-gray-600">{{ $e->maker?->name ?? '—' }}</td>
-                        <td class="px-4 py-3 text-right"><a href="{{ route('expenses.show', $e) }}" class="btn-primary !py-1 !px-3 text-xs">Semak</a></td>
+                        <td class="px-4 py-3 text-right">
+                            <x-table-actions>
+                                <x-table-action href="{{ route('expenses.show', $e) }}" icon="clipboard" label="Semak" variant="primary" />
+                            </x-table-actions>
+                        </td>
                     </tr>
                 @empty
                     <tr><td colspan="6" class="px-4 py-10 text-center text-gray-400">Tiada perbelanjaan menunggu pengesahan.</td></tr>

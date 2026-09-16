@@ -65,7 +65,7 @@
             {{-- Tindakan maker --}}
             @can('update', $refund)
                 <div class="card p-5 space-y-2">
-                    <a href="{{ route('refunds.edit', $refund) }}" class="btn-white w-full">Sunting</a>
+                    <a href="{{ route('refunds.edit', $refund) }}" class="btn-white w-full">Kemaskini</a>
                     <form method="POST" action="{{ route('refunds.submit', $refund) }}" onsubmit="return confirm('Hantar untuk pengesahan?')">@csrf<button class="btn-navy w-full">Hantar Untuk Pengesahan</button></form>
                 </div>
             @endcan

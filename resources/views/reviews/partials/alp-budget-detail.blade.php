@@ -9,14 +9,14 @@
 
 <div class="space-y-5">
     <div>
-        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Ringkasan Ledger · {{ $application->alp->ref_code }}</p>
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Ringkasan Kewangan · {{ $application->alp->ref_code }}</p>
         <dl class="space-y-2 text-sm">
             <div class="flex items-center justify-between rounded-lg bg-navy-50 px-3 py-2">
                 <dt class="text-gray-600">Peruntukan Tahunan</dt>
                 <dd class="font-semibold text-navy-700"><x-money :value="$summary->allocation" /></dd>
             </div>
             <div class="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2">
-                <dt class="text-gray-600">Committed</dt>
+                <dt class="text-gray-600">Permohonan Peruntukkan</dt>
                 <dd class="font-semibold text-amber-700"><x-money :value="$summary->committed" /></dd>
             </div>
             <div class="flex items-center justify-between rounded-lg bg-purple-50 px-3 py-2">
@@ -24,7 +24,7 @@
                 <dd class="font-semibold text-purple-700"><x-money :value="$summary->spent" /></dd>
             </div>
             <div class="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2.5">
-                <dt class="text-gray-600">Ledger Available</dt>
+                <dt class="text-gray-600">Baki Peruntukkan Diluluskan</dt>
                 <dd class="font-semibold text-green-700"><x-money :value="$ledgerAvailable" /></dd>
             </div>
         </dl>
@@ -45,7 +45,7 @@
         <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Permohonan Semasa</p>
         <dl class="space-y-2 text-sm">
             <div class="flex items-center justify-between rounded-lg bg-orange-50 px-3 py-2">
-                <dt class="text-gray-600">Pending Lain</dt>
+                <dt class="text-gray-600">Dalam Proses</dt>
                 <dd class="font-semibold text-orange-700"><x-money :value="$otherPending" /></dd>
             </div>
             <div class="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
@@ -53,7 +53,7 @@
                 <dd class="font-semibold text-navy-700"><x-money :value="$thisRequest" /></dd>
             </div>
             <div class="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2.5">
-                <dt class="font-medium text-gray-600">Projected Available</dt>
+                <dt class="font-medium text-gray-600">Baki Tersedia</dt>
                 <dd class="font-semibold {{ $projected->isNegative() ? 'text-danger' : 'text-green-600' }}">
                     <x-money :value="$projected" />
                 </dd>
@@ -120,10 +120,10 @@
 
     <div>
         <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Pending Lain ({{ $pendingApplications->count() }})
+            Dalam Proses ({{ $pendingApplications->count() }})
         </p>
         @if ($pendingApplications->isEmpty())
-            <p class="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-400">Tiada permohonan pending lain.</p>
+            <p class="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-400">Tiada permohonan dalam proses.</p>
         @else
             <div class="max-h-44 overflow-y-auto rounded-lg border border-gray-100">
                 <table class="min-w-full divide-y divide-gray-100 text-xs">

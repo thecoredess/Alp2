@@ -7,6 +7,7 @@ use App\Enums\UserStatus;
 use App\Http\Requests\UserRequest;
 use App\Models\Alp;
 use App\Models\User;
+use App\Services\Audit\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,8 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    public function __construct(private readonly AuditService $audit) {}
+
     public function index(Request $request): View
     {
         $this->authorize('users.view');
@@ -64,6 +67,11 @@ class UserController extends Controller
 
         $this->syncRole($request, $user);
 
+        $this->audit->log('USER_CREATED', $user, null, [
+            'email' => $user->email,
+            'role' => $request->validated('role'),
+        ]);
+
         return redirect()->route('users.index')
             ->with('status', "Pengguna {$user->name} berjaya dicipta.")
             ->with('temp_password', $tempPassword)
@@ -97,6 +105,11 @@ class UserController extends Controller
             $this->syncRole($request, $user);
         }
 
+        $this->audit->log('USER_UPDATED', $user, null, [
+            'email' => $user->email,
+            'role' => $request->validated('role'),
+        ]);
+
         return redirect()->route('users.index')
             ->with('status', "Pengguna {$user->name} berjaya dikemas kini.");
     }
@@ -108,6 +121,8 @@ class UserController extends Controller
 
         $user->update(['status' => UserStatus::INACTIVE]);
 
+        $this->audit->log('USER_DEACTIVATED', $user);
+
         return back()->with('status', "Akaun {$user->name} telah dinyahaktifkan.");
     }
 
@@ -116,6 +131,8 @@ class UserController extends Controller
         $this->authorize('users.deactivate');
 
         $user->update(['status' => UserStatus::ACTIVE]);
+
+        $this->audit->log('USER_ACTIVATED', $user);
 
         return back()->with('status', "Akaun {$user->name} telah diaktifkan semula.");
     }
@@ -129,6 +146,8 @@ class UserController extends Controller
             'password' => Hash::make($tempPassword),
             'must_change_password' => true,
         ]);
+
+        $this->audit->log('USER_PASSWORD_RESET', $user);
 
         return back()
             ->with('status', "Kata laluan {$user->name} telah ditetapkan semula.")

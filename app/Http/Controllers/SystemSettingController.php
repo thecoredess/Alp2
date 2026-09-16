@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SystemSetting;
+use App\Services\Audit\AuditService;
 use App\Support\UrsContributionPolicy;
 use App\Support\UrsDocumentTemplates;
 use Illuminate\Http\RedirectResponse;
@@ -11,6 +12,15 @@ use Illuminate\View\View;
 
 class SystemSettingController extends Controller
 {
+    public function __construct(private readonly AuditService $audit) {}
+
+    public function index(Request $request): View
+    {
+        abort_unless($this->canAccessSystemSettings($request->user()), 403);
+
+        return view('admin.settings.index');
+    }
+
     public function edit(Request $request): View
     {
         abort_unless($request->user()->can('settings.manage'), 403);
@@ -54,6 +64,23 @@ class SystemSettingController extends Controller
         SystemSetting::set(UrsDocumentTemplates::KEY_BORANG_HEADER, $data['template_borang_header']);
         SystemSetting::set(UrsDocumentTemplates::KEY_BORANG_FOOTER, $data['template_borang_footer']);
 
-        return redirect()->route('settings.edit')->with('status', 'Tetapan polisi URS & templat dokumen dikemas kini.');
+        $this->audit->log('SETTINGS_CONTRIBUTION_POLICY_UPDATED', null, null, [
+            'policy_enabled' => $request->boolean('urs_policy_enabled'),
+            'max_annual_allocation' => $data['urs_max_annual_allocation'],
+            'max_per_application' => $data['urs_max_per_application'],
+            'period_quota' => $data['urs_period_quota'],
+            'overdue_days' => $data['urs_overdue_days'],
+        ]);
+
+        return redirect()->route('settings.edit')->with('status', 'Tetapan polisi sumbangan & templat dokumen dikemas kini.');
+    }
+
+    private function canAccessSystemSettings($user): bool
+    {
+        return $user->can('users.view')
+            || $user->can('financial_years.view')
+            || $user->can('settings.manage')
+            || $user->can('approval_matrix.view')
+            || $user->hasRole(\App\Enums\RoleName::SUPER_ADMIN->value);
     }
 }

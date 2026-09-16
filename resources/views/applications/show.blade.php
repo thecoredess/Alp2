@@ -23,7 +23,10 @@
     $attachmentDocs = $application->documents->reject(fn ($d) => in_array($d->document_type, [
         \App\Enums\DocumentType::REPORT_CARD,
         \App\Enums\DocumentType::LAPORAN_AKTIVITI,
+        \App\Enums\DocumentType::SEMAKAN_SILANG_JKEW,
     ], true));
+    $crosscheckDocument = $application->documents
+        ->first(fn ($d) => $d->document_type === \App\Enums\DocumentType::SEMAKAN_SILANG_JKEW);
     $attachmentCount = $attachmentDocs->count();
     $timelineDoneCount = collect($timelineStages ?? [])->filter(fn ($s) => ($s['done'] ?? false) || ($s['skipped'] ?? false))->count();
     $timelineTotalCount = count($timelineStages ?? []);
@@ -390,6 +393,16 @@
                     <p class="mt-1 text-sm text-gray-500">Dokumen sokongan belum dimuat naik.</p>
                 </div>
             @endif
+
+            @unless ($isAlpView)
+                <div class="mt-6">
+                    @include('reviews.partials.crosscheck-card', [
+                        'application' => $application,
+                        'crosscheckDocument' => $crosscheckDocument,
+                        'uploadAction' => route('applications.crosscheck.store', $application),
+                    ])
+                </div>
+            @endunless
         </div>
 
         {{-- Laporan Aktiviti --}}
@@ -400,7 +413,15 @@
                         <div class="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <h3 class="text-base font-semibold text-gray-900">Laporan Aktiviti</h3>
-                                <p class="mt-1 text-sm text-gray-500">Muat naik dalam 1 bulan selepas baucar disedia.</p>
+                                @php
+                                    $reportTemplateYear = (int) ($application->financialYear?->year ?? now()->year);
+                                @endphp
+                                <p class="mt-1 text-sm text-gray-500">Muat naik dalam 1 bulan selepas program dijalankan.</p>
+                                <a href="{{ route('applications.report-template.pdf', $application) }}"
+                                   class="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-royal-700 underline hover:text-royal-800">
+                                    <x-icon name="download" class="h-4 w-4" />
+                                    Format Laporan Program
+                                </a>
                             </div>
                             @if ($application->status === \App\Enums\ApplicationStatus::APPROVED)
                                 @if ($hasReportCard ?? false)
@@ -428,38 +449,95 @@
                                 \App\Enums\DocumentType::LAPORAN_AKTIVITI,
                             ], true));
                         @endphp
-                        @foreach ($reportDocs as $doc)
-                            <div class="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
-                                <span class="font-medium text-gray-900">{{ $doc->document_type->label() }}</span>
-                                <a href="{{ route('applications.documents.view', [$application, $doc]) }}"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="inline-flex items-center gap-1 text-xs font-semibold text-royal-600 hover:text-royal-700">
-                                    Lihat
-                                </a>
+                        @php
+                            $reportCardDraft = $reportCardDraft ?? null;
+                        @endphp
+
+                        @if ($reportCardDraft)
+                            <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-5">
+                                <p class="text-sm font-semibold text-amber-900">Draf laporan aktiviti</p>
+                                <p class="mt-1 text-xs text-amber-800">Semak fail di bawah. Hantar ke Admin JP hanya selepas anda pasti fail betul.</p>
+                                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-100 bg-white px-4 py-3 text-sm">
+                                    <div>
+                                        <p class="font-medium text-gray-900">{{ $reportCardDraft->original_filename }}</p>
+                                        <p class="text-xs text-gray-500">{{ number_format($reportCardDraft->file_size / 1024, 1) }} KB</p>
+                                    </div>
+                                    <a href="{{ route('applications.documents.view', [$application, $reportCardDraft]) }}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="btn-white text-xs !px-3 !py-1.5">
+                                        <x-icon name="eye" class="h-4 w-4" />
+                                        Preview
+                                    </a>
+                                </div>
+
+                                @can('submitReportCard', $application)
+                                    <form method="POST" action="{{ route('applications.report-card.submit', $application) }}" class="mt-4 space-y-3">
+                                        @csrf
+                                        <label class="flex items-start gap-2 text-sm text-gray-700">
+                                            <input type="checkbox" name="confirmed" value="1" required class="mt-1 rounded border-gray-300 text-royal-600 focus:ring-royal-500">
+                                            <span>Saya sahkan laporan aktiviti ini lengkap dan betul untuk dihantar ke Admin JP.</span>
+                                        </label>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button type="submit" class="btn-primary text-sm">Hantar ke Admin JP</button>
+                                        </div>
+                                    </form>
+                                @endcan
+
+                                @can('uploadReportCard', $application)
+                                    <form method="POST" action="{{ route('applications.report-card.store', $application) }}" enctype="multipart/form-data" class="mt-3 flex flex-wrap items-center gap-2 border-t border-amber-100 pt-3">
+                                        @csrf
+                                        <input type="hidden" name="document_type" value="{{ \App\Enums\DocumentType::LAPORAN_AKTIVITI->value }}">
+                                        <label class="btn-white cursor-pointer text-xs">
+                                            Tukar fail
+                                            <input type="file" name="file" class="sr-only" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onchange="if(this.files.length) this.form.requestSubmit()">
+                                        </label>
+                                    </form>
+                                @endcan
+
+                                @can('discardReportCardDraft', $application)
+                                    <form method="POST" action="{{ route('applications.report-card.draft.destroy', $application) }}" class="mt-2" onsubmit="return confirm('Batalkan draf laporan aktiviti?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-xs font-medium text-red-600 hover:text-red-700">Batal draf</button>
+                                    </form>
+                                @endcan
                             </div>
-                        @endforeach
+                        @else
+                            @foreach ($reportDocs as $doc)
+                                <div class="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
+                                    <span class="font-medium text-gray-900">{{ $doc->document_type->label() }}</span>
+                                    <a href="{{ route('applications.documents.view', [$application, $doc]) }}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="inline-flex items-center gap-1 text-xs font-semibold text-royal-600 hover:text-royal-700">
+                                        Lihat
+                                    </a>
+                                </div>
+                            @endforeach
+                        @endif
 
                         @can('uploadReportCard', $application)
-                            <form method="POST" action="{{ route('applications.report-card.store', $application) }}" enctype="multipart/form-data" class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-6 text-center">
-                                @csrf
-                                <select name="document_type" class="inp mx-auto mb-4 max-w-xs text-sm" required>
-                                    <option value="{{ \App\Enums\DocumentType::LAPORAN_AKTIVITI->value }}">Laporan Aktiviti</option>
-                                    <option value="{{ \App\Enums\DocumentType::REPORT_CARD->value }}">Report Card</option>
-                                </select>
-                                <label class="btn-primary inline-flex cursor-pointer items-center text-sm !px-5 !py-2.5">
-                                    <x-icon name="paper-clip" class="h-4 w-4" />
-                                    Pilih Fail
-                                    <input type="file" name="file" class="sr-only" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                           onchange="if(this.files.length) this.form.requestSubmit()">
-                                </label>
-                            </form>
+                            @if (! $reportCardDraft)
+                                <form method="POST" action="{{ route('applications.report-card.store', $application) }}" enctype="multipart/form-data" class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-6 text-center">
+                                    @csrf
+                                    <input type="hidden" name="document_type" value="{{ \App\Enums\DocumentType::LAPORAN_AKTIVITI->value }}">
+                                    <p class="mb-1 text-sm font-medium text-gray-700">Muat naik Laporan Aktiviti</p>
+                                    <p class="mb-4 text-xs text-gray-500">Fail akan disimpan sebagai draf untuk preview sebelum dihantar.</p>
+                                    <label class="btn-primary inline-flex cursor-pointer items-center text-sm !px-5 !py-2.5">
+                                        <x-icon name="paper-clip" class="h-4 w-4" />
+                                        Pilih Fail
+                                        <input type="file" name="file" class="sr-only" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                    </label>
+                                    <button type="submit" class="btn-white mt-3 text-sm">Simpan draf</button>
+                                </form>
+                            @endif
                         @elseif ($application->report_card_status === \App\Enums\ReportCardStatus::AWAITING_ADMIN_JP || $application->report_card_status === \App\Enums\ReportCardStatus::AWAITING_PEGAWAI_JP)
                             <p class="text-center text-sm text-gray-500">Laporan aktiviti dalam semakan JP. Anda akan dimaklumkan selepas pengesahan.</p>
                         @elseif ($application->status !== \App\Enums\ApplicationStatus::APPROVED)
                             <p class="text-center text-sm text-gray-400">Laporan aktiviti boleh dimuat naik selepas permohonan diluluskan.</p>
                         @elseif (! $application->hasVoucherPrepared())
-                            <p class="text-center text-sm text-gray-400">Menunggu Kewangan JP menyediakan baucar. Tempoh 1 bulan bermula selepas baucar disedia.</p>
+                            <p class="text-center text-sm text-gray-400">Menunggu Kewangan JP menyediakan baucar. Tempoh 1 bulan bermula selepas program dijalankan.</p>
                         @endcan
                     </div>
                 </div>

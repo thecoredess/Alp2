@@ -42,7 +42,11 @@
                         <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$project->approved_amount" /></td>
                         <td class="px-4 py-3 text-gray-600">{{ $project->progress_percent }}%</td>
                         <td class="px-4 py-3"><x-status-badge :label="$project->status->label()" :classes="$project->status->badgeClasses()" /></td>
-                        <td class="px-4 py-3 text-right"><a href="{{ route('projects.show', $project) }}" class="text-royal-600 hover:text-royal-700 font-medium">Lihat</a></td>
+                        <td class="px-4 py-3 text-right">
+                            <x-table-actions>
+                                <x-table-action href="{{ route('projects.show', $project) }}" icon="eye" label="Lihat" variant="primary" />
+                            </x-table-actions>
+                        </td>
                     </tr>
                 @empty
                     <tr><td colspan="{{ $scopeAll ? 8 : 7 }}" class="px-4 py-10 text-center text-gray-400">Tiada projek.</td></tr>

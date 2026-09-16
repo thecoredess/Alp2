@@ -249,4 +249,20 @@ class ApplicationTest extends TestCase
         $this->actingAs($officer)->get(route('applications.all'))->assertOk();
         $this->actingAs($officer)->get(route('applications.show', $app))->assertOk();
     }
+
+    public function test_simulation_prefix_is_hidden_from_purpose_display(): void
+    {
+        $app = Application::factory()->create([
+            'purpose' => Application::SIMULATION_PREFIX.'Menunggu Peraku (TP/Pengarah JP)',
+        ]);
+
+        $app = $app->fresh();
+
+        $this->assertSame('Menunggu Peraku (TP/Pengarah JP)', $app->purpose);
+        $this->assertSame('Menunggu Peraku (TP/Pengarah JP)', $app->project_title);
+        $this->assertSame(
+            Application::SIMULATION_PREFIX.'Menunggu Peraku (TP/Pengarah JP)',
+            $app->getRawOriginal('purpose'),
+        );
+    }
 }

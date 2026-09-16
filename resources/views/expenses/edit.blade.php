@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', 'Sunting Perbelanjaan')
-@section('heading', 'Sunting Perbelanjaan')
+@section('title', 'Kemaskini Perbelanjaan')
+@section('heading', 'Kemaskini Perbelanjaan')
 
 @section('content')
     <div class="max-w-2xl">

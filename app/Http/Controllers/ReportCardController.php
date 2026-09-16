@@ -150,6 +150,14 @@ class ReportCardController extends Controller
             ->with('status', 'Keputusan semakan laporan aktiviti direkod.');
     }
 
+    /** Halaman muat naik laporan aktiviti (tab dalam permohonan). */
+    public function show(Request $request, Application $application): RedirectResponse
+    {
+        $this->authorize('view', $application);
+
+        return redirect()->route('applications.show', [$application, 'tab' => 'report']);
+    }
+
     public function store(Request $request, Application $application): RedirectResponse
     {
         $this->authorize('uploadReportCard', $application);
@@ -176,6 +184,38 @@ class ReportCardController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('status', 'Laporan aktiviti dimuat naik dan menunggu semakan Admin JP.');
+        return redirect()
+            ->route('applications.show', [$application, 'tab' => 'report'])
+            ->with('status', 'Fail laporan aktiviti disimpan sebagai draf. Sila semak dan hantar ke Admin JP.');
+    }
+
+    public function submit(Request $request, Application $application): RedirectResponse
+    {
+        $this->authorize('submitReportCard', $application);
+
+        try {
+            $this->reportCards->submit($application, $request->user());
+        } catch (ApplicationException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('applications.show', [$application, 'tab' => 'report'])
+            ->with('status', 'Laporan aktiviti dihantar ke Admin JP untuk semakan.');
+    }
+
+    public function destroyDraft(Request $request, Application $application): RedirectResponse
+    {
+        $this->authorize('discardReportCardDraft', $application);
+
+        try {
+            $this->reportCards->discardDraft($application, $request->user());
+        } catch (ApplicationException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('applications.show', [$application, 'tab' => 'report'])
+            ->with('status', 'Draf laporan aktiviti dibatalkan.');
     }
 }

@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Enums\FinancialYearStatus;
 use App\Http\Requests\FinancialYearRequest;
 use App\Models\FinancialYear;
+use App\Services\Audit\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class FinancialYearController extends Controller
 {
+    public function __construct(private readonly AuditService $audit) {}
+
     public function index(): View
     {
         $this->authorize('financial_years.view');
@@ -31,12 +34,14 @@ class FinancialYearController extends Controller
     {
         $this->authorize('financial_years.create');
 
-        FinancialYear::create([
+        $year = FinancialYear::create([
             ...$request->validated(),
             'status' => FinancialYearStatus::DRAFT,
             'is_active' => false,
             'created_by' => $request->user()->id,
         ]);
+
+        $this->audit->log('FINANCIAL_YEAR_CREATED', $year, null, ['year' => $year->year]);
 
         return redirect()->route('financial-years.index')
             ->with('status', 'Tahun kewangan berjaya dicipta.');
@@ -57,6 +62,8 @@ class FinancialYearController extends Controller
 
         $financialYear->update($request->validated());
 
+        $this->audit->log('FINANCIAL_YEAR_UPDATED', $financialYear, null, ['year' => $financialYear->year]);
+
         return redirect()->route('financial-years.index')
             ->with('status', 'Tahun kewangan berjaya dikemas kini.');
     }
@@ -74,6 +81,8 @@ class FinancialYearController extends Controller
             'status' => FinancialYearStatus::OPEN,
             'opened_at' => now(),
         ]);
+
+        $this->audit->log('FINANCIAL_YEAR_OPENED', $financialYear, null, ['year' => $financialYear->year]);
 
         return back()->with('status', "Tahun kewangan {$financialYear->year} telah dibuka.");
     }
@@ -100,6 +109,8 @@ class FinancialYearController extends Controller
             ]);
         });
 
+        $this->audit->log('FINANCIAL_YEAR_ACTIVATED', $financialYear, null, ['year' => $financialYear->year]);
+
         return back()->with('status', "Tahun kewangan {$financialYear->year} kini aktif.");
     }
 
@@ -117,6 +128,8 @@ class FinancialYearController extends Controller
             'is_active' => false,
             'closed_at' => now(),
         ]);
+
+        $this->audit->log('FINANCIAL_YEAR_CLOSED', $financialYear, null, ['year' => $financialYear->year]);
 
         return back()->with('status', "Tahun kewangan {$financialYear->year} telah ditutup.");
     }

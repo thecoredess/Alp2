@@ -35,7 +35,9 @@
                         <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$req->amount" /></td>
                         <td class="px-4 py-3"><x-status-badge :label="$req->status->label()" :classes="$req->status->badgeClasses()" /></td>
                         <td class="px-4 py-3 text-right">
-                            <a href="{{ route('budget-requests.show', $req) }}" class="text-royal-600 hover:text-royal-700 font-medium">Lihat</a>
+                            <x-table-actions>
+                                <x-table-action href="{{ route('budget-requests.show', $req) }}" icon="eye" label="Lihat" variant="primary" />
+                            </x-table-actions>
                         </td>
                     </tr>
                 @empty

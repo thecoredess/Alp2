@@ -17,8 +17,8 @@
             <label class="block text-xs text-gray-500">Status</label>
             <select name="status" class="inp" onchange="this.form.requestSubmit()">
                 <option value="">Semua</option>
-                @foreach (\App\Enums\ApplicationStatus::cases() as $s)
-                    <option value="{{ $s->value }}" @selected(request('status')===$s->value)>{{ $s->label() }}</option>
+                @foreach ($statusFilterOptions as $value => $label)
+                    <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                 @endforeach
             </select>
         </div>

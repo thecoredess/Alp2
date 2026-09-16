@@ -8,7 +8,7 @@
         <x-budget-cards :summary="$summary" />
         @if ($entitlement)
             <p class="mt-2 text-xs text-gray-500">
-                Siling BR-007 (lantikan): <strong>RM {{ number_format((float) $entitlement->value(), 2) }}</strong>
+                Siling kelayakan (lantikan): <strong>RM {{ number_format((float) $entitlement->value(), 2) }}</strong>
             </p>
         @endif
     </div>

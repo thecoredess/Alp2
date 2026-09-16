@@ -135,7 +135,11 @@
                                 <td class="px-4 py-3 text-gray-600">{{ $e->payee ?? '—' }}</td>
                                 <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$e->amount" /></td>
                                 <td class="px-4 py-3"><x-status-badge :label="$e->status->label()" :classes="$e->status->badgeClasses()" /></td>
-                                <td class="px-4 py-3 text-right"><a href="{{ route('expenses.show', $e) }}" class="text-royal-600 hover:text-royal-700 font-medium">Lihat</a></td>
+                                <td class="px-4 py-3 text-right">
+                                    <x-table-actions>
+                                        <x-table-action href="{{ route('expenses.show', $e) }}" icon="eye" label="Lihat" variant="primary" />
+                                    </x-table-actions>
+                                </td>
                             </tr>
                         @empty
                             <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">Tiada perbelanjaan.</td></tr>

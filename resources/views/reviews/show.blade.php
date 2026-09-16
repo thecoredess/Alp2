@@ -19,6 +19,13 @@
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div class="space-y-4 lg:col-span-2">
                 <x-page-card title="Borang Penyaluran Sumbangan" icon="clipboard">
+                    <div @if ($canEditBorang ?? false) x-data="{ editing: {{ ($errors->any() || request()->boolean('edit')) ? 'true' : 'false' }} }" @endif>
+                    @if ($canEditBorang ?? false)
+                        <div class="mb-4 flex justify-end" x-show="!editing">
+                            <button type="button" class="btn-white text-sm" @click="editing = true">Kemaskini</button>
+                        </div>
+                    @endif
+                    <div @if ($canEditBorang ?? false) x-show="!editing" x-cloak @endif>
                     <dl class="flex flex-col gap-4">
                         <div class="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
                             <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">a) Nama ALP</dt>
@@ -67,11 +74,24 @@
                             <dd class="mt-1.5 whitespace-pre-line text-gray-900">{{ $application->recipient_address ?? '—' }}</dd>
                         </div>
                     </dl>
+                    </div>
+                    @if ($canEditBorang ?? false)
+                        <div x-show="editing" x-cloak>
+                            @include('reviews.partials.borang-penyaluran-form')
+                        </div>
+                    @endif
+                    </div>
                 </x-page-card>
 
                 <x-page-card title="Lampiran" icon="paper-clip">
-                    <x-document-preview-list :application="$application" :documents="$application->documents" />
+                    <x-document-preview-list :application="$application" :documents="$attachmentDocuments ?? $application->documents" />
                 </x-page-card>
+
+                @include('reviews.partials.crosscheck-card', [
+                    'application' => $application,
+                    'crosscheckDocument' => $crosscheckDocument ?? null,
+                    'uploadAction' => route('applications.crosscheck.store', $application),
+                ])
 
                 @if ($application->reviews->isNotEmpty())
                     <x-page-card title="Sejarah Semakan" icon="clock">

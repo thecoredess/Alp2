@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Log Masuk') — {{ config('app.name') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-dbkl.png') }}?v={{ @filemtime(public_path('images/logo-dbkl.png')) ?: time() }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo-dbkl.png') }}?v={{ @filemtime(public_path('images/logo-dbkl.png')) ?: time() }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -150,6 +152,19 @@
         .guest-site-footer p {
             margin: 0.15rem 0;
         }
+        .guest-jpm-credit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.35rem;
+        }
+        .guest-jpm-credit img {
+            display: block;
+            height: 1.75rem;
+            width: auto;
+            object-fit: contain;
+        }
         @media (min-width: 1024px) {
             .guest-shell {
                 flex-direction: row;
@@ -224,8 +239,16 @@
 
         <footer class="guest-site-footer">
             <p>Hak Cipta Terpelihara &copy; {{ date('Y') }} Dewan Bandaraya Kuala Lumpur (DBKL)</p>
-            <p>Paparan terbaik dengan Microsoft Edge, Google Chrome atau Mozilla Firefox versi terkini.</p>
-            <p>DBKL menghargai data peribadi pelanggan dan memastikan pengumpulan data selaras dengan PDPA 2010.</p>
+            <p class="guest-jpm-credit">
+                <img
+                    src="{{ asset('images/jpm-logo.png') }}?v={{ @filemtime(public_path('images/jpm-logo.png')) ?: time() }}"
+                    alt="Logo Jabatan Pengurusan Maklumat (JPM)"
+                    width="120"
+                    height="28"
+                    decoding="async"
+                >
+                <span>Dibangunkan oleh Jabatan Pengurusan Maklumat (JPM)</span>
+            </p>
         </footer>
     </div>
 </body>

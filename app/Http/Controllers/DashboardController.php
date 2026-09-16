@@ -266,9 +266,24 @@ class DashboardController extends Controller
             ? $this->kpiWatchlist($activeYear?->id, null)
             : collect();
 
-        $contributionAnalytics = $activeYear && ($user->alp_id || $user->can('applications.view_all'))
-            ? $this->contributionAnalytics($request, $activeYear, $user->alp_id)
-            : null;
+        $isAlpUser = $user->alp_id !== null;
+
+        $contributionAnalytics = null;
+        $contributionKpi = null;
+
+        if ($activeYear) {
+            if ($isAlpUser) {
+                $contributionAnalytics = $this->contributionAnalytics($request, $activeYear, $user->alp_id);
+            } elseif ($user->can('applications.view_all')) {
+                $contributionAnalytics = $this->contributionAnalytics($request, $activeYear, null);
+                $contributionKpi = $contributionAnalytics;
+            } else {
+                $contributionKpi = $this->contributionAnalytics($request, $activeYear, null);
+            }
+        }
+
+        // Kad bajet/ringkasan asal digantikan analisa sumbangan — ALP sahaja; pegawai kekal paparan lama.
+        $suppressLegacyDashboardCards = $contributionAnalytics !== null && $isAlpUser;
 
         return view('dashboard.index', [
             'activeYear' => $activeYear,
@@ -289,6 +304,8 @@ class DashboardController extends Controller
             'annualAllocation' => $annualAllocation,
             'annualAvailable' => $annualAvailable,
             'contributionAnalytics' => $contributionAnalytics,
+            'contributionKpi' => $contributionKpi,
+            'suppressLegacyDashboardCards' => $suppressLegacyDashboardCards,
         ]);
     }
 

@@ -111,13 +111,18 @@ class UrsSpineSmokeTest extends TestCase
             ->assertOk()
             ->assertSee($app->application_number);
 
-        // 7) Report card
+        // 7) Report card — draf kemudian hantar
         $this->actingAs($owner)
             ->post(route('applications.report-card.store', $app), [
                 'document_type' => DocumentType::REPORT_CARD->value,
                 'file' => UploadedFile::fake()->create('report-smoke.pdf', 80, 'application/pdf'),
                 'report_card_remarks' => 'Selesai smoke',
             ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $this->actingAs($owner)
+            ->post(route('applications.report-card.submit', $app))
             ->assertRedirect()
             ->assertSessionHas('status');
 

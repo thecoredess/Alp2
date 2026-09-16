@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', 'Sunting Refund')
-@section('heading', 'Sunting Refund')
+@section('title', 'Kemaskini Refund')
+@section('heading', 'Kemaskini Refund')
 @section('subheading', $refund->project->project_number.' · '.$refund->expense->reference_number)
 
 @section('content')

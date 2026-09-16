@@ -105,7 +105,7 @@
 </head>
 <body>
     <div class="cover">
-        <div class="cover-badge">Sistem ALP DBKL · URS v1.2</div>
+        <div class="cover-badge">Sistem ALP DBKL</div>
         <h1>Panduan Penyediaan Dokumen Persatuan / Pertubuhan</h1>
         <p class="muted">Untuk permohonan sumbangan melalui Ahli Lembaga Penasihat (ALP)<br>
         Dewan Bandaraya Kuala Lumpur · Tahun {{ $year }}</p>
@@ -142,7 +142,7 @@
             <h3><span class="item-no">{{ $item['no'] }}</span>{{ $item['label'] }}</h3>
             <p>{{ $item['notes'] }}</p>
             @if ($item['type'] === \App\Enums\DocumentType::BORANG_EFT)
-                <p><strong>Nota:</strong> Borang EFT rasmi DBKL 2026 dilampirkan di <strong>laman terakhir</strong> dokumen PDF ini.
+                <p><strong>Nota:</strong> Borang EFT rasmi DBKL dilampirkan di <strong>laman terakhir</strong> dokumen PDF ini.
                 Sila cetak, lengkapkan, tandatangan dan cop persatuan sebelum dimuat naik semula ke sistem.</p>
             @endif
             @if ($item['type'] === \App\Enums\DocumentType::KERTAS_KERJA)
@@ -157,11 +157,11 @@
         </div>
     @endforeach
 
-    <h2>3. Laporan Program / Report Card (Selepas Program)</h2>
+    <h2>3. Laporan Program (Selepas Program)</h2>
     <p>
         Selepas program dilaksanakan, persatuan hendaklah mengemukakan <strong>laporan program</strong> kepada ALP
-        dalam tempoh <strong>satu bulan</strong> (BR-018). Format rasmi dilampirkan dalam PDF ini —
-        <strong>Format Laporan Program ALP {{ $year }}</strong>.
+        dalam tempoh <strong>satu bulan</strong>. Format rasmi dilampirkan dalam PDF ini —
+        <strong>Format Laporan Program ALP</strong>.
     </p>
     <ul class="checklist">
         <li>Lengkapkan 12 bahagian: latar belakang, objektif, sasaran, peserta, pelaksanaan, kewangan, gambar, dll.</li>
@@ -171,17 +171,13 @@
     <h2>4. Perkara Penting</h2>
     <ul class="checklist">
         <li>Pastikan <strong>nama persatuan, nombor ROS dan maklumat bank</strong> konsisten merentas semua dokumen.</li>
-        <li>Permohonan maksimum <strong>RM3,000</strong> setiap kali (BR-005).</li>
-        <li>Satu persatuan (nombor ROS) hanya <strong>satu permohonan setahun</strong> (BR-009).</li>
-        <li>Dokumen tidak lengkap atau kabur akan diminta pembetulan semula.</li>
+        <li>Permohonan maksimum <strong>RM3,000</strong> setiap kali permohonan.</li>
+        <li>Satu persatuan (nombor ROS) hanya <strong>satu permohonan setahun</strong>.</li>
         <li>ALP bertanggungjawab memastikan semua lampiran dimuat naik sebelum hantar ke JP.</li>
     </ul>
 
-    <h2>5. Hubungi Kami</h2>
-    <p>{{ $contactOffice ?? \App\Services\Documents\AssociationDocumentGuideService::CONTACT_OFFICE }}</p>
-
     <div class="footer-note">
-        Dokumen dijana oleh Sistem ALP DBKL. Format Laporan Program ALP {{ $year }} dan Borang EFT rasmi DBKL 2026 dilampirkan selepas halaman ini.
+        Dokumen dijana oleh Sistem ALP DBKL. Format Laporan Program ALP dan Borang EFT rasmi DBKL dilampirkan selepas halaman ini.
         Versi panduan: {{ now()->format('d/m/Y') }}.
     </div>
 </body>

@@ -16,7 +16,7 @@
                 </p>
                 @if (! $limits['max_annual_entitlement']->equals($limits['max_annual_policy']))
                     <p class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                        Kelayakan anda bagi tahun ini (BR-007):
+                        Kelayakan anda bagi tahun ini:
                         <strong>RM {{ $limits['max_annual_entitlement']->format() }}</strong>
                         — {{ $limits['entitlement_periods'] }} tempoh × RM {{ $limits['period_quota']->format() }}
                         (kuota penuh setiap tempoh)

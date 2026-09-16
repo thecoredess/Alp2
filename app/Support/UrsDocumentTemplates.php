@@ -100,7 +100,7 @@ final class UrsDocumentTemplates
             self::KEY_LETTER_CONTACT_PHONE => '03-2617 9852/03-2617 9853',
             self::KEY_LETTER_DBAYAR_URL => 'https://dbayar.dbkl.gov.my/',
             self::KEY_BORANG_HEADER => 'Dewan Bandaraya Kuala Lumpur',
-            self::KEY_BORANG_FOOTER => 'Borang Penyaluran Sumbangan (BR-020 / TBL-10) — Sistem ALP DBKL',
+            self::KEY_BORANG_FOOTER => 'Borang Penyaluran Sumbangan — Sistem ALP DBKL',
         ];
     }
 

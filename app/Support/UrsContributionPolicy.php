@@ -125,7 +125,7 @@ final class UrsContributionPolicy
         $max = self::maxAnnualForAlp($alp, $calendarYear);
         if ($allocationAmount->greaterThan($max)) {
             return [sprintf(
-                'Polisi URS (BR-007): peruntukan (RM%s) melebihi kelayakan ALP mengikut tarikh lantikan (RM%s) bagi tahun %d.',
+                'Polisi sumbangan: peruntukan (RM%s) melebihi kelayakan ALP mengikut tarikh lantikan (RM%s) bagi tahun %d.',
                 $allocationAmount->format(),
                 $max->format(),
                 $calendarYear,
@@ -314,7 +314,7 @@ final class UrsContributionPolicy
         $max = self::maxPerApplication();
         if ($requested->greaterThan($max)) {
             return [sprintf(
-                'Polisi URS: jumlah permohonan (RM%s) melebihi had maksimum setiap permohonan (RM%s).',
+                'Polisi sumbangan: jumlah permohonan (RM%s) melebihi had maksimum setiap permohonan (RM%s).',
                 $requested->format(),
                 $max->format(),
             )];
@@ -358,7 +358,7 @@ final class UrsContributionPolicy
             }
 
             return [sprintf(
-                'Polisi URS (%s): kuota tempoh RM%s. Digunakan RM%s; baki RM%s. Jumlah dipohon RM%s melebihi baki tempoh. Baki tempoh lepas tidak dibawa ke hadapan (BR-003).',
+                'Polisi sumbangan (%s): kuota tempoh RM%s. Digunakan RM%s; baki RM%s. Jumlah dipohon RM%s melebihi baki tempoh. Baki tempoh lepas tidak dibawa ke hadapan.',
                 $period['label'],
                 $max->format(),
                 $used->format(),
@@ -382,7 +382,7 @@ final class UrsContributionPolicy
         $max = self::maxAnnualAllocation();
         if ($allocationAmount->greaterThan($max)) {
             return [sprintf(
-                'Polisi URS: peruntukan tahunan (RM%s) melebihi had maksimum ALP setahun (RM%s).',
+                'Polisi sumbangan: peruntukan tahunan (RM%s) melebihi had maksimum ALP setahun (RM%s).',
                 $allocationAmount->format(),
                 $max->format(),
             )];

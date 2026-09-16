@@ -38,6 +38,28 @@ class ApplicationNotifier
                 'Permohonan baharu telah dihantar dan menunggu semakan Admin JP.',
             ),
         );
+
+        $this->submissionAcknowledged($application);
+    }
+
+    /** Pengesahan e-mel kepada ALP selepas hantar / hantar semula permohonan. */
+    public function submissionAcknowledged(Application $application): void
+    {
+        $application->loadMissing('alp.users');
+        $owners = $application->alp?->users ?? collect();
+
+        if ($owners->isEmpty()) {
+            return;
+        }
+
+        Notification::send(
+            $owners,
+            new ApplicationWorkflowNotification(
+                $application,
+                'submission_acknowledged',
+                'Permohonan anda '.$application->application_number.' telah berjaya dihantar dan akan diproses oleh Jabatan Pentadbiran.',
+            ),
+        );
     }
 
     /** Selepas keputusan Admin JP — giliran Pegawai JP membuat pengesyoran ke Pengarah. */
@@ -95,7 +117,7 @@ class ApplicationNotifier
         $isFirst = $approvedCount === 0;
         $event = $isFirst ? 'awaiting_peraku' : 'awaiting_pepu';
         $msg = $isFirst
-            ? 'Permohonan menunggu perakuan (NT-003). Aras: '.$next->name.'.'
+            ? 'Permohonan menunggu perakuan. Aras: '.$next->name.'.'
             : 'Permohonan menunggu kelulusan PEPU / aras seterusnya (NT-004). Aras: '.$next->name.'.';
 
         Notification::send(
@@ -173,16 +195,16 @@ class ApplicationNotifier
         $application->loadMissing('alp.users');
         $owners = $application->alp?->users ?? collect();
 
-        $due = $application->payment_voucher_date
-            ? $application->payment_voucher_date->copy()->addMonthNoOverflow()
-            : now()->addMonthNoOverflow();
+        $due = $application->program_date?->copy()->startOfDay()->addMonthNoOverflow();
+
+        $dueLabel = $due ? $due->format('d/m/Y') : '—';
 
         Notification::send(
             $owners,
             new ApplicationWorkflowNotification(
                 $application,
                 'payment_voucher',
-                'Baucar telah disedia. Sila muat naik laporan aktiviti dalam 1 bulan (akhir: '.$due->format('d/m/Y').').',
+                'Baucar telah disedia. Sila muat naik laporan aktiviti dalam 1 bulan selepas tarikh program (akhir: '.$dueLabel.').',
             ),
         );
     }
@@ -206,8 +228,8 @@ class ApplicationNotifier
         );
     }
 
-    /** NT-007 — peringatan report card / laporan aktiviti. */
-    public function reportCardReminder(Application $application): void
+    /** NT-007 — 7 hari sebelum tarikh akhir laporan aktiviti. */
+    public function reportCardUpcomingReminder(Application $application, \Carbon\Carbon $due): void
     {
         $application->loadMissing('alp.users');
         $owners = $application->alp?->users ?? collect();
@@ -216,8 +238,24 @@ class ApplicationNotifier
             $owners,
             new ApplicationWorkflowNotification(
                 $application,
-                'report_card_reminder',
-                'Peringatan: sila muat naik laporan aktiviti untuk permohonan ini. Tempoh: 1 bulan selepas baucar disedia.',
+                'report_card_reminder_upcoming',
+                'Peringatan: sila muat naik laporan aktiviti sebelum '.$due->format('d/m/Y').' (7 hari lagi). Tarikh akhir dikira 1 bulan selepas tarikh program.',
+            ),
+        );
+    }
+
+    /** NT-007 — 7 hari selepas tarikh akhir jika laporan masih belum dimuat naik. */
+    public function reportCardOverdueReminder(Application $application, \Carbon\Carbon $due): void
+    {
+        $application->loadMissing('alp.users');
+        $owners = $application->alp?->users ?? collect();
+
+        Notification::send(
+            $owners,
+            new ApplicationWorkflowNotification(
+                $application,
+                'report_card_reminder_overdue',
+                'Peringatan: laporan aktiviti masih belum dimuat naik. Tarikh akhir ('.$due->format('d/m/Y').') telah luput 7 hari. Sila muat naik segera.',
             ),
         );
     }

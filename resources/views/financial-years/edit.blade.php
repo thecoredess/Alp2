@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', 'Sunting Tahun Kewangan')
-@section('heading', 'Sunting Tahun Kewangan '.$year->year)
+@section('title', 'Kemaskini Tahun Kewangan')
+@section('heading', 'Kemaskini Tahun Kewangan '.$year->year)
 
 @section('content')
     <div class="max-w-xl">

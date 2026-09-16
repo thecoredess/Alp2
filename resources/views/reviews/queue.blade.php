@@ -46,7 +46,9 @@
                         <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$app->requested_amount" /></td>
                         <td class="px-4 py-3 text-gray-500">{{ $app->submitted_at?->format('d/m/Y') ?? '—' }}</td>
                         <td class="px-4 py-3 text-right">
-                            <a href="{{ route('reviews.show', [$app, $reviewType->value]) }}" class="btn-primary !py-1 !px-3 text-xs">Semak</a>
+                            <x-table-actions>
+                                <x-table-action href="{{ route('reviews.show', [$app, $reviewType->value]) }}" icon="clipboard" label="Semak" variant="primary" />
+                            </x-table-actions>
                         </td>
                     </tr>
                 @empty

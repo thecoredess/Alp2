@@ -51,7 +51,7 @@ class ApplicationDocumentController extends Controller
 
     public function download(Application $application, ApplicationDocument $document): StreamedResponse
     {
-        $this->authorize('downloadDocument', $application);
+        $this->authorizeDocument($application, $document);
         abort_unless($document->application_id === $application->id, 404);
         abort_unless(Storage::disk(self::DISK)->exists($document->stored_path), 404);
 
@@ -60,7 +60,7 @@ class ApplicationDocumentController extends Controller
 
     public function view(Application $application, ApplicationDocument $document): StreamedResponse
     {
-        $this->authorize('downloadDocument', $application);
+        $this->authorizeDocument($application, $document);
         abort_unless($document->application_id === $application->id, 404);
         abort_unless(Storage::disk(self::DISK)->exists($document->stored_path), 404);
 
@@ -98,5 +98,16 @@ class ApplicationDocumentController extends Controller
         ]);
 
         return back()->with('status', 'Dokumen dibuang.');
+    }
+
+    private function authorizeDocument(Application $application, ApplicationDocument $document): void
+    {
+        if ($document->document_type === DocumentType::SEMAKAN_SILANG_JKEW) {
+            $this->authorize('viewCrosscheckReference', $application);
+
+            return;
+        }
+
+        $this->authorize('downloadDocument', $application);
     }
 }

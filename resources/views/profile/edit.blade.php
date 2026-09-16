@@ -1,7 +1,7 @@
 @extends('layouts.app')
-@section('title', 'Tetapan')
-@section('heading', 'Tetapan')
-@section('subheading', 'Profil, kata laluan dan konfigurasi sistem')
+@section('title', 'Profil')
+@section('heading', 'Profil')
+@section('subheading', 'Maklumat akaun, hubungan dan kata laluan')
 
 @section('content')
     <div class="page-shell space-y-6">
@@ -166,60 +166,5 @@
             </form>
             </x-page-card>
         </div>
-
-        @if ($canSystem ?? false)
-            <section id="sistem" class="scroll-mt-6">
-                <div class="mb-3">
-                    <h2 class="section-title">Tetapan Sistem</h2>
-                    <p class="mt-0.5 text-sm text-gray-500">Konfigurasi operasi, polisi URS dan pentadbiran.</p>
-                </div>
-                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    @can('settings.manage')
-                        <a href="{{ route('settings.edit') }}" class="card group flex items-start gap-3 p-4 transition hover:border-royal-300 hover:shadow-sm">
-                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-royal-50 text-royal-700">
-                                <x-icon name="scale" class="h-5 w-5" />
-                            </span>
-                            <span>
-                                <span class="block text-sm font-semibold text-gray-900 group-hover:text-navy-800">Polisi URS</span>
-                                <span class="mt-0.5 block text-xs text-gray-500">Had sumbangan &amp; templat surat/borang.</span>
-                            </span>
-                        </a>
-                    @endcan
-                    @can('users.view')
-                        <a href="{{ route('users.index') }}" class="card group flex items-start gap-3 p-4 transition hover:border-royal-300 hover:shadow-sm">
-                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-royal-50 text-royal-700">
-                                <x-icon name="users-group" class="h-5 w-5" />
-                            </span>
-                            <span>
-                                <span class="block text-sm font-semibold text-gray-900 group-hover:text-navy-800">Pengguna</span>
-                                <span class="mt-0.5 block text-xs text-gray-500">Urus akaun, peranan dan status pengguna.</span>
-                            </span>
-                        </a>
-                    @endcan
-                    @can('financial_years.view')
-                        <a href="{{ route('financial-years.index') }}" class="card group flex items-start gap-3 p-4 transition hover:border-royal-300 hover:shadow-sm">
-                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-royal-50 text-royal-700">
-                                <x-icon name="calendar" class="h-5 w-5" />
-                            </span>
-                            <span>
-                                <span class="block text-sm font-semibold text-gray-900 group-hover:text-navy-800">Tahun Kewangan</span>
-                                <span class="mt-0.5 block text-xs text-gray-500">Buka / tutup tahun kewangan aktif.</span>
-                            </span>
-                        </a>
-                    @endcan
-                    @can('approval_matrix.view')
-                        <a href="{{ route('approval-matrix.index') }}" class="card group flex items-start gap-3 p-4 transition hover:border-royal-300 hover:shadow-sm">
-                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-royal-50 text-royal-700">
-                                <x-icon name="clipboard" class="h-5 w-5" />
-                            </span>
-                            <span>
-                                <span class="block text-sm font-semibold text-gray-900 group-hover:text-navy-800">Matriks Kelulusan</span>
-                                <span class="mt-0.5 block text-xs text-gray-500">Ambang Peraku / PEPU mengikut jumlah.</span>
-                            </span>
-                        </a>
-                    @endcan
-                </div>
-            </section>
-        @endif
     </div>
 @endsection

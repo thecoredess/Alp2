@@ -178,6 +178,38 @@ class ReviewWorkflowTest extends TestCase
         $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->status);
     }
 
+    public function test_admin_jp_can_update_borang_during_secretariat_review(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->submitted($alp, $year, '2500.00');
+        $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
+
+        $this->actingAs($admin)
+            ->get(route('reviews.show', [$app, 'secretariat']))
+            ->assertOk()
+            ->assertSee('Kemaskini');
+
+        $this->actingAs($admin)
+            ->put(route('reviews.borang.update', [$app, 'secretariat']), [
+                'recipient_name' => 'Persatuan Kemaskini Semakan',
+                'recipient_ros_number' => $app->recipient_ros_number,
+                'program_date' => $app->program_date->format('Y-m-d'),
+                'program_category' => $app->program_category->value,
+                'requested_amount' => '3000.00',
+                'purpose' => 'Tujuan dikemaskini semasa semakan',
+                'recipient_bank_account' => $app->recipient_bank_account,
+                'recipient_address' => $app->recipient_address,
+            ])
+            ->assertRedirect(route('reviews.show', [$app, 'secretariat']))
+            ->assertSessionHas('status');
+
+        $app->refresh();
+        $this->assertSame('Persatuan Kemaskini Semakan', $app->recipient_name);
+        $this->assertSame('3000.00', $app->requested_amount);
+    }
+
     public function test_secretariat_show_includes_alp_budget_detail_for_pegawai_after_admin(): void
     {
         $alp = Alp::factory()->create();
@@ -189,10 +221,10 @@ class ReviewWorkflowTest extends TestCase
         $this->actingAs($jp)
             ->get(route('reviews.show', [$app, 'secretariat']))
             ->assertOk()
-            ->assertSee('Ringkasan Ledger')
+            ->assertSee('Ringkasan Kewangan')
             ->assertSee('Peruntukan Tahunan')
             ->assertSee('Permohonan Diluluskan')
-            ->assertSee('Pending Lain')
+            ->assertSee('Dalam Proses')
             ->assertSee('permohonan/semua')
             ->assertSee('status=approved')
             ->assertSee('alp='.$alp->id)

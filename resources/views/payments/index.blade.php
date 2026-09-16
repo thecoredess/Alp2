@@ -60,7 +60,9 @@
                         </td>
                         <td class="px-4 py-3 font-mono text-xs text-gray-600">{{ $app->payment_voucher_no ?? '—' }}</td>
                         <td class="px-4 py-3 text-right">
-                            <a href="{{ route('applications.show', $app) }}" class="btn-primary !py-1 !px-3 text-xs">Buka</a>
+                            <x-table-actions>
+                                <x-table-action href="{{ route('applications.show', $app) }}" icon="eye" label="Buka" variant="primary" />
+                            </x-table-actions>
                         </td>
                     </tr>
                 @empty

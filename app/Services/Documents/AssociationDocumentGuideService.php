@@ -13,9 +13,9 @@ class AssociationDocumentGuideService
 {
     public const DOWNLOAD_FILENAME = 'Panduan-Dokumen-Persatuan-ALP-DBKL.pdf';
 
-    public const GUIDE_VERSION = 3;
+    public const REPORT_TEMPLATE_FILENAME_PREFIX = 'Format-Laporan-Program-ALP-DBKL';
 
-    public const CONTACT_OFFICE = 'Jabatan Pentadbiran, Tingkat 4, Menara DBKL 1, Jalan Raja Laut, 50350 Kuala Lumpur';
+    public const GUIDE_VERSION = 5;
 
     public function downloadUrl(): string
     {
@@ -30,6 +30,20 @@ class AssociationDocumentGuideService
     public function reportCardTemplateExists(): bool
     {
         return is_readable($this->reportCardTemplatePath());
+    }
+
+    public function reportCardTemplateFilename(int $year): string
+    {
+        return self::REPORT_TEMPLATE_FILENAME_PREFIX.'-'.$year.'.pdf';
+    }
+
+    public function generateReportCardTemplate(?int $year = null): string
+    {
+        $year ??= now()->year;
+
+        return Pdf::loadView('pdf.laporan-program-alp', [
+            'year' => $year,
+        ])->setPaper('a4')->output();
     }
 
     public function eftFormPath(): string
@@ -93,12 +107,9 @@ class AssociationDocumentGuideService
         $guidePdf = Pdf::loadView('pdf.panduan-dokumen-persatuan', [
             'items' => $this->checklistItems(),
             'year' => now()->year,
-            'contactOffice' => self::CONTACT_OFFICE,
         ])->setPaper('a4')->output();
 
-        $reportPdf = Pdf::loadView('pdf.laporan-program-alp', [
-            'year' => now()->year,
-        ])->setPaper('a4')->output();
+        $reportPdf = $this->generateReportCardTemplate(now()->year);
 
         $merged = new Fpdi;
 

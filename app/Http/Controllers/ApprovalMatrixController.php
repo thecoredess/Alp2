@@ -9,6 +9,7 @@ use App\Models\ApprovalLevel;
 use App\Models\FinancialYear;
 use App\Services\Application\ApplicationException;
 use App\Services\Application\ApprovalMatrixService;
+use App\Services\Audit\AuditService;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,10 @@ use Illuminate\View\View;
 
 class ApprovalMatrixController extends Controller
 {
-    public function __construct(private readonly ApprovalMatrixService $matrix) {}
+    public function __construct(
+        private readonly ApprovalMatrixService $matrix,
+        private readonly AuditService $audit,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -48,7 +52,12 @@ class ApprovalMatrixController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
 
-        ApprovalLevel::create([...$request->validated(), 'active' => $request->boolean('active', true)]);
+        $level = ApprovalLevel::create([...$request->validated(), 'active' => $request->boolean('active', true)]);
+
+        $this->audit->log('APPROVAL_LEVEL_CREATED', $level, null, [
+            'sequence' => $level->sequence,
+            'role' => $level->role,
+        ]);
 
         return redirect()->route('approval-matrix.index')->with('status', 'Aras kelulusan dicipta.');
     }
@@ -77,6 +86,11 @@ class ApprovalMatrixController extends Controller
 
         $approvalLevel->update([...$request->validated(), 'active' => $request->boolean('active', true)]);
 
+        $this->audit->log('APPROVAL_LEVEL_UPDATED', $approvalLevel, null, [
+            'sequence' => $approvalLevel->sequence,
+            'role' => $approvalLevel->role,
+        ]);
+
         return redirect()->route('approval-matrix.index')->with('status', 'Aras kelulusan dikemas kini.');
     }
 
@@ -86,6 +100,10 @@ class ApprovalMatrixController extends Controller
         abort_unless($request->user()->can('approval_matrix.manage'), 403);
 
         $approvalLevel->update(['active' => ! $approvalLevel->active]);
+
+        $this->audit->log('APPROVAL_LEVEL_TOGGLED', $approvalLevel, null, [
+            'active' => $approvalLevel->active,
+        ]);
 
         return back()->with('status', 'Status aras dikemas kini.');
     }

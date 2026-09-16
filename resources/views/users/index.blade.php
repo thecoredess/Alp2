@@ -43,32 +43,32 @@
                             <x-status-badge :label="$user->status->label()" :classes="$user->status->badgeClasses()" />
                         </td>
                         <td class="px-4 py-3">
-                            <div class="flex items-center justify-end gap-3">
+                            <x-table-actions>
                                 @can('users.update')
-                                    <a href="{{ route('users.edit', $user) }}" class="text-royal-600 hover:text-royal-700 font-medium">Sunting</a>
-                                    <form method="POST" action="{{ route('users.reset-password', $user) }}"
+                                    <x-table-action href="{{ route('users.edit', $user) }}" icon="pencil-square" label="Kemaskini" variant="primary" />
+                                    <form method="POST" action="{{ route('users.reset-password', $user) }}" class="inline"
                                           onsubmit="return confirm('Jana kata laluan sementara baharu untuk {{ $user->name }}?')">
                                         @csrf
-                                        <button class="text-amber-600 hover:text-amber-700 font-medium">Reset Kata Laluan</button>
+                                        <x-table-action icon="arrow-path" label="Reset Kata Laluan" variant="warning" type="submit" />
                                     </form>
                                 @endcan
                                 @can('users.deactivate')
                                     @if($user->id !== auth()->id())
                                         @if($user->isActive())
-                                            <form method="POST" action="{{ route('users.deactivate', $user) }}"
+                                            <form method="POST" action="{{ route('users.deactivate', $user) }}" class="inline"
                                                   onsubmit="return confirm('Nyahaktifkan akaun ini?')">
                                                 @csrf
-                                                <button class="text-danger hover:text-red-700 font-medium">Nyahaktif</button>
+                                                <x-table-action icon="x-circle" label="Nyahaktif" variant="danger" type="submit" />
                                             </form>
                                         @else
-                                            <form method="POST" action="{{ route('users.activate', $user) }}">
+                                            <form method="POST" action="{{ route('users.activate', $user) }}" class="inline">
                                                 @csrf
-                                                <button class="text-green-600 hover:text-green-700 font-medium">Aktif</button>
+                                                <x-table-action icon="check" label="Aktifkan" variant="success" type="submit" />
                                             </form>
                                         @endif
                                     @endif
                                 @endcan
-                            </div>
+                            </x-table-actions>
                         </td>
                     </tr>
                 @empty

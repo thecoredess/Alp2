@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', 'Sunting Pengguna')
-@section('heading', 'Sunting Pengguna — '.$user->name)
+@section('title', 'Kemaskini Pengguna')
+@section('heading', 'Kemaskini Pengguna — '.$user->name)
 
 @section('content')
     <div class="max-w-3xl">

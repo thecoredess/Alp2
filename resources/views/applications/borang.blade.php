@@ -38,7 +38,7 @@
              style="max-width: 240px; width: 100%; height: auto;">
     </div>
     <h1>Borang Penyaluran Sumbangan<br>Ahli Lembaga Penasihat Bandaraya Kuala Lumpur</h1>
-    <p class="sub">{{ $templates[\App\Support\UrsDocumentTemplates::KEY_BORANG_HEADER] ?? 'Sistem Pengurusan Sumbangan ALP' }} · BR-020 · TBL-10 · {{ $application->application_number }}</p>
+    <p class="sub">{{ $templates[\App\Support\UrsDocumentTemplates::KEY_BORANG_HEADER] ?? 'Sistem Pengurusan Sumbangan ALP' }} · {{ $application->application_number }}</p>
 
     <table class="form">
         <tr><th>A · Nama ALP</th><td>{{ $application->alp->ref_code }} — {{ $application->alp->name }}</td></tr>

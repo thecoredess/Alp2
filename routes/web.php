@@ -14,6 +14,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\FinancialYearController;
+use App\Http\Controllers\JkewCrosscheckController;
+use App\Http\Controllers\MailSettingController;
+use App\Http\Controllers\NotificationTemplateController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
@@ -23,7 +26,9 @@ use App\Http\Controllers\RecipientController;
 use App\Http\Controllers\ReportCardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AlpController;
+use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\ProfileController;
+use App\Enums\RoleName;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -61,7 +66,16 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     Route::put('profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('profil/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
 
-    Route::get('tetapan', fn () => redirect()->route('profile.edit'))->name('settings.index');
+    Route::get('tetapan', function () {
+        $user = auth()->user();
+        $canSystem = $user->can('users.view')
+            || $user->can('financial_years.view')
+            || $user->can('settings.manage')
+            || $user->can('approval_matrix.view')
+            || $user->hasRole(RoleName::SUPER_ADMIN->value);
+
+        return redirect()->route($canSystem ? 'settings.hub' : 'profile.edit');
+    })->name('settings.index');
     Route::get('ketetapan', fn () => redirect()->route('settings.index'));
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -107,7 +121,11 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     // Semakan Pegawai JP (M04) — kewangan/teknikal pra-kelulusan dinyahaktif
     Route::get('semakan/urus-setia', [ReviewController::class, 'secretariat'])->name('reviews.secretariat');
     Route::get('permohonan/{application}/semak/{type}', [ReviewController::class, 'show'])->name('reviews.show');
+    Route::put('permohonan/{application}/semak/{type}/borang', [ReviewController::class, 'updateBorang'])->name('reviews.borang.update');
     Route::post('permohonan/{application}/semak/{type}', [ReviewController::class, 'store'])->name('reviews.store');
+
+    Route::get('permohonan/{application}/semakan-silang/memo.docx', [JkewCrosscheckController::class, 'downloadDoc'])->name('applications.crosscheck.memo.doc');
+    Route::post('permohonan/{application}/semakan-silang', [JkewCrosscheckController::class, 'store'])->name('applications.crosscheck.store');
 
     // Kelulusan Peraku / PEPU (M05)
     Route::get('kelulusan', [ApprovalController::class, 'queue'])->name('approvals.queue');
@@ -127,7 +145,11 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     Route::get('permohonan/{application}/surat-kelulusan', [ApplicationController::class, 'letter'])->name('applications.letter');
     Route::get('permohonan/{application}/surat-kelulusan/pdf', [ApplicationController::class, 'letterPdf'])->name('applications.letter.pdf');
     Route::get('permohonan/{application}/borang-penyaluran', [ApplicationController::class, 'borang'])->name('applications.borang');
+    Route::get('permohonan/{application}/format-laporan-program/pdf', [ApplicationController::class, 'reportTemplatePdf'])->name('applications.report-template.pdf');
+    Route::get('permohonan/{application}/report-card', [ReportCardController::class, 'show'])->name('applications.report-card');
     Route::post('permohonan/{application}/report-card', [ReportCardController::class, 'store'])->name('applications.report-card.store');
+    Route::post('permohonan/{application}/report-card/hantar', [ReportCardController::class, 'submit'])->name('applications.report-card.submit');
+    Route::delete('permohonan/{application}/report-card/draf', [ReportCardController::class, 'destroyDraft'])->name('applications.report-card.draft.destroy');
 
     Route::get('laporan-aktiviti', [ReportCardController::class, 'index'])->name('report-cards.index');
     Route::get('laporan-aktiviti/semak', [ReportCardController::class, 'reviewQueue'])->name('report-cards.review.index');
@@ -176,6 +198,16 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     Route::post('pengguna/{user}/aktif', [UserController::class, 'activate'])->name('users.activate');
     Route::post('pengguna/{user}/reset-kata-laluan', [UserController::class, 'resetPassword'])->name('users.reset-password');
 
+    Route::get('tetapan/sistem', [SystemSettingController::class, 'index'])->name('settings.hub');
     Route::get('tetapan/polisi-urs', [SystemSettingController::class, 'edit'])->name('settings.edit');
     Route::put('tetapan/polisi-urs', [SystemSettingController::class, 'update'])->name('settings.update');
+
+    Route::get('tetapan/e-mel', [MailSettingController::class, 'edit'])->name('settings.mail.edit');
+    Route::put('tetapan/e-mel', [MailSettingController::class, 'update'])->name('settings.mail.update');
+    Route::post('tetapan/e-mel/ujian', [MailSettingController::class, 'test'])->name('settings.mail.test');
+
+    Route::get('tetapan/templat-notifikasi', [NotificationTemplateController::class, 'edit'])->name('settings.notification-templates.edit');
+    Route::put('tetapan/templat-notifikasi', [NotificationTemplateController::class, 'update'])->name('settings.notification-templates.update');
+
+    Route::get('tetapan/jejak-audit', [AuditTrailController::class, 'index'])->name('settings.audit-trail');
 });

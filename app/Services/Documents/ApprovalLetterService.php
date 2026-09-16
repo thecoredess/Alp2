@@ -4,6 +4,7 @@ namespace App\Services\Documents;
 
 use App\Enums\ApplicationStatus;
 use App\Models\Application;
+use App\Support\HijriDate;
 use App\Support\UrsDocumentTemplates;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -39,7 +40,7 @@ class ApprovalLetterService
             'referenceNo' => $this->referenceNo($application),
             'letterDate' => $at,
             'letterDateMalay' => $at->locale('ms')->translatedFormat('d F Y'),
-            'letterDateHijri' => $this->hijriLabel($at),
+            'letterDateHijri' => HijriDate::malayLabel($at),
             'alpName' => $application->alp->name,
             'alpAddress' => $application->alp->address ?: '—',
             'recipientName' => $application->recipient_name ?: '—',
@@ -72,30 +73,4 @@ class ApprovalLetterService
         return UrsDocumentTemplates::letterReferenceBase();
     }
 
-    private function hijriLabel(Carbon $date): string
-    {
-        if (! class_exists(\IntlCalendar::class)) {
-            return '—';
-        }
-
-        try {
-            $cal = \IntlCalendar::createInstance(null, 'ms_MY@calendar=islamic');
-            if (! $cal) {
-                return '—';
-            }
-            $cal->setTime($date->getTimestamp() * 1000);
-            $day = $cal->get(\IntlCalendar::FIELD_DAY_OF_MONTH);
-            $month = $cal->get(\IntlCalendar::FIELD_MONTH) + 1;
-            $months = [
-                1 => 'Muharram', 2 => 'Safar', 3 => 'Rabiulawal', 4 => 'Rabiulakhir',
-                5 => 'Jamadilawal', 6 => 'Jamadilakhir', 7 => 'Rejab', 8 => 'Syaaban',
-                9 => 'Ramadan', 10 => 'Syawal', 11 => 'Zulkaedah', 12 => 'Zulhijjah',
-            ];
-            $year = $cal->get(\IntlCalendar::FIELD_YEAR);
-
-            return sprintf('%d %s %dH', $day, $months[$month] ?? '', $year);
-        } catch (\Throwable) {
-            return '—';
-        }
-    }
 }

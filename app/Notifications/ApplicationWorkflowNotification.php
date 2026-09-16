@@ -3,6 +3,9 @@
 namespace App\Notifications;
 
 use App\Models\Application;
+use App\Models\User;
+use App\Support\NotificationTarget;
+use App\Support\NotificationTemplates;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -17,20 +20,46 @@ class ApplicationWorkflowNotification extends Notification
     /** @return list<string> */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        $channels = ['database'];
+
+        if ($notifiable instanceof User && NotificationTemplates::mailEnabledFor($this->event, $notifiable)) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     public function toMail(object $notifiable): MailMessage
     {
+        /** @var User $notifiable */
         $app = $this->application;
+        $target = NotificationTarget::for($this->toArray($notifiable), $notifiable);
+        $actionExtras = [
+            '{action_url}' => $target->url,
+            '{action_label}' => $target->action,
+        ];
+        $body = NotificationTemplates::render(
+            NotificationTemplates::body($this->event, $notifiable, $this->message),
+            $app,
+            $notifiable,
+            $this->message,
+            $actionExtras,
+        );
+        $subject = NotificationTemplates::render(
+            NotificationTemplates::subject($this->event, $notifiable),
+            $app,
+            $notifiable,
+            $this->message,
+            $actionExtras,
+        );
 
         return (new MailMessage)
-            ->subject('[ALP] '.$this->title())
-            ->greeting('Assalamualaikum / Salam sejahtera,')
-            ->line($this->message)
+            ->subject('[ALP] '.$subject)
+            ->greeting('Assalamualaikum / Salam sejahtera '.$notifiable->name.',')
+            ->line($body)
             ->line('No. Permohonan: '.$app->application_number)
             ->line('Tajuk: '.$app->project_title)
-            ->action('Buka Permohonan', route('applications.show', $app))
+            ->action($target->action, $target->url)
             ->line('Sistem ALP DBKL');
     }
 
@@ -50,7 +79,9 @@ class ApplicationWorkflowNotification extends Notification
     private function title(): string
     {
         return match ($this->event) {
+            'submission_acknowledged' => 'Permohonan berjaya dihantar',
             'submitted' => 'Permohonan dihantar',
+            'awaiting_pegawai_jp' => 'Menunggu pengesyoran Pegawai JP',
             'revision_required' => 'Permohonan dikembalikan',
             'awaiting_peraku' => 'Menunggu perakuan',
             'awaiting_pepu' => 'Menunggu kelulusan PEPU',
@@ -60,11 +91,13 @@ class ApplicationWorkflowNotification extends Notification
             'payment_voucher' => 'Baucar pembayaran',
             'payment_paid' => 'Pembayaran selesai',
             'report_card_reminder' => 'Peringatan laporan aktiviti',
+            'report_card_reminder_upcoming' => 'Peringatan laporan aktiviti (7 hari lagi)',
+            'report_card_reminder_overdue' => 'Peringatan laporan aktiviti (tertunggak)',
             'report_card_submitted' => 'Laporan aktiviti menunggu semakan',
             'report_card_awaiting_pegawai_jp' => 'Laporan menunggu pengesahan Pegawai JP',
             'report_card_approved' => 'Laporan aktiviti disahkan',
             'report_card_returned' => 'Laporan aktiviti dikembalikan',
-            default => 'Kemaskini permohonan',
+            default => NotificationTemplates::defaultSubject($this->event),
         };
     }
 }

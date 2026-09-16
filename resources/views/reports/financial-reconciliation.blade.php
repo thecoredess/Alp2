@@ -40,7 +40,11 @@
                                 <td class="px-3 py-2 font-mono text-xs">{{ $e['project']->project_number }}</td>
                                 <td class="px-3 py-2 text-right"><x-money :value="$e['expected']" /></td>
                                 <td class="px-3 py-2 text-right text-red-700"><x-money :value="$e['recomputed']" /></td>
-                                <td class="px-3 py-2"><a href="{{ route('projects.show', $e['project']) }}" class="text-royal-600 hover:text-royal-700 font-medium">Lihat Projek</a></td>
+                                <td class="px-3 py-2">
+                                    <x-table-actions>
+                                        <x-table-action href="{{ route('projects.show', $e['project']) }}" icon="eye" label="Lihat Projek" variant="primary" />
+                                    </x-table-actions>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

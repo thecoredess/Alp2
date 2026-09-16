@@ -19,7 +19,7 @@
     <x-budget-cards :summary="$summary" />
     @if ($entitlement ?? null)
         <p class="mt-2 text-xs text-gray-500">
-            Siling kelayakan BR-007: <strong>RM {{ number_format((float) $entitlement->value(), 2) }}</strong>
+            Siling kelayakan: <strong>RM {{ number_format((float) $entitlement->value(), 2) }}</strong>
             (ikut tarikh lantikan ALP)
         </p>
     @endif

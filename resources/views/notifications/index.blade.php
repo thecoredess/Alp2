@@ -20,7 +20,7 @@
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <p class="text-sm font-medium text-gray-900">{{ $n->data['title'] ?? 'Notifikasi' }}</p>
-                        <p class="mt-0.5 text-sm text-gray-600">{{ $n->data['message'] ?? '' }}</p>
+                        <p class="mt-0.5 text-sm text-gray-600">{{ \App\Support\NotificationMessage::display($n->data['message'] ?? null) }}</p>
                         <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                             @if(!empty($n->data['application_number']))
                                 <span class="font-mono text-xs text-gray-500">{{ $n->data['application_number'] }}</span>

@@ -84,7 +84,7 @@
 
             @can('update', $request)
                 <div class="card p-5 space-y-2">
-                    <a href="{{ route('budget-requests.edit', $request) }}" class="btn-white w-full">Sunting Draf</a>
+                    <a href="{{ route('budget-requests.edit', $request) }}" class="btn-white w-full">Kemaskini Draf</a>
                     <form method="POST" action="{{ route('budget-requests.submit', $request) }}"
                           onsubmit="return confirm('Hantar cadangan untuk kelulusan?')">
                         @csrf

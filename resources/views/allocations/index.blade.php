@@ -69,17 +69,21 @@
                             <x-money :value="$s->available()" />
                         </td>
                         <td class="px-4 py-3 text-right text-gray-500">{{ $s->utilisationPercent() }}%</td>
-                        <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                        <td class="px-4 py-3 text-right whitespace-nowrap">
                             @if ($alloc)
-                                <a href="{{ route('allocations.show', $alloc) }}" class="font-medium text-royal-600 hover:text-royal-700">Lihat</a>
-                                @can('allocations.manage')
-                                    @unless($year?->isClosed())
-                                        <a href="{{ route('allocations.adjust', $alloc) }}" class="font-medium text-navy-700 hover:text-navy-900">Laras</a>
-                                    @endunless
-                                @endcan
+                                <x-table-actions>
+                                    <x-table-action href="{{ route('allocations.show', $alloc) }}" icon="eye" label="Lihat" variant="primary" />
+                                    @can('allocations.manage')
+                                        @unless($year?->isClosed())
+                                            <x-table-action href="{{ route('allocations.adjust', $alloc) }}" icon="pencil-square" label="Laras" variant="muted" />
+                                        @endunless
+                                    @endcan
+                                </x-table-actions>
                             @else
                                 @can('allocations.manage')
-                                    <a href="{{ route('allocations.create', ['tahun' => $year?->id, 'alp' => $alp->id]) }}" class="font-medium text-royal-600 hover:text-royal-700">Set</a>
+                                    <x-table-actions>
+                                        <x-table-action href="{{ route('allocations.create', ['tahun' => $year?->id, 'alp' => $alp->id]) }}" icon="plus" label="Set Peruntukan" variant="primary" />
+                                    </x-table-actions>
                                 @else
                                     <span class="text-gray-300">—</span>
                                 @endcan

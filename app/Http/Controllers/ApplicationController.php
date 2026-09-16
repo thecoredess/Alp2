@@ -16,6 +16,7 @@ use App\Services\Application\RecipientRegistry;
 use App\Services\Audit\AuditService;
 use App\Services\Budget\BudgetService;
 use App\Services\Documents\ApprovalLetterService;
+use App\Services\Documents\AssociationDocumentGuideService;
 use App\Support\ApplicationAmountValidator;
 use App\Support\UrsContributionPolicy;
 use Illuminate\Http\RedirectResponse;
@@ -34,6 +35,7 @@ class ApplicationController extends Controller
         private readonly BudgetService $budget,
         private readonly RecipientRegistry $recipients,
         private readonly ApprovalLetterService $approvalLetters,
+        private readonly AssociationDocumentGuideService $documentGuide,
     ) {}
 
     /** Permohonan Saya (permohonan ALP pengguna). */
@@ -207,6 +209,7 @@ class ApplicationController extends Controller
             'reportCardDue' => $this->reportCards->dueDate($application),
             'reportCardOverdue' => $this->reportCards->isOverdue($application),
             'hasReportCard' => $this->reportCards->hasReportCard($application),
+            'reportCardDraft' => $this->reportCards->draftDocument($application),
         ]);
     }
 
@@ -226,6 +229,24 @@ class ApplicationController extends Controller
         $this->assertLetterAvailable($application);
 
         return $this->approvalLetters->pdf($application);
+    }
+
+    /** Muat turun template Format Laporan Program ALP. */
+    public function reportTemplatePdf(Application $application): Response
+    {
+        $this->authorize('view', $application);
+
+        $application->loadMissing('financialYear');
+        $year = (int) ($application->financialYear?->year ?? now()->year);
+        $pdf = $this->documentGuide->generateReportCardTemplate($year);
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$this->documentGuide->reportCardTemplateFilename($year).'"',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 
     private function assertLetterAvailable(Application $application): void

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Peraku / PEPU')
-@section('heading', 'Menunggu Peraku / PEPU')
+@section('heading', 'Menunggu Peraku PEPU')
 @section('subheading', 'Aliran URS v1.2: Peraku (TP/Pengarah JP) kemudian PEPU / Pengurusan Tertinggi')
 
 @section('content')
@@ -42,15 +42,14 @@
                         <td class="px-4 py-3 text-gray-600">{{ $app->alp->ref_code }}</td>
                         <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$app->requested_amount" /></td>
                         <td class="px-4 py-3 text-right">
-                            <a href="{{ route('approvals.show', $app) }}" class="btn-primary !py-1 !px-3 text-xs">
-                                @if (auth()->user()->hasRole(\App\Enums\RoleName::PELULUS->value))
-                                    Syor
-                                @elseif (auth()->user()->hasRole(\App\Enums\RoleName::PENGURUSAN->value))
-                                    Kelulusan
-                                @else
-                                    Semak &amp; Putus
-                                @endif
-                            </a>
+                            @php
+                                $approvalActionLabel = auth()->user()->hasRole(\App\Enums\RoleName::PELULUS->value)
+                                    ? 'Syor'
+                                    : (auth()->user()->hasRole(\App\Enums\RoleName::PENGURUSAN->value) ? 'Kelulusan' : 'Semak & Putus');
+                            @endphp
+                            <x-table-actions>
+                                <x-table-action href="{{ route('approvals.show', $app) }}" icon="shield-check" :label="$approvalActionLabel" variant="primary" />
+                            </x-table-actions>
                         </td>
                     </tr>
                 @empty

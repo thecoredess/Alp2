@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') — {{ config('app.name') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-dbkl.png') }}?v={{ @filemtime(public_path('images/logo-dbkl.png')) ?: time() }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo-dbkl.png') }}?v={{ @filemtime(public_path('images/logo-dbkl.png')) ?: time() }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full antialiased text-gray-800">
@@ -68,7 +70,7 @@
                             <p class="text-xs text-gray-500 truncate">{{ auth()->user()->unit }}</p>
                         @endif
                     </div>
-                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Tetapan</a>
+                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profil</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-danger hover:bg-red-50">Log Keluar</button>

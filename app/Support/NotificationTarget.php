@@ -41,7 +41,7 @@ final class NotificationTarget
             'awaiting_peraku', 'awaiting_pepu' => self::approval($application, $user),
             'revision_required' => self::revision($application, $user),
             'awaiting_payment' => self::payment($application, $user, 'Sediakan baucar'),
-            'payment_voucher', 'report_card_reminder' => self::reportCard($application),
+            'payment_voucher', 'report_card_reminder', 'report_card_reminder_upcoming', 'report_card_reminder_overdue' => self::reportCard($application),
             'report_card_submitted', 'report_card_awaiting_pegawai_jp' => self::reportCardReview($application, $user),
             'report_card_approved', 'report_card_returned' => self::reportCard($application, 'Buka laporan aktiviti'),
             'payment_paid' => self::payment($application, $user),

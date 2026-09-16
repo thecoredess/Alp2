@@ -44,7 +44,7 @@ class ApplicationTimelineTest extends TestCase
         $pepu = $stages->firstWhere('key', 'pepu');
         $peraku = $stages->firstWhere('key', 'peraku');
 
-        $this->assertSame('Pengesyoran PEPU', $peraku['label']);
+        $this->assertSame('Pengesyoran TP/Pengarah JP', $peraku['label']);
         $this->assertTrue($peraku['done']);
         $this->assertFalse($pepu['done']);
         $this->assertFalse($pepu['skipped']);
@@ -163,6 +163,7 @@ class ApplicationTimelineTest extends TestCase
         $app = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2500.00')));
 
         $app->update([
+            'program_date' => '2026-08-05',
             'payment_status' => \App\Enums\ApplicationPaymentStatus::VOUCHER_PREPARED,
             'payment_voucher_date' => '2026-08-05',
             'payment_updated_at' => now(),
@@ -196,7 +197,50 @@ class ApplicationTimelineTest extends TestCase
 
         $this->assertSame('Dalam semakan JP', $staffReport['status_label']);
         $this->assertSame('Dalam semakan JP', $alpReport['status_label']);
-        $this->assertStringContainsString('Dimuat naik', $staffReport['hint']);
+        $this->assertStringContainsString('Dihantar', $staffReport['hint']);
+    }
+
+    public function test_alp_timeline_shows_rejection_with_comments_before_voucher(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
+
+        $this->approvals()->reject(
+            $app,
+            $this->userWithRole(RoleName::PELULUS->value),
+            'Tidak memenuhi syarat sumbangan.',
+        );
+
+        $app = $app->fresh();
+        $this->assertSame(ApplicationStatus::REJECTED, $app->status);
+
+        $alpStages = collect($this->timeline()->stages($app, forAlpView: true));
+        $keys = $alpStages->pluck('key')->all();
+
+        $this->assertSame(
+            ['submitted', 'jp_review', 'rejected', 'voucher', 'report'],
+            $keys,
+        );
+
+        $rejected = $alpStages->firstWhere('key', 'rejected');
+        $this->assertSame('rejected', $rejected['variant']);
+        $this->assertTrue($rejected['done']);
+        $this->assertSame('Ditolak', $rejected['status_label']);
+        $this->assertSame('Tidak memenuhi syarat sumbangan.', $rejected['hint']);
+        $this->assertNotNull($rejected['at']);
+
+        $voucher = $alpStages->firstWhere('key', 'voucher');
+        $this->assertTrue($voucher['skipped']);
+        $this->assertFalse($voucher['done']);
+
+        $report = $alpStages->firstWhere('key', 'report');
+        $this->assertTrue($report['skipped']);
+
+        $jpStage = $alpStages->firstWhere('key', 'jp_review');
+        $this->assertTrue($jpStage['done']);
+        $this->assertNull($jpStage['status_label']);
     }
 
     public function test_report_stage_done_when_approved_by_pegawai_jp(): void

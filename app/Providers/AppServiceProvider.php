@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Enums\RoleName;
 use App\Models\User;
+use App\Support\MailSettings;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -30,5 +32,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Dasar kata laluan minimum: 8 aksara, huruf & nombor.
         Password::defaults(fn () => Password::min(8)->letters()->numbers());
+
+        if (Schema::hasTable('system_settings')) {
+            MailSettings::applyToConfig();
+        }
     }
 }

@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
     <meta charset="utf-8">
-    <title>Format Laporan Program ALP — {{ $year }}</title>
+    <title>Format Laporan Program ALP</title>
     <style>
         @page { margin: 18mm 16mm; }
         * { box-sizing: border-box; }
@@ -69,7 +69,7 @@
 <body>
     <div class="notice">
         <strong>Nota:</strong> Ini adalah contoh format laporan penganjuran program/aktiviti kemasyarakatan.
-        Laporan hendaklah dikemukakan kepada ALP <strong>satu bulan</strong> selepas penganjuran program dilaksanakan (BR-018).
+        Laporan hendaklah dikemukakan kepada ALP <strong>satu bulan</strong> selepas penganjuran program dilaksanakan.
     </div>
 
     <h1>Laporan Program</h1>
@@ -245,7 +245,7 @@
     </div>
 
     <p style="margin-top: 20px; font-size: 9pt; color: #64748b;">
-        Format Laporan Program ALP · DBKL · {{ $year }} · Template rasmi (Laporan Program ALP {{ $year }})
+        Format Laporan Program ALP
     </p>
 </body>
 </html>

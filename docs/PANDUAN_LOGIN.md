@@ -21,7 +21,8 @@
 | Peranan URS | E-mel | Kata laluan | Untuk apa |
 |-------------|-------|-------------|-----------|
 | **Super Admin** (teknikal) | `superadmin@dbkl.test` | `password` | Semua menu, tetapan, bypass |
-| **Admin JP / Pentadbir** | `sysadmin@dbkl.test` | `password` | Pengguna, ALP, FY, matriks, Polisi URS |
+| **Admin JP** | `adminjp@dbkl.test` | `password` | Semakan Admin JP, borang bagi pihak ALP, peruntukan |
+| **Pentadbir Sistem** | `sysadmin@dbkl.test` | `password` | Pengguna, ALP, FY, matriks, Polisi URS |
 | **ALP (pemohon)** | `alp01@dbkl.test` … `alp15@dbkl.test` | `password` | 15 ALP rasmi DBKL (Jun 2026) |
 | ALP contoh pantas | `alp01@dbkl.test` | `password` | Datuk Muhammad Azmi bin Mohd Zain |
 | **Urus Setia ALP** | `urussetiaalp@dbkl.test` | `password` | Bantu ALP-01 (skop ALP) |
@@ -40,6 +41,7 @@
 |-----------|-------------------|
 | Semak semua / tetapan Polisi URS | `superadmin@dbkl.test` |
 | Buat & hantar permohonan | `alp01@dbkl.test` |
+| Semak permohonan (Admin JP) | `adminjp@dbkl.test` |
 | Semak permohonan (Pegawai JP) | `urussetia@dbkl.test` |
 | Kemas kini baucar / bayaran | `kewangan@dbkl.test` |
 | Semakan silang JKEW (skop dihantar) | `jkew@dbkl.test` |
@@ -58,6 +60,11 @@ Kata laluan: password
 
 ```
 E-mel:    alp01@dbkl.test
+Kata laluan: password
+```
+
+```
+E-mel:    adminjp@dbkl.test
 Kata laluan: password
 ```
 

@@ -39,38 +39,38 @@
                             @endif
                         </td>
                         <td class="px-4 py-3">
-                            <div class="flex items-center justify-end gap-2">
+                            <x-table-actions>
                                 @can('financial_years.update')
                                     @if(! $year->isClosed())
-                                        <a href="{{ route('financial-years.edit', $year) }}" class="text-royal-600 hover:text-royal-700 font-medium">Sunting</a>
+                                        <x-table-action href="{{ route('financial-years.edit', $year) }}" icon="pencil-square" label="Kemaskini" variant="primary" />
                                     @endif
                                 @endcan
 
                                 @can('financial_years.manage')
                                     @if($year->status === \App\Enums\FinancialYearStatus::DRAFT)
-                                        <form method="POST" action="{{ route('financial-years.open', $year) }}">
+                                        <form method="POST" action="{{ route('financial-years.open', $year) }}" class="inline">
                                             @csrf
-                                            <button class="text-blue-600 hover:text-blue-700 font-medium">Buka</button>
+                                            <x-table-action icon="check" label="Buka" variant="primary" type="submit" />
                                         </form>
                                     @endif
 
                                     @if(! $year->is_active && ! $year->isClosed())
-                                        <form method="POST" action="{{ route('financial-years.activate', $year) }}"
+                                        <form method="POST" action="{{ route('financial-years.activate', $year) }}" class="inline"
                                               onsubmit="return confirm('Tetapkan tahun {{ $year->year }} sebagai tahun aktif?')">
                                             @csrf
-                                            <button class="text-green-600 hover:text-green-700 font-medium">Set Aktif</button>
+                                            <x-table-action icon="check" label="Set Aktif" variant="success" type="submit" />
                                         </form>
                                     @endif
 
                                     @if(! $year->isClosed())
-                                        <form method="POST" action="{{ route('financial-years.close', $year) }}"
+                                        <form method="POST" action="{{ route('financial-years.close', $year) }}" class="inline"
                                               onsubmit="return confirm('Tutup tahun {{ $year->year }}? Data akan dilindungi selepas ini.')">
                                             @csrf
-                                            <button class="text-danger hover:text-red-700 font-medium">Tutup</button>
+                                            <x-table-action icon="x-circle" label="Tutup" variant="danger" type="submit" />
                                         </form>
                                     @endif
                                 @endcan
-                            </div>
+                            </x-table-actions>
                         </td>
                     </tr>
                 @empty

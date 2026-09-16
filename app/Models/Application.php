@@ -20,6 +20,9 @@ class Application extends Model
     /** @use HasFactory<\Database\Factories\ApplicationFactory> */
     use HasFactory;
 
+    /** Awalan data simulasi UAT — disimpan dalam DB, tidak dipapar kepada pengguna. */
+    public const SIMULATION_PREFIX = '[SIM] ';
+
     protected $fillable = [
         'application_number',
         'financial_year_id',
@@ -52,6 +55,8 @@ class Application extends Model
         'report_card_submitted_at',
         'report_card_status',
         'report_card_reminder_sent_at',
+        'report_card_upcoming_reminder_sent_at',
+        'report_card_overdue_reminder_sent_at',
         'report_card_remarks',
         'created_by',
         'updated_by',
@@ -76,6 +81,8 @@ class Application extends Model
             'report_card_submitted_at' => 'datetime',
             'report_card_status' => ReportCardStatus::class,
             'report_card_reminder_sent_at' => 'datetime',
+            'report_card_upcoming_reminder_sent_at' => 'datetime',
+            'report_card_overdue_reminder_sent_at' => 'datetime',
         ];
     }
 
@@ -211,11 +218,30 @@ class Application extends Model
         return $this->requestedAmountMoney();
     }
 
+    /** Buang awalan simulasi UAT daripada teks paparan. */
+    public static function stripSimulationPrefix(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        return str_starts_with($value, self::SIMULATION_PREFIX)
+            ? substr($value, strlen(self::SIMULATION_PREFIX))
+            : $value;
+    }
+
+    protected function purpose(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => self::stripSimulationPrefix($value),
+        );
+    }
+
     /** Alias paparan: tujuan sumbangan. */
     protected function projectTitle(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->attributes['purpose'] ?? null,
+            get: fn () => $this->purpose,
             set: fn (?string $value) => ['purpose' => $value],
         );
     }

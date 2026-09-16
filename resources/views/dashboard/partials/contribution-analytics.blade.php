@@ -41,42 +41,54 @@
     $ticks = [0, $tickMax / 2, $tickMax];
 @endphp
 
-<section class="mt-8" aria-labelledby="contribution-analysis-title">
-    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <h2 id="contribution-analysis-title" class="text-lg font-semibold text-gray-900">Analisa Sumbangan</h2>
-            <p class="mt-1 text-xs text-gray-500">
-                {{ $analytics['scope_label'] }} ·
-                {{ $analytics['from']->format('d/m/Y') }} hingga {{ $analytics['to']->format('d/m/Y') }}
-            </p>
+<section @class(['mt-8' => ($analytics['scope_label'] ?? '') === 'ALP sendiri', 'mt-5' => ($analytics['scope_label'] ?? '') !== 'ALP sendiri']) aria-labelledby="contribution-analysis-title">
+    @if (($analytics['scope_label'] ?? '') === 'ALP sendiri')
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <h2 id="contribution-analysis-title" class="text-lg font-semibold text-gray-900">Analisa Sumbangan</h2>
+                <p class="mt-1 text-xs text-gray-500">
+                    {{ $analytics['scope_label'] }} ·
+                    {{ $analytics['from']->format('d/m/Y') }} hingga {{ $analytics['to']->format('d/m/Y') }}
+                </p>
+            </div>
+            <a href="{{ route('budget.mine') }}" class="text-xs font-medium text-royal-600 hover:text-royal-700">
+                Bajet saya →
+            </a>
         </div>
-        <a href="{{ route('dashboard.templates') }}" class="text-xs font-medium text-royal-600 hover:text-royal-700">
-            Rujuk templat →
-        </a>
-    </div>
+    @else
+        <h2 id="contribution-analysis-title" class="sr-only">Analisa Sumbangan — graf & jadual</h2>
+    @endif
 
-    {{-- KPI utama --}}
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        @foreach ([
-            ['label' => 'Jumlah Sumbangan', 'value' => $analytics['kpi']['total'], 'classes' => 'border-green-300 bg-green-50', 'iconClasses' => 'bg-cyan-100 text-cyan-700', 'icon' => 'wallet'],
-            ['label' => 'Jumlah Sumbangan Dalam Proses', 'value' => $analytics['kpi']['in_process'], 'classes' => 'border-orange-300 bg-orange-50', 'iconClasses' => 'bg-orange-100 text-orange-700', 'icon' => 'arrow-path'],
-            ['label' => 'Jumlah Sumbangan Diluluskan', 'value' => $analytics['kpi']['approved'], 'classes' => 'border-blue-300 bg-blue-50', 'iconClasses' => 'bg-blue-100 text-blue-700', 'icon' => 'banknotes'],
-        ] as $card)
-            <article class="flex items-center gap-4 rounded-2xl border-2 p-5 {{ $card['classes'] }}">
-                <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full {{ $card['iconClasses'] }}">
-                    <x-icon :name="$card['icon']" class="h-7 w-7" />
-                </span>
-                <div class="min-w-0">
-                    <p class="text-xs font-bold uppercase leading-tight tracking-wide text-gray-700">{{ $card['label'] }}</p>
-                    <p class="mt-1 text-xl font-bold text-gray-900 sm:text-2xl">RM {{ number_format($card['value'], 2) }}</p>
-                    <p class="text-xs text-gray-500">({{ $analytics['scope_label'] }})</p>
-                </div>
-            </article>
-        @endforeach
-    </div>
+    {{-- Kuota tempoh URS — ALP sahaja --}}
+    @if ($periodSummary ?? null)
+        <div class="mb-5">
+            <h3 class="dashboard-section-title mb-4">
+                Kuota Tempoh URS · {{ $periodSummary['label'] }}
+                @if ($activeYear ?? null)
+                    <span class="font-normal text-gray-400"> · {{ $activeYear->year }}</span>
+                @endif
+            </h3>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <x-stat-card label="Kuota tempoh" icon="banknotes" tone="navy">
+                    <x-money :value="$periodSummary['quota']" />
+                </x-stat-card>
+                <x-stat-card label="Digunakan (pending + diluluskan)" icon="arrow-path" tone="amber">
+                    <x-money :value="$periodSummary['used']" />
+                </x-stat-card>
+                <x-stat-card
+                    label="Baki tempoh"
+                    icon="sparkles"
+                    tone="green"
+                    :hint="'Luput '.$periodSummary['ends_at']->format('d/m/Y').' · tiada bawa ke hadapan'"
+                >
+                    <x-money :value="$periodSummary['remaining']" />
+                </x-stat-card>
+            </div>
+        </div>
+    @endif
 
     {{-- Graf --}}
-    <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <article class="overflow-hidden rounded-2xl border-2 border-gray-300 bg-white">
             <h3 class="px-4 py-2.5 text-center text-sm font-bold uppercase text-white" style="background:#15803d">Baki Sumbangan</h3>
             <div class="p-5">

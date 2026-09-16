@@ -145,4 +145,20 @@ body {
     .section-title {
         @apply text-sm font-semibold uppercase tracking-wide text-navy-700;
     }
+
+    .timeline-icon {
+        @apply relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold;
+    }
+
+    .timeline-icon--rejected {
+        background-color: var(--color-danger);
+        color: #fff;
+        box-shadow: 0 1px 2px rgb(220 38 38 / 0.25);
+    }
+
+    .timeline-icon--done {
+        background-color: var(--color-success);
+        color: #fff;
+        box-shadow: 0 1px 2px rgb(22 163 74 / 0.25);
+    }
 }

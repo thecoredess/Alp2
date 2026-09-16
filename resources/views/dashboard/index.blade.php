@@ -60,12 +60,16 @@
         </div>
     @endif
 
+    @if ($contributionKpi && ! auth()->user()->alp_id)
+        @include('dashboard.partials.contribution-kpi-cards')
+    @endif
+
     @if ($contributionAnalytics)
         @include('dashboard.partials.contribution-analytics')
     @endif
 
     {{-- Bajet tahunan ALP --}}
-    @if (! $contributionAnalytics && $scope === 'own' && $annualAllocation)
+    @if (! $suppressLegacyDashboardCards && $scope === 'own' && $annualAllocation)
         <div class="mt-8">
             <div class="mb-4 flex items-center justify-between">
                 <h3 class="dashboard-section-title mb-0">Bajet Tahunan @if($activeYear)<span class="font-normal text-gray-400">· {{ $activeYear->year }}</span>@endif</h3>
@@ -82,8 +86,8 @@
         </div>
     @endif
 
-    {{-- Kuota tempoh URS (BR-003/004) — hanya jika polisi aktif & pengguna ALP --}}
-    @if (! $contributionAnalytics && $periodSummary)
+    {{-- Kuota tempoh — hanya jika polisi aktif & pengguna ALP --}}
+    @if (! $suppressLegacyDashboardCards && $periodSummary)
         <div class="mt-8">
             <h3 class="dashboard-section-title">Kuota Tempoh URS · {{ $periodSummary['label'] }}@if($activeYear)<span class="font-normal text-gray-400"> · {{ $activeYear->year }}</span>@endif</h3>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -164,7 +168,7 @@
                             <th class="px-4 py-3">Tajuk</th>
                             <th class="px-4 py-3">Status</th>
                             <th class="px-4 py-3">Dihantar</th>
-                            <th class="px-4 py-3"></th>
+                            <th class="px-4 py-3 text-right">Tindakan</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -187,7 +191,9 @@
                                     <span class="block text-xs text-danger">{{ $app->submitted_at?->diffForHumans() }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <a href="{{ route('applications.show', $app) }}" class="text-xs font-medium text-royal-600 hover:text-royal-700">Buka →</a>
+                                    <x-table-actions>
+                                        <x-table-action href="{{ route('applications.show', $app) }}" icon="eye" label="Buka" variant="primary" />
+                                    </x-table-actions>
                                 </td>
                             </tr>
                         @endforeach
@@ -198,7 +204,7 @@
     @endif
 
     {{-- Kad permohonan --}}
-    @if (! $contributionAnalytics && $appStats && $scope === 'own')
+    @if (! $suppressLegacyDashboardCards && $appStats && $scope === 'own')
         <div class="mt-8">
             <h3 class="dashboard-section-title">Ringkasan Permohonan</h3>
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -211,7 +217,7 @@
         </div>
 
         @include('dashboard.partials.alp-charts')
-    @elseif (! $contributionAnalytics && $appStats && $scope === 'all')
+    @elseif ($appStats && $scope === 'all')
         <div class="mt-8">
             <h3 class="dashboard-section-title">Ringkasan Permohonan</h3>
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -227,7 +233,7 @@
     {{-- Modul projek diasingkan (URS v1.2) — kad projek tidak lagi dipaparkan --}}
 
     {{-- Ringkasan bajet — pegawai sahaja (ALP guna halaman Bajet Saya) --}}
-    @if (! $contributionAnalytics && $summary && $scope === 'all')
+    @if ($summary && $scope === 'all')
         <div class="mt-8">
             <div class="mb-4 flex items-center justify-between">
                 <h3 class="dashboard-section-title mb-0">Bajet Keseluruhan ALP @if($activeYear)<span class="font-normal text-gray-400">· {{ $activeYear->year }}</span>@endif</h3>
@@ -285,7 +291,7 @@
                     <a href="{{ route('notifications.read', $n->id) }}"
                        class="block px-5 py-3 hover:bg-gray-50 {{ $n->read_at ? '' : 'bg-royal-50/50' }}">
                         <p class="text-sm font-medium text-gray-900">{{ $n->data['title'] ?? 'Notifikasi' }}</p>
-                        <p class="mt-0.5 truncate text-xs text-gray-500">{{ $n->data['message'] ?? '' }}</p>
+                        <p class="mt-0.5 truncate text-xs text-gray-500">{{ \App\Support\NotificationMessage::display($n->data['message'] ?? null) }}</p>
                         <p class="mt-1 text-[11px] text-gray-400">{{ $n->created_at->diffForHumans() }}</p>
                     </a>
                 @empty

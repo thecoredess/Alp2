@@ -21,6 +21,7 @@ enum DocumentType: string
     // URS v1.2 M07
     case LAPORAN_AKTIVITI = 'laporan_aktiviti';
     case REPORT_CARD = 'report_card';
+    case SEMAKAN_SILANG_JKEW = 'semakan_silang_jkew';
 
     public function label(): string
     {
@@ -39,6 +40,7 @@ enum DocumentType: string
             self::SIJIL_ROS => 'Dokumen/Sijil ROS (sah daftar)',
             self::LAPORAN_AKTIVITI => 'Laporan Aktiviti',
             self::REPORT_CARD => 'Report Card / Kad Prestasi',
+            self::SEMAKAN_SILANG_JKEW => 'Ulasan Semakan Silang JKEW',
         };
     }
 
@@ -72,6 +74,12 @@ enum DocumentType: string
     public static function reportCardTypes(): array
     {
         return [self::REPORT_CARD, self::LAPORAN_AKTIVITI];
+    }
+
+    /** @return list<self> */
+    public static function internalReferenceTypes(): array
+    {
+        return [self::SEMAKAN_SILANG_JKEW];
     }
 
     /** Lampiran wajib Senarai Semak Penyaluran Sumbangan ALP (item 2–6). */

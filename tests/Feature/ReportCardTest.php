@@ -52,6 +52,35 @@ class ReportCardTest extends TestCase
         ])->save();
     }
 
+    private function uploadReportCardDraft(User $owner, $app, DocumentType $type = DocumentType::REPORT_CARD): void
+    {
+        $this->actingAs($owner)
+            ->post(route('applications.report-card.store', $app), [
+                'document_type' => $type->value,
+                'file' => UploadedFile::fake()->create('report.pdf', 120, 'application/pdf'),
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+    }
+
+    private function submitReportCard(User $owner, $app): void
+    {
+        $this->actingAs($owner)
+            ->post(route('applications.report-card.submit', $app))
+            ->assertRedirect()
+            ->assertSessionHas('status');
+    }
+
+    public function test_report_card_url_redirects_to_application_report_tab(): void
+    {
+        [$app, $alp] = $this->approvedApp();
+        $owner = $this->userWithRole(RoleName::ALP->value, $alp);
+
+        $this->actingAs($owner)
+            ->get(route('applications.report-card', $app))
+            ->assertRedirect(route('applications.show', [$app, 'tab' => 'report']));
+    }
+
     public function test_alp_cannot_upload_report_card_before_voucher(): void
     {
         [$app, $alp] = $this->approvedApp();
@@ -67,7 +96,7 @@ class ReportCardTest extends TestCase
         $this->assertNull($app->fresh()->report_card_submitted_at);
     }
 
-    public function test_alp_can_upload_report_card_after_voucher_prepared(): void
+    public function test_alp_can_upload_report_card_draft_after_voucher_prepared(): void
     {
         Notification::fake();
         [$app, $alp] = $this->approvedApp();
@@ -85,19 +114,60 @@ class ReportCardTest extends TestCase
             ->assertSessionHas('status');
 
         $app->refresh();
-        $this->assertNotNull($app->report_card_submitted_at);
-        $this->assertSame(ReportCardStatus::AWAITING_ADMIN_JP, $app->report_card_status);
-        $this->assertFalse(app(ApplicationReportCardService::class)->hasReportCard($app));
+        $this->assertNull($app->report_card_submitted_at);
+        $this->assertSame(ReportCardStatus::DRAFT, $app->report_card_status);
+        $this->assertTrue(app(ApplicationReportCardService::class)->hasDraft($app));
         $this->assertDatabaseHas('application_documents', [
             'application_id' => $app->id,
             'document_type' => DocumentType::REPORT_CARD->value,
         ]);
+
+        Notification::assertNothingSentTo($admin);
+    }
+
+    public function test_alp_can_submit_report_card_draft_to_admin_jp(): void
+    {
+        Notification::fake();
+        [$app, $alp] = $this->approvedApp();
+        $this->prepareVoucher($app);
+        $owner = $this->userWithRole(RoleName::ALP->value, $alp);
+        $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
+
+        $this->uploadReportCardDraft($owner, $app);
+        $this->submitReportCard($owner, $app);
+
+        $app->refresh();
+        $this->assertNotNull($app->report_card_submitted_at);
+        $this->assertSame(ReportCardStatus::AWAITING_ADMIN_JP, $app->report_card_status);
+        $this->assertFalse(app(ApplicationReportCardService::class)->hasDraft($app));
 
         Notification::assertSentTo(
             $admin,
             ApplicationWorkflowNotification::class,
             fn (ApplicationWorkflowNotification $n) => $n->event === 'report_card_submitted'
         );
+    }
+
+    public function test_alp_can_discard_report_card_draft(): void
+    {
+        [$app, $alp] = $this->approvedApp();
+        $this->prepareVoucher($app);
+        $owner = $this->userWithRole(RoleName::ALP->value, $alp);
+
+        $this->uploadReportCardDraft($owner, $app);
+
+        $this->actingAs($owner)
+            ->delete(route('applications.report-card.draft.destroy', $app))
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $app->refresh();
+        $this->assertNull($app->report_card_status);
+        $this->assertNull($app->report_card_submitted_at);
+        $this->assertDatabaseMissing('application_documents', [
+            'application_id' => $app->id,
+            'document_type' => DocumentType::REPORT_CARD->value,
+        ]);
     }
 
     public function test_report_card_review_flow_admin_then_pegawai_jp(): void
@@ -109,12 +179,8 @@ class ReportCardTest extends TestCase
         $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
         $pegawai = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
 
-        $this->actingAs($owner)
-            ->post(route('applications.report-card.store', $app), [
-                'document_type' => DocumentType::LAPORAN_AKTIVITI->value,
-                'file' => UploadedFile::fake()->create('laporan.pdf', 120, 'application/pdf'),
-            ])
-            ->assertRedirect();
+        $this->uploadReportCardDraft($owner, $app, DocumentType::LAPORAN_AKTIVITI);
+        $this->submitReportCard($owner, $app);
 
         app(ReportCardReviewService::class)->review(
             $app->fresh(),
@@ -158,11 +224,8 @@ class ReportCardTest extends TestCase
         $owner = $this->userWithRole(RoleName::ALP->value, $alp);
         $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
 
-        $this->actingAs($owner)
-            ->post(route('applications.report-card.store', $app), [
-                'document_type' => DocumentType::REPORT_CARD->value,
-                'file' => UploadedFile::fake()->create('report.pdf', 120, 'application/pdf'),
-            ]);
+        $this->uploadReportCardDraft($owner, $app);
+        $this->submitReportCard($owner, $app);
 
         app(ReportCardReviewService::class)->review(
             $app->fresh(),
@@ -182,37 +245,66 @@ class ReportCardTest extends TestCase
         );
     }
 
-    public function test_reminder_command_notifies_overdue_report_cards(): void
+    public function test_reminder_notifies_alp_seven_days_before_due_date(): void
     {
         Notification::fake();
         [$app, $alp] = $this->approvedApp();
-        $this->prepareVoucher($app, now()->subMonths(2)->toDateString());
+        $app->forceFill(['program_date' => '2026-03-15'])->save();
+        $this->prepareVoucher($app);
         $owner = $this->userWithRole(RoleName::ALP->value, $alp);
 
-        $sent = app(ApplicationReportCardService::class)->sendReminders(onlyOverdue: true);
+        $this->travelTo('2026-04-08');
+
+        $sent = app(ApplicationReportCardService::class)->sendReminders();
         $this->assertSame(1, $sent);
 
         Notification::assertSentTo(
             $owner,
             ApplicationWorkflowNotification::class,
-            fn (ApplicationWorkflowNotification $n) => $n->event === 'report_card_reminder'
+            fn (ApplicationWorkflowNotification $n) => $n->event === 'report_card_reminder_upcoming'
         );
+
+        $this->assertNotNull($app->fresh()->report_card_upcoming_reminder_sent_at);
     }
 
-    public function test_due_date_is_one_month_after_voucher_date(): void
+    public function test_reminder_notifies_alp_seven_days_after_due_date(): void
+    {
+        Notification::fake();
+        [$app, $alp] = $this->approvedApp();
+        $app->forceFill(['program_date' => '2026-03-15'])->save();
+        $this->prepareVoucher($app);
+        $owner = $this->userWithRole(RoleName::ALP->value, $alp);
+
+        $this->travelTo('2026-04-22');
+
+        $sent = app(ApplicationReportCardService::class)->sendReminders();
+        $this->assertSame(1, $sent);
+
+        Notification::assertSentTo(
+            $owner,
+            ApplicationWorkflowNotification::class,
+            fn (ApplicationWorkflowNotification $n) => $n->event === 'report_card_reminder_overdue'
+        );
+
+        $this->assertNotNull($app->fresh()->report_card_overdue_reminder_sent_at);
+    }
+
+    public function test_due_date_is_one_month_after_program_date(): void
     {
         [$app] = $this->approvedApp();
-        $this->prepareVoucher($app, '2026-03-15');
+        $app->forceFill(['program_date' => '2026-03-15'])->save();
 
         $due = app(ApplicationReportCardService::class)->dueDate($app->fresh());
 
         $this->assertSame('2026-04-15', $due?->toDateString());
+        $this->travelTo('2026-04-16');
         $this->assertTrue(app(ApplicationReportCardService::class)->isOverdue($app->fresh()));
     }
 
-    public function test_no_due_date_before_voucher(): void
+    public function test_no_due_date_without_program_date(): void
     {
         [$app] = $this->approvedApp();
+        $app->forceFill(['program_date' => null])->save();
         $service = app(ApplicationReportCardService::class);
 
         $this->assertNull($service->dueDate($app));

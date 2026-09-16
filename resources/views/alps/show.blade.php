@@ -10,7 +10,7 @@
         </a>
         <div class="flex items-center gap-2">
             @can('alps.update')
-                <a href="{{ route('alps.edit', $alp) }}" class="btn-white">Sunting</a>
+                <a href="{{ route('alps.edit', $alp) }}" class="btn-white">Kemaskini</a>
             @endcan
             @can('alps.deactivate')
                 @if($alp->isActive())

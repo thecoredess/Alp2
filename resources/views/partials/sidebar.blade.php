@@ -20,6 +20,16 @@
     $canAlps = $user->can('alps.view');
     $hideReferenceMenu = $user->hasRole(\App\Enums\RoleName::PEGAWAI_KEWANGAN->value);
     $showReference = ! $hideReferenceMenu && ($canRecipients || $canAlps);
+
+    $canSystem = $user->can('users.view')
+        || $user->can('financial_years.view')
+        || $user->can('settings.manage')
+        || $user->can('approval_matrix.view')
+        || $user->hasRole(\App\Enums\RoleName::SUPER_ADMIN->value);
+    $systemRoutesActive = request()->routeIs('settings.*')
+        || request()->routeIs('users.*')
+        || request()->routeIs('financial-years.*')
+        || request()->routeIs('approval-matrix.*');
 @endphp
 
 <div class="flex h-full flex-col">
@@ -138,10 +148,16 @@
         <div>
             <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-navy-300">Tetapan</p>
             <div class="space-y-1">
-                <a href="{{ route('profile.edit') }}" class="{{ $link(request()->routeIs('profile.*') || request()->routeIs('password.change*') || request()->routeIs('settings.edit') || request()->routeIs('settings.update') || request()->routeIs('users.*') || request()->routeIs('financial-years.*') || request()->routeIs('approval-matrix.*')) }}">
-                    <x-icon name="user-cog" class="h-5 w-5 shrink-0" />
-                    Tetapan
+                <a href="{{ route('profile.edit') }}" class="{{ $link(request()->routeIs('profile.*') || request()->routeIs('password.change*')) }}">
+                    <x-icon name="user" class="h-5 w-5 shrink-0" />
+                    Profil
                 </a>
+                @if($canSystem)
+                    <a href="{{ route('settings.hub') }}" class="{{ $link($systemRoutesActive) }}">
+                        <x-icon name="user-cog" class="h-5 w-5 shrink-0" />
+                        Tetapan Sistem
+                    </a>
+                @endif
                 <a href="{{ route('manual.show') }}" class="{{ $link(request()->routeIs('manual.*')) }}">
                     <x-icon name="document" class="h-5 w-5 shrink-0" />
                     Manual Pengguna

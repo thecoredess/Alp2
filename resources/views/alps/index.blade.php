@@ -41,7 +41,9 @@
                             <x-status-badge :label="$alp->status->label()" :classes="$alp->status->badgeClasses()" />
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <a href="{{ route('alps.show', $alp) }}" class="text-gray-500 hover:text-gray-700 font-medium">Lihat</a>
+                            <x-table-actions>
+                                <x-table-action href="{{ route('alps.show', $alp) }}" icon="eye" label="Lihat" variant="muted" />
+                            </x-table-actions>
                         </td>
                     </tr>
                 @empty

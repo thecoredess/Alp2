@@ -35,7 +35,7 @@ enum ApplicationStatus: string
             self::UNDER_SECRETARIAT_REVIEW => 'Menunggu Perakuan Pegawai JP',
             self::UNDER_FINANCE_REVIEW => 'Semakan Kewangan (legacy)',
             self::UNDER_TECHNICAL_REVIEW => 'Semakan Teknikal (legacy)',
-            self::PENDING_APPROVAL => 'Menunggu Peraku / PEPU',
+            self::PENDING_APPROVAL => 'Menunggu Peraku PEPU',
             self::REVISION_REQUIRED => 'Perlu Pembetulan',
             self::APPROVED => 'Diluluskan',
             self::REJECTED => 'Ditolak',
