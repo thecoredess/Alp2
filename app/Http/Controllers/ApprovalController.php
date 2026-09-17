@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ApplicationStatus;
-use App\Enums\ApplicationType;
+use App\Enums\ProgramCategory;
 use App\Models\Alp;
 use App\Models\Application;
 use App\Models\FinancialYear;
@@ -33,7 +33,7 @@ class ApprovalController extends Controller
             ->where('status', ApplicationStatus::PENDING_APPROVAL->value)
             ->when($request->filled('tahun'), fn ($q) => $q->where('financial_year_id', $request->integer('tahun')))
             ->when($request->filled('alp'), fn ($q) => $q->where('alp_id', $request->integer('alp')))
-            ->when($request->filled('jenis'), fn ($q) => $q->where('application_type', $request->string('jenis')))
+            ->when($request->filled('jenis'), fn ($q) => $q->where('program_category', $request->string('jenis')))
             ->when($request->filled('cari'), fn ($q) => $q->where(fn ($s) => $s
                 ->where('application_number', 'like', '%'.$request->string('cari').'%')
                 ->orWhere('purpose', 'like', '%'.$request->string('cari').'%')
@@ -47,7 +47,7 @@ class ApprovalController extends Controller
             'applications' => $applications,
             'years' => FinancialYear::orderByDesc('year')->get(),
             'alps' => Alp::orderBy('ref_code')->get(),
-            'typeOptions' => ApplicationType::options(),
+            'categoryOptions' => ProgramCategory::options(),
         ]);
     }
 

@@ -6,7 +6,8 @@
 @section('content')
     <form method="GET" class="mb-4 flex flex-wrap items-end gap-3">
         @include('reports.partials.year-filter')
-        <div class="ml-auto">@include('reports.partials.export-buttons')</div>
+        <x-filter-reset />
+        <div class="ml-auto flex items-center gap-2">@include('reports.partials.export-buttons')</div>
     </form>
 
     {{-- Ringkasan --}}

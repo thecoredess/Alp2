@@ -324,4 +324,26 @@ class ApplicationTest extends TestCase
         $this->assertSame('MAIN BOWLING', $app->fresh()->programLabelForReport());
         $this->assertSame('PERSATUAN PPTM', $app->fresh()->recipientLabelForReport());
     }
+
+    public function test_report_program_label_ignores_simulation_workflow_placeholders(): void
+    {
+        $placeholders = [
+            'Diluluskan — baucar disedia',
+            'Diluluskan — menunggu baucar',
+            'Menunggu kelulusan PEPU',
+        ];
+
+        foreach ($placeholders as $purpose) {
+            $app = Application::factory()->create([
+                'purpose' => Application::SIMULATION_PREFIX.$purpose,
+                'program_category' => 'sukan',
+            ]);
+
+            $this->assertSame(
+                'Program sukan',
+                $app->fresh()->programLabelForReport(),
+                "Expected category fallback for placeholder: {$purpose}",
+            );
+        }
+    }
 }

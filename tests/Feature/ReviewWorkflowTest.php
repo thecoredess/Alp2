@@ -8,6 +8,7 @@ use App\Enums\ReviewDecision;
 use App\Enums\ReviewType;
 use App\Enums\RoleName;
 use App\Models\Alp;
+use App\Models\FinancialYear;
 use App\Services\Application\ApplicationException;
 use App\Services\Application\ApplicationReviewService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -355,5 +356,27 @@ class ReviewWorkflowTest extends TestCase
             ->assertOk()
             ->assertSee($awaitingPegawai->application_number)
             ->assertDontSee($submitted->application_number);
+    }
+
+    public function test_secretariat_queue_filters_by_program_category(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = FinancialYear::factory()->active()->create(['year' => 2096]);
+        $this->allocate($alp, $year, '500000.00');
+
+        $sukan = $this->afterAdminJpReview($this->submitted($alp, $year, '1200.00'));
+        $sukan->forceFill(['program_category' => \App\Enums\ProgramCategory::SUKAN])->save();
+
+        $komuniti = $this->afterAdminJpReview($this->submitted($alp, $year, '1300.00'));
+        $komuniti->forceFill(['program_category' => \App\Enums\ProgramCategory::KOMUNITI])->save();
+
+        $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
+
+        $this->actingAs($jp)
+            ->get(route('reviews.secretariat', ['jenis' => 'sukan']))
+            ->assertOk()
+            ->assertSee('Program sukan')
+            ->assertSee($sukan->application_number)
+            ->assertDontSee($komuniti->application_number);
     }
 }

@@ -6,8 +6,9 @@
 @section('content')
     <form method="GET" class="mb-4 flex flex-wrap items-end gap-3">
         @include('reports.partials.year-filter')
-        <button class="btn-white">Tapis</button>
-        <div class="ml-auto">@include('reports.partials.export-buttons')</div>
+        <button class="btn-primary">Tapis</button>
+        <x-filter-reset />
+        <div class="ml-auto flex items-center gap-2">@include('reports.partials.export-buttons')</div>
     </form>
 
     <div class="mb-5 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">

@@ -4,13 +4,14 @@
 
 @section('content')
     <div class="mb-5 flex items-center justify-between">
-        <form method="GET">
+        <form method="GET" class="flex flex-wrap items-center gap-2">
             <select name="status" onchange="this.form.submit()" class="inp w-auto">
                 <option value="">Semua Status</option>
                 @foreach ($statusOptions as $val => $label)
                     <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
                 @endforeach
             </select>
+            <x-filter-reset />
         </form>
         <a href="{{ route('budget-requests.create') }}" class="btn-primary"><x-icon name="plus" class="h-4 w-4" /> Cadangan Baharu</a>
     </div>

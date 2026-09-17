@@ -13,6 +13,7 @@
                 @endforeach
             </select>
         </div>
+        <x-filter-reset />
     </form>
 
     {{-- Giliran operasi kewangan (drill-down terus ke halaman berkaitan) --}}

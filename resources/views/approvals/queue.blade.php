@@ -11,14 +11,15 @@
             @foreach ($years as $y)<option value="{{ $y->id }}" @selected(request('tahun') == $y->id)>{{ $y->year }}</option>@endforeach
         </select>
         <select name="jenis" class="inp-select shrink-0">
-            <option value="">Semua Jenis</option>
-            @foreach ($typeOptions as $val => $label)<option value="{{ $val }}" @selected(request('jenis') === $val)>{{ $label }}</option>@endforeach
+            <option value="">Semua Kategori</option>
+            @foreach ($categoryOptions as $val => $label)<option value="{{ $val }}" @selected(request('jenis') === $val)>{{ $label }}</option>@endforeach
         </select>
         <select name="alp" class="inp-select inp-select--alp shrink-0">
             <option value="">Semua ALP</option>
             @foreach ($alps as $alp)<option value="{{ $alp->id }}" @selected(request('alp') == $alp->id)>{{ $alp->ref_code }}</option>@endforeach
         </select>
-        <button type="submit" class="btn-white shrink-0">Tapis</button>
+        <button type="submit" class="btn-primary shrink-0">Tapis</button>
+        <x-filter-reset />
     </form>
 
     <div class="card overflow-x-auto">
@@ -26,7 +27,7 @@
             <thead class="bg-gray-50">
                 <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     <th class="px-4 py-3">No. Permohonan</th><th class="px-4 py-3">Tujuan / Penerima</th>
-                    <th class="px-4 py-3">Jenis</th><th class="px-4 py-3">ALP</th>
+                    <th class="px-4 py-3">Kategori</th><th class="px-4 py-3">ALP</th>
                     <th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3 text-right">Tindakan</th>
                 </tr>
             </thead>
@@ -35,10 +36,10 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-mono text-xs text-gray-700">{{ $app->application_number }}</td>
                         <td class="px-4 py-3 text-gray-900">
-                            <p>{{ $app->purpose }}</p>
-                            <p class="text-xs text-gray-500">{{ $app->recipient_name }}</p>
+                            <p>{{ $app->programLabelForReport(60) }}</p>
+                            <p class="text-xs text-gray-500">{{ $app->recipientLabelForReport() }}</p>
                         </td>
-                        <td class="px-4 py-3"><x-status-badge :label="$app->application_type->label()" :classes="$app->application_type->badgeClasses()" /></td>
+                        <td class="px-4 py-3 text-gray-600">{{ $app->program_category?->label() ?? '—' }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $app->alp->ref_code }}</td>
                         <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$app->requested_amount" /></td>
                         <td class="px-4 py-3 text-right">

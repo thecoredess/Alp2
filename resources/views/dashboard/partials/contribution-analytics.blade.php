@@ -153,10 +153,8 @@
                     Hingga
                     <input name="hingga" type="date" value="{{ $analytics['to']->format('Y-m-d') }}" class="mt-1 block rounded-lg border-gray-300 px-2 py-1.5 text-xs">
                 </label>
-                <button type="submit" class="btn-navy !px-3 !py-1.5 text-xs">Tapis</button>
-                @if (request()->filled('dari') || request()->filled('hingga'))
-                    <a href="{{ route('dashboard') }}" class="btn-white !px-3 !py-1.5 text-xs">Reset</a>
-                @endif
+                <button type="submit" class="btn-primary !px-3 !py-1.5 text-xs">Tapis</button>
+                <x-filter-reset :href="route('dashboard')" class="btn-primary !px-3 !py-1.5 text-xs shrink-0" />
             </form>
         </div>
 

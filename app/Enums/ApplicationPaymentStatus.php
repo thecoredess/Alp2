@@ -21,7 +21,7 @@ enum ApplicationPaymentStatus: string
             self::VOUCHER_PREPARED => 'Baucar Disedia',
             self::SENT_TO_JKEW => 'Dihantar ke JKEW',
             self::PAID => 'Telah Dibayar',
-            self::CANCELLED => 'Dibatalkan',
+            self::CANCELLED => 'Ditolak',
         };
     }
 
@@ -32,7 +32,7 @@ enum ApplicationPaymentStatus: string
             self::VOUCHER_PREPARED => 'bg-blue-100 text-blue-800',
             self::SENT_TO_JKEW => 'bg-indigo-100 text-indigo-800',
             self::PAID => 'bg-green-100 text-green-800',
-            self::CANCELLED => 'bg-gray-200 text-gray-700',
+            self::CANCELLED => 'bg-red-100 text-red-800',
         };
     }
 
@@ -44,5 +44,13 @@ enum ApplicationPaymentStatus: string
             self::VOUCHER_PREPARED->value,
             self::SENT_TO_JKEW->value,
         ];
+    }
+
+    /** @return array<string, string> */
+    public static function options(): array
+    {
+        return collect(self::cases())
+            ->mapWithKeys(fn (self $status) => [$status->value => $status->label()])
+            ->all();
     }
 }

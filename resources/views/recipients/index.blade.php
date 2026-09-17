@@ -6,7 +6,8 @@
 @section('content')
     <form method="GET" class="mb-5 flex flex-wrap items-center gap-2">
         <input type="text" name="cari" value="{{ request('cari') }}" placeholder="Nama / ROS / alamat…" class="inp sm:w-72">
-        <button type="submit" class="btn-primary">Cari</button>
+        <button type="submit" class="btn-primary shrink-0">Cari</button>
+        <x-filter-reset />
     </form>
 
     <div class="card overflow-x-auto">

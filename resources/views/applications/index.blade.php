@@ -42,7 +42,8 @@
                     @endforeach
                 </select>
             @endif
-            <button type="submit" class="btn-white shrink-0">Tapis</button>
+            <button type="submit" class="btn-primary shrink-0">Tapis</button>
+            <x-filter-reset />
         </form>
 
         @can('create', \App\Models\Application::class)
@@ -71,8 +72,8 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-mono text-xs text-gray-700">{{ $app->application_number }}</td>
                         <td class="px-4 py-3 text-gray-900">
-                            <p>{{ $app->purpose }}</p>
-                            <p class="text-xs text-gray-500">{{ $app->recipient_name }}</p>
+                            <p>{{ $app->programLabelForReport(60) }}</p>
+                            <p class="text-xs text-gray-500">{{ $app->recipientLabelForReport() }}</p>
                         </td>
                         @if ($scopeAll)<td class="px-4 py-3 text-gray-600">{{ $app->alp->ref_code }}</td>@endif
                         <td class="px-4 py-3 text-gray-600">{{ $app->financialYear->year }}</td>

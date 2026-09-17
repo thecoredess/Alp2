@@ -13,6 +13,7 @@
             @endforeach
         </select>
         <button type="submit" class="btn-primary">Tapis</button>
+        <x-filter-reset />
         <a href="{{ route('report-cards.index') }}" class="btn-white ml-auto">Pemantauan Laporan</a>
     </form>
 
@@ -33,8 +34,8 @@
                         <td class="px-4 py-3 font-mono text-xs">{{ $app->application_number }}</td>
                         <td class="px-4 py-3">{{ $app->alp?->ref_code }}</td>
                         <td class="px-4 py-3">
-                            <p>{{ $app->purpose }}</p>
-                            <p class="text-xs text-gray-500">{{ $app->recipient_name }}</p>
+                            <p>{{ $app->programLabelForReport(60) }}</p>
+                            <p class="text-xs text-gray-500">{{ $app->recipientLabelForReport() }}</p>
                         </td>
                         <td class="px-4 py-3 text-xs text-gray-600">{{ $app->report_card_submitted_at?->format('d/m/Y H:i') ?? '—' }}</td>
                         <td class="px-4 py-3 text-right">

@@ -139,6 +139,49 @@ class ApplicationPaymentTest extends TestCase
             ->assertHeader('content-disposition');
     }
 
+    public function test_payments_index_filters_by_payment_status(): void
+    {
+        $pending = $this->approvedApplication('2100.00');
+        $pending->forceFill(['payment_status' => ApplicationPaymentStatus::PENDING_PAYMENT])->save();
+
+        $voucher = $this->approvedApplication('2200.00');
+        $voucher->forceFill([
+            'payment_status' => ApplicationPaymentStatus::VOUCHER_PREPARED,
+            'payment_voucher_no' => 'BV-TEST-001',
+            'payment_supplier_no' => 'SUP-001',
+            'payment_voucher_date' => '2026-09-08',
+        ])->save();
+
+        $paid = $this->approvedApplication('2300.00');
+        $paid->forceFill([
+            'payment_status' => ApplicationPaymentStatus::PAID,
+            'paid_at' => now(),
+        ])->save();
+
+        $finance = User::factory()->create()->assignRole(RoleName::PEGAWAI_KEWANGAN->value);
+
+        $this->actingAs($finance)
+            ->get(route('payments.index', ['status' => ApplicationPaymentStatus::VOUCHER_PREPARED->value]))
+            ->assertOk()
+            ->assertSee($voucher->application_number)
+            ->assertDontSee($pending->application_number)
+            ->assertDontSee($paid->application_number);
+
+        $this->actingAs($finance)
+            ->get(route('payments.index', ['status' => 'all']))
+            ->assertOk()
+            ->assertSee($pending->application_number)
+            ->assertSee($voucher->application_number)
+            ->assertSee($paid->application_number);
+
+        $this->actingAs($finance)
+            ->get(route('payments.index', ['status' => 'open']))
+            ->assertOk()
+            ->assertSee($pending->application_number)
+            ->assertSee($voucher->application_number)
+            ->assertDontSee($paid->application_number);
+    }
+
     public function test_finance_cannot_edit_voucher_after_recorded(): void
     {
         $app = $this->approvedApplication();

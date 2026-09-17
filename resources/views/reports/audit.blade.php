@@ -16,8 +16,9 @@
         <div><label class="block text-xs text-gray-500">Entiti (jenis)</label><input type="text" name="entiti" value="{{ request('entiti') }}" class="inp" placeholder="cth: Project"></div>
         <div><label class="block text-xs text-gray-500">Dari</label><input type="date" name="dari" value="{{ request('dari') }}" class="inp"></div>
         <div><label class="block text-xs text-gray-500">Hingga</label><input type="date" name="hingga" value="{{ request('hingga') }}" class="inp"></div>
-        <button class="btn-white">Tapis</button>
-        <div class="ml-auto">@include('reports.partials.export-buttons')</div>
+        <button class="btn-primary">Tapis</button>
+        <x-filter-reset />
+        <div class="ml-auto flex items-center gap-2">@include('reports.partials.export-buttons')</div>
     </form>
 
     <div class="card overflow-x-auto">

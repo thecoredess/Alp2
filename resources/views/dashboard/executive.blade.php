@@ -13,6 +13,7 @@
                 @endforeach
             </select>
         </div>
+        <x-filter-reset />
         @can('reports.view')<a href="{{ route('reports.index', ['fy' => $year?->id]) }}" class="btn-white">Laporan Penuh</a>@endcan
     </form>
 

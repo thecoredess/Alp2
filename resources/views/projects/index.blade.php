@@ -19,7 +19,8 @@
                 @foreach ($alps as $alp)<option value="{{ $alp->id }}" @selected(request('alp') == $alp->id)>{{ $alp->ref_code }}</option>@endforeach
             </select>
         @endif
-        <button type="submit" class="btn-white shrink-0">Tapis</button>
+        <button type="submit" class="btn-primary shrink-0">Tapis</button>
+        <x-filter-reset />
     </form>
 
     <div class="card overflow-x-auto">

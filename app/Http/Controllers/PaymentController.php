@@ -25,7 +25,7 @@ class PaymentController extends Controller
         abort_unless($request->user()->can('payments.view'), 403);
 
         $years = FinancialYear::orderByDesc('year')->get();
-        $statusFilter = $request->string('status')->toString();
+        $statusFilter = $this->resolvePaymentStatusFilter($request);
         $jkewScoped = $this->usesJkewScope($request->user());
 
         $query = Application::query()
@@ -41,22 +41,15 @@ class PaymentController extends Controller
                         ->orWhere('payment_voucher_no', 'like', $term);
                 });
             })
-            ->when(
-                $statusFilter !== '' && $statusFilter !== 'open',
-                fn ($q) => $q->where('payment_status', $statusFilter),
-            )
-            ->when(
-                $statusFilter === '' || $statusFilter === 'open',
-                fn ($q) => $q->whereIn('payment_status', ApplicationPaymentStatus::openValues()),
-            )
+            ->tap(fn (Builder $q) => $this->applyPaymentStatusFilter($q, $statusFilter))
             ->tap(fn (Builder $q) => $this->applyJkewScope($q, $request->user()))
             ->latest('id');
 
         return view('payments.index', [
             'applications' => $query->paginate(20)->withQueryString(),
             'years' => $years,
-            'statusOptions' => collect(ApplicationPaymentStatus::cases())
-                ->mapWithKeys(fn (ApplicationPaymentStatus $s) => [$s->value => $s->label()]),
+            'selectedStatus' => $statusFilter,
+            'statusOptions' => ApplicationPaymentStatus::options(),
             'jkewScoped' => $jkewScoped,
         ]);
     }
@@ -102,17 +95,14 @@ class PaymentController extends Controller
     {
         abort_unless($request->user()->can('payments.view'), 403);
 
+        $statusFilter = $this->resolvePaymentStatusFilter($request);
+
         $rows = Application::query()
             ->with(['alp:id,ref_code,name', 'financialYear:id,year'])
             ->where('status', ApplicationStatus::APPROVED->value)
             ->whereNotNull('payment_status')
             ->when($request->filled('tahun'), fn ($q) => $q->where('financial_year_id', $request->integer('tahun')))
-            ->when($request->filled('status') && $request->string('status') !== 'open',
-                fn ($q) => $q->where('payment_status', $request->string('status')))
-            ->when(
-                ! $request->filled('status') || $request->string('status') === 'open',
-                fn ($q) => $q->whereIn('payment_status', ApplicationPaymentStatus::openValues()),
-            )
+            ->tap(fn (Builder $q) => $this->applyPaymentStatusFilter($q, $statusFilter))
             ->tap(fn (Builder $q) => $this->applyJkewScope($q, $request->user()))
             ->orderBy('id')
             ->get();
@@ -150,6 +140,38 @@ class PaymentController extends Controller
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    private function resolvePaymentStatusFilter(Request $request): string
+    {
+        $status = (string) $request->query('status', 'open');
+
+        if ($status === '' || $status === 'open') {
+            return 'open';
+        }
+
+        if ($status === 'all') {
+            return 'all';
+        }
+
+        return array_key_exists($status, ApplicationPaymentStatus::options())
+            ? $status
+            : 'open';
+    }
+
+    private function applyPaymentStatusFilter(Builder $query, string $filter): void
+    {
+        if ($filter === 'all') {
+            return;
+        }
+
+        if ($filter === 'open') {
+            $query->whereIn('payment_status', ApplicationPaymentStatus::openValues());
+
+            return;
+        }
+
+        $query->where('payment_status', $filter);
     }
 
     /** SEC-007: pengguna skop JKEW (tanpa manage) hanya nampak rekod dihantar ke JKEW. */

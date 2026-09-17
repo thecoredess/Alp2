@@ -130,7 +130,7 @@
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3">
                                         <a href="{{ route('applications.show', $app) }}" class="font-mono text-xs text-royal-700 hover:underline">{{ $app->application_number }}</a>
-                                        <p class="line-clamp-1 text-xs text-gray-500">{{ $app->project_title }}</p>
+                                        <p class="line-clamp-1 text-xs text-gray-500">{{ $app->programLabelForReport(60) }}</p>
                                     </td>
                                     <td class="px-4 py-3 text-gray-600">{{ $app->alp?->ref_code }}</td>
                                     <td class="px-4 py-3 font-semibold">{{ $kpi['days'] ?? '—' }}</td>
@@ -176,7 +176,7 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3 font-medium text-gray-900">{{ $app->application_number }}</td>
                                 <td class="px-4 py-3 text-gray-700">
-                                    <span class="line-clamp-1">{{ $app->project_title }}</span>
+                                    <span class="line-clamp-1">{{ $app->programLabelForReport(60) }}</span>
                                     @if ($app->alp)
                                         <span class="block text-xs text-gray-400">{{ $app->alp->ref_code }}</span>
                                     @endif

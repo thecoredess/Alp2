@@ -5,7 +5,7 @@
 
 @section('content')
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <form method="GET" class="flex items-center gap-2">
+        <form method="GET" class="flex flex-wrap items-center gap-2">
             <label class="text-sm text-gray-500">Tahun Kewangan</label>
             <select name="tahun" onchange="this.form.submit()" class="inp w-auto">
                 @foreach ($years as $y)
@@ -14,6 +14,7 @@
                     </option>
                 @endforeach
             </select>
+            <x-filter-reset />
         </form>
         @can('allocations.manage')
             <a href="{{ route('allocations.create', ['tahun' => $year?->id]) }}" class="btn-primary shrink-0">

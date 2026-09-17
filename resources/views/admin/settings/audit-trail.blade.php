@@ -40,10 +40,8 @@
                 <label class="block text-xs text-gray-500">Hingga</label>
                 <input type="date" name="hingga" value="{{ $filters['date_to'] ?? '' }}" class="inp">
             </div>
-            <button type="submit" class="btn-white">Tapis</button>
-            @if (collect($filters)->filter()->isNotEmpty())
-                <a href="{{ route('settings.audit-trail') }}" class="text-sm text-gray-500 hover:text-gray-700">Reset</a>
-            @endif
+            <button type="submit" class="btn-primary">Tapis</button>
+            <x-filter-reset :href="route('settings.audit-trail')" />
         </form>
 
         <p class="mb-3 text-xs text-gray-500">

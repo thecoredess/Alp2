@@ -20,12 +20,14 @@
             @endforeach
         </select>
         <select name="status" class="inp-select inp-select--status shrink-0">
-            <option value="open" @selected(request('status', 'open') === 'open')>Belum Selesai</option>
+            <option value="all" @selected($selectedStatus === 'all')>Semua Status</option>
+            <option value="open" @selected($selectedStatus === 'open')>Belum Selesai</option>
             @foreach ($statusOptions as $val => $label)
-                <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
+                <option value="{{ $val }}" @selected($selectedStatus === $val)>{{ $label }}</option>
             @endforeach
         </select>
         <button type="submit" class="btn-primary shrink-0">Tapis</button>
+        <x-filter-reset />
         <a href="{{ route('payments.export', request()->query()) }}" class="btn-white shrink-0">Eksport CSV</a>
     </form>
 

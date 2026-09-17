@@ -3,13 +3,14 @@
 @section('heading', 'Kelulusan Bajet (Menunggu)')
 
 @section('content')
-    <form method="GET" class="mb-5">
+    <form method="GET" class="mb-5 flex flex-wrap items-center gap-2">
         <select name="jenis" onchange="this.form.submit()" class="inp w-auto">
             <option value="">Semua Jenis</option>
             @foreach (\App\Enums\BudgetRequestType::options() as $val => $label)
                 <option value="{{ $val }}" @selected(request('jenis') === $val)>{{ $label }}</option>
             @endforeach
         </select>
+        <x-filter-reset />
     </form>
 
     <div class="card overflow-x-auto">

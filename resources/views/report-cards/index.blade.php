@@ -27,6 +27,7 @@
             <option value="returned" @selected(request('status') === 'returned')>Dikembalikan</option>
         </select>
         <button type="submit" class="btn-primary">Tapis</button>
+        <x-filter-reset />
     </form>
 
     <div class="card overflow-x-auto">
@@ -52,7 +53,7 @@
                         <td class="px-4 py-3 font-mono text-xs">{{ $app->application_number }}</td>
                         <td class="px-4 py-3">{{ $app->alp?->ref_code }}</td>
                         <td class="px-4 py-3">
-                            <span class="line-clamp-1">{{ $app->project_title }}</span>
+                            <span class="line-clamp-1">{{ $app->programLabelForReport(60) }}</span>
                         </td>
                         <td class="px-4 py-3 text-xs text-gray-600">{{ $due?->format('d/m/Y') ?? '—' }}</td>
                         <td class="px-4 py-3">

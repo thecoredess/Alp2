@@ -50,8 +50,9 @@
             <label class="block text-xs text-gray-500">Hingga</label>
             <input type="date" name="hingga" value="{{ request('hingga') }}" class="inp">
         </div>
-        <button type="submit" class="btn-white">Tapis</button>
-        <div class="ml-auto">@include('reports.partials.export-buttons')</div>
+        <button type="submit" class="btn-primary">Tapis</button>
+        <x-filter-reset />
+        <div class="ml-auto flex items-center gap-2">@include('reports.partials.export-buttons')</div>
     </form>
 
     <div class="mb-5 card p-5">

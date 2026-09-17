@@ -4,12 +4,16 @@
 
 @section('content')
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <form method="GET" class="relative w-full max-w-xs">
-            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">
-                <x-icon name="search" class="h-4 w-4" />
-            </span>
-            <input type="text" name="cari" value="{{ request('cari') }}"
-                   placeholder="Cari nama / e-mel…" class="inp pl-9">
+        <form method="GET" class="flex flex-wrap items-center gap-2">
+            <div class="relative w-full max-w-xs">
+                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">
+                    <x-icon name="search" class="h-4 w-4" />
+                </span>
+                <input type="text" name="cari" value="{{ request('cari') }}"
+                       placeholder="Cari nama / e-mel…" class="inp w-full pl-9">
+            </div>
+            <button type="submit" class="btn-primary shrink-0">Cari</button>
+            <x-filter-reset />
         </form>
         @can('users.create')
             <a href="{{ route('users.create') }}" class="btn-primary shrink-0">
