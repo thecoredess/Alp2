@@ -165,6 +165,44 @@
             width: auto;
             object-fit: contain;
         }
+        .guest-contact {
+            width: min(100%, 28rem);
+            margin-top: 1.35rem;
+            padding-top: 1.15rem;
+            border-top: 1px solid rgba(255,255,255,.22);
+            text-align: center;
+            font-size: 0.72rem;
+            line-height: 1.55;
+            color: rgba(255,255,255,.88);
+        }
+        .guest-contact-title {
+            margin: 0 0 0.5rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: #fff;
+        }
+        .guest-contact-org {
+            margin: 0 0 0.2rem;
+            font-weight: 600;
+            color: rgba(255,255,255,.95);
+        }
+        .guest-contact-dept {
+            margin: 0 0 0.35rem;
+            font-weight: 500;
+            color: rgba(255,255,255,.9);
+        }
+        .guest-contact-line {
+            margin: 0.25rem 0;
+        }
+        .guest-contact a {
+            color: #bfdbfe;
+            text-decoration: none;
+        }
+        .guest-contact a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
         @media (min-width: 1024px) {
             .guest-shell {
                 flex-direction: row;
@@ -225,6 +263,7 @@
                             <li>Pembayaran</li>
                             <li>Pelaporan</li>
                         </ul>
+                        @include('auth.partials.hubungi-kami')
                     </div>
                 </div>
             </aside>

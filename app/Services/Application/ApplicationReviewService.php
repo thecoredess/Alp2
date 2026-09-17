@@ -59,8 +59,14 @@ class ApplicationReviewService
             if ($type === ReviewType::SECRETARIAT) {
                 $this->assertSecretariatActor($application, $isAdminJp);
 
-                if ($decision === ReviewDecision::RECOMMEND && $isAdminJp) {
-                    if (! is_array($checklist) || ! JpReviewChecklist::allLengkap($checklist)) {
+                if ($decision === ReviewDecision::RECOMMEND) {
+                    if (! $application->hasJkewCrosscheckDocument()) {
+                        throw new ApplicationException(
+                            'Sila muat naik Borang Ulasan JKEW sebelum hantar keputusan Disyorkan.'
+                        );
+                    }
+
+                    if ($isAdminJp && (! is_array($checklist) || ! JpReviewChecklist::allLengkap($checklist))) {
                         throw new ApplicationException(
                             'Semua item senarai semak mesti lengkap sebelum hantar kepada Pegawai JP (UR-M04-001).'
                         );

@@ -118,18 +118,106 @@ class ApplicationPaymentTest extends TestCase
     public function test_payments_queue_and_csv_export(): void
     {
         $app = $this->approvedApplication();
+        $app->forceFill([
+            'purpose' => \App\Models\Application::SIMULATION_PREFIX.'Diluluskan — menunggu baucar',
+            'program_category' => \App\Enums\ProgramCategory::KOMUNITI,
+        ])->save();
+
         $finance = User::factory()->create()->assignRole(RoleName::PEGAWAI_KEWANGAN->value);
 
         $this->actingAs($finance)
             ->get(route('payments.index'))
             ->assertOk()
             ->assertSee($app->application_number)
+            ->assertSee('Program komuniti')
+            ->assertDontSee('Diluluskan — menunggu baucar')
             ->assertSee('Pembayaran');
 
         $this->actingAs($finance)
             ->get(route('payments.export'))
             ->assertOk()
             ->assertHeader('content-disposition');
+    }
+
+    public function test_finance_cannot_edit_voucher_after_recorded(): void
+    {
+        $app = $this->approvedApplication();
+        $finance = User::factory()->create()->assignRole(RoleName::PEGAWAI_KEWANGAN->value);
+
+        $this->actingAs($finance)->put(route('payments.update', $app), [
+            'payment_status' => ApplicationPaymentStatus::VOUCHER_PREPARED->value,
+            'payment_supplier_no' => 'SUP-2026-001',
+            'payment_voucher_no' => 'BV-2026-001',
+            'payment_voucher_date' => '2026-09-07',
+        ])->assertRedirect()->assertSessionHas('status');
+
+        $this->actingAs($finance)
+            ->put(route('payments.update', $app->fresh()), [
+                'payment_status' => ApplicationPaymentStatus::VOUCHER_PREPARED->value,
+                'payment_supplier_no' => 'SUP-2026-001',
+                'payment_voucher_no' => 'BV-2026-999',
+                'payment_voucher_date' => '2026-09-07',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertSame('BV-2026-001', $app->fresh()->payment_voucher_no);
+    }
+
+    public function test_finance_can_mark_paid_without_changing_voucher(): void
+    {
+        $app = $this->approvedApplication();
+        $finance = User::factory()->create()->assignRole(RoleName::PEGAWAI_KEWANGAN->value);
+
+        $this->actingAs($finance)->put(route('payments.update', $app), [
+            'payment_status' => ApplicationPaymentStatus::VOUCHER_PREPARED->value,
+            'payment_supplier_no' => 'SUP-2026-001',
+            'payment_voucher_no' => 'BV-2026-001',
+            'payment_voucher_date' => '2026-09-07',
+        ]);
+
+        $this->actingAs($finance)
+            ->put(route('payments.update', $app->fresh()), [
+                'payment_status' => ApplicationPaymentStatus::PAID->value,
+                'payment_voucher_no' => 'BV-2026-001',
+                'paid_at' => now()->format('Y-m-d H:i:s'),
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $app->refresh();
+        $this->assertSame(ApplicationPaymentStatus::PAID, $app->payment_status);
+        $this->assertSame('BV-2026-001', $app->payment_voucher_no);
+    }
+
+    public function test_super_admin_can_edit_voucher_after_recorded(): void
+    {
+        $app = $this->approvedApplication();
+        $finance = User::factory()->create()->assignRole(RoleName::PEGAWAI_KEWANGAN->value);
+        $super = User::factory()->create()->assignRole(RoleName::SUPER_ADMIN->value);
+
+        $this->actingAs($finance)->put(route('payments.update', $app), [
+            'payment_status' => ApplicationPaymentStatus::VOUCHER_PREPARED->value,
+            'payment_supplier_no' => 'SUP-2026-001',
+            'payment_voucher_no' => 'BV-2026-001',
+            'payment_voucher_date' => '2026-09-07',
+        ]);
+
+        $this->actingAs($super)
+            ->put(route('payments.update', $app->fresh()), [
+                'payment_status' => ApplicationPaymentStatus::VOUCHER_PREPARED->value,
+                'payment_supplier_no' => 'SUP-2026-002',
+                'payment_voucher_no' => 'BV-2026-002',
+                'payment_voucher_date' => '2026-09-08',
+                'payment_remarks' => 'Pembetulan Super Admin',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $app->refresh();
+        $this->assertSame('BV-2026-002', $app->payment_voucher_no);
+        $this->assertSame('SUP-2026-002', $app->payment_supplier_no);
+        $this->assertSame('Pembetulan Super Admin', $app->payment_remarks);
     }
 
     public function test_payment_update_does_not_create_expenditure_ledger(): void

@@ -140,6 +140,12 @@
                                         @if ($stage['key'] === 'voucher' && str_contains($stage['hint'], 'https://dbayar.dbkl.gov.my'))
                                             Semakan bayaran boleh disemak melalui
                                             <a href="https://dbayar.dbkl.gov.my" target="_blank" rel="noopener noreferrer" class="font-medium text-royal-600 underline hover:text-royal-700">https://dbayar.dbkl.gov.my</a>
+                                            dengan menggunakan no. pembekal
+                                            @if (filled($stage['payment_supplier_no'] ?? null))
+                                                <span class="font-mono font-semibold text-gray-800">{{ $stage['payment_supplier_no'] }}</span>.
+                                            @else
+                                                <span class="text-gray-500">(belum direkod)</span>.
+                                            @endif
                                         @else
                                             {{ $stage['hint'] }}
                                         @endif

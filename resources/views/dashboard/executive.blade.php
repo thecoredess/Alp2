@@ -30,7 +30,7 @@
         {{-- Baris kedua --}}
         <div class="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
             <div class="card p-5"><p class="text-sm text-gray-500">Pending Application</p><p class="mt-2 text-xl font-semibold text-gray-700"><x-money :value="$totals->pending" /></p></div>
-            <div class="card p-5"><p class="text-sm text-gray-500">Projected Available</p><p class="mt-2 text-xl font-semibold text-teal-700"><x-money :value="$totals->projectedAvailable()" /></p></div>
+            <div class="card p-5"><p class="text-sm text-gray-500">Baki Peruntukan Semasa</p><p class="mt-2 text-xl font-semibold text-teal-700"><x-money :value="$totals->projectedAvailable()" /></p></div>
             <div class="card p-5"><p class="text-sm text-gray-500">Refund</p><p class="mt-2 text-xl font-semibold text-green-600"><x-money :value="$totals->refunded" /></p></div>
             <div class="card p-5"><p class="text-sm text-gray-500">Released Commitment</p><p class="mt-2 text-xl font-semibold text-gray-600"><x-money :value="$totals->released" /></p></div>
         </div>

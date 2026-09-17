@@ -268,7 +268,7 @@
                 <x-stat-card label="Pending Request" icon="clock" tone="orange" hint="Belum diluluskan — bukan Committed">
                     <x-money :value="$pending" />
                 </x-stat-card>
-                <x-stat-card label="Projected Available" icon="sparkles" :tone="$projected->isNegative() ? 'red' : 'green'" hint="Ledger Available − Pending">
+                <x-stat-card label="Baki Peruntukan Semasa" icon="sparkles" :tone="$projected->isNegative() ? 'red' : 'green'" hint="Baki Peruntukan Diluluskan − Pending Request">
                     <x-money :value="$projected" />
                 </x-stat-card>
             </div>

@@ -197,7 +197,7 @@ class ReportController extends Controller
                 ['label' => 'Status', 'width' => 2], ['label' => 'Tarikh', 'type' => 'date', 'width' => 2],
             ],
             $listing->map(fn ($a) => [
-                $a->application_number, $a->alp?->ref_code, $a->application_type->label(), $a->project_title,
+                $a->application_number, $a->alp?->ref_code, $a->application_type->label(), $a->programLabelForReport(),
                 (string) $a->requested_amount, $a->status->label(), $a->created_at?->format('d/m/Y'),
             ])->all(),
             $this->meta($request, $year),
@@ -208,7 +208,7 @@ class ReportController extends Controller
                 'year' => $year, 'listing' => $listing, 'filters' => $filters,
                 'counts' => $this->applications->statusCounts($filters), 'amounts' => $this->applications->amounts($filters),
                 'pipeline' => $this->applications->pipeline($filters), 'byType' => $this->applications->byType($filters),
-                'statusFilterOptions' => ApplicationReportService::statusFilterOptions(),
+                'statusFilterOptions' => ApplicationReportService::statusFilterOptionsForUser($request->user()),
             ], 'permohonan', true);
     }
 
@@ -218,12 +218,10 @@ class ReportController extends Controller
     {
         abort_unless($request->user()->can('reports.view'), 403);
         $year = $this->year($request);
+        $staffFilters = ApplicationReportService::usesStaffStatusFilters($request->user());
         $filters = $this->programFilters($request, $year);
-        $rows = $this->programs->listing($filters);
-        $summary = $this->programs->summary($rows);
-
-        $statusLabels = ProgramReportService::statusOptions();
-
+        $rows = $this->programs->listing($filters, $staffFilters);
+        $statusLabels = ApplicationReportService::statusFilterOptionsForUser($request->user());
         $data = new ReportData(
             'Laporan Program & Laporan Aktiviti',
             [
@@ -237,8 +235,8 @@ class ReportController extends Controller
             $rows->map(fn (array $r) => [
                 $r['application']->application_number,
                 $r['application']->alp?->ref_code,
-                $r['application']->purpose,
-                $r['application']->recipient_name,
+                $r['application']->programLabelForReport(),
+                $r['application']->recipientLabelForReport(),
                 $r['application']->program_category?->label(),
                 $r['application']->program_date?->format('d/m/Y'),
                 (string) $r['application']->requested_amount,
@@ -250,7 +248,7 @@ class ReportController extends Controller
 
         return $this->respond($request, $data, 'reports.programs',
             $this->shell($request) + [
-                'year' => $year, 'rows' => $rows, 'filters' => $filters, 'summary' => $summary,
+                'year' => $year, 'rows' => $rows, 'filters' => $filters,
                 'byCategory' => $this->programs->byCategory($rows),
                 'statusLabels' => $statusLabels,
             ], 'program', true);
@@ -397,7 +395,10 @@ class ReportController extends Controller
             'financial_year_id' => $year->id,
             'alp_id' => $this->scopeAlp($request),
             'type' => $request->string('jenis')->toString() ?: null,
-            'status' => $request->string('status')->toString() ?: null,
+            'status' => ApplicationReportService::sanitizeStatusFilter(
+                $request->string('status')->toString() ?: null,
+                $request->user(),
+            ),
             'date_from' => $request->date('dari')?->toDateString(),
             'date_to' => $request->date('hingga')?->toDateString(),
             'amount_min' => $request->input('amaun_min') ?: null,
@@ -411,9 +412,26 @@ class ReportController extends Controller
             'financial_year_id' => $year->id,
             'alp_id' => $this->scopeAlp($request),
             'category' => $request->string('kategori')->toString() ?: null,
-            'report_status' => $request->string('laporan')->toString() ?: null,
+            'report_status' => ApplicationReportService::sanitizeStatusFilter(
+                $request->string('laporan')->toString() ?: null,
+                $request->user(),
+            ),
             'date_from' => $request->date('dari')?->toDateString(),
             'date_to' => $request->date('hingga')?->toDateString(),
+        ];
+    }
+
+    /** Tapisan permohonan selari laporan program (kiraan kad status staf). */
+    private function programApplicationFilters(Request $request, FinancialYear $year): array
+    {
+        $program = $this->programFilters($request, $year);
+
+        return [
+            'financial_year_id' => $program['financial_year_id'],
+            'alp_id' => $program['alp_id'],
+            'category' => $program['category'],
+            'program_date_from' => $program['date_from'],
+            'program_date_to' => $program['date_to'],
         ];
     }
 

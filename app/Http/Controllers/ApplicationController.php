@@ -17,6 +17,7 @@ use App\Services\Audit\AuditService;
 use App\Services\Budget\BudgetService;
 use App\Services\Documents\ApprovalLetterService;
 use App\Services\Documents\AssociationDocumentGuideService;
+use App\Services\Reports\ApplicationReportService;
 use App\Support\ApplicationAmountValidator;
 use App\Support\UrsContributionPolicy;
 use Illuminate\Http\RedirectResponse;
@@ -36,6 +37,7 @@ class ApplicationController extends Controller
         private readonly RecipientRegistry $recipients,
         private readonly ApprovalLetterService $approvalLetters,
         private readonly AssociationDocumentGuideService $documentGuide,
+        private readonly ApplicationReportService $applicationReports,
     ) {}
 
     /** Permohonan Saya (permohonan ALP pengguna). */
@@ -54,7 +56,7 @@ class ApplicationController extends Controller
         return view('applications.index', [
             'applications' => $applications,
             'scopeAll' => false,
-        ] + $this->filterOptions());
+        ] + $this->filterOptions($request, scopeAll: false));
     }
 
     /** Semua Permohonan (staf DBKL berkuasa). */
@@ -62,9 +64,9 @@ class ApplicationController extends Controller
     {
         $this->authorize('viewAll', Application::class);
 
-        $applications = $this->filteredQuery($request)
+        $applications = $this->filteredQuery($request, useOperationalStatus: true)
             ->when($request->filled('alp'), fn ($q) => $q->where('alp_id', $request->integer('alp')))
-            ->with(['financialYear', 'alp'])
+            ->with(['financialYear', 'alp', 'approvals', 'reportCardReviews'])
             ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
@@ -72,8 +74,9 @@ class ApplicationController extends Controller
         return view('applications.index', [
             'applications' => $applications,
             'scopeAll' => true,
+            'usesOperationalStatus' => true,
             'alps' => Alp::orderBy('ref_code')->get(),
-        ] + $this->filterOptions());
+        ] + $this->filterOptions($request, scopeAll: true));
     }
 
     /** Borang mula permohonan baharu (Langkah 1). */
@@ -281,12 +284,11 @@ class ApplicationController extends Controller
 
     // ── Bantuan ─────────────────────────────────────────────────
 
-    private function filteredQuery(Request $request)
+    private function filteredQuery(Request $request, bool $useOperationalStatus = false)
     {
-        return Application::query()
+        $query = Application::query()
             ->when($request->filled('tahun'), fn ($q) => $q->where('financial_year_id', $request->integer('tahun')))
             ->when($request->filled('jenis'), fn ($q) => $q->where('application_type', $request->string('jenis')))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('cari'), function ($q) use ($request) {
                 $term = $request->string('cari');
                 $q->where(fn ($sub) => $sub
@@ -294,14 +296,35 @@ class ApplicationController extends Controller
                     ->orWhere('purpose', 'like', "%{$term}%")
                     ->orWhere('recipient_name', 'like', "%{$term}%"));
             });
+
+        if ($request->filled('status')) {
+            if ($useOperationalStatus) {
+                $status = ApplicationReportService::sanitizeStatusFilter(
+                    $request->string('status')->toString(),
+                    $request->user(),
+                );
+                if ($status !== null) {
+                    $this->applicationReports->applyStatusFilterToQuery($query, $status);
+                }
+            } else {
+                $query->where('status', $request->string('status'));
+            }
+        }
+
+        return $query;
     }
 
-    private function filterOptions(): array
+    private function filterOptions(Request $request, bool $scopeAll): array
     {
+        $user = $request->user();
+        $statusOptions = $scopeAll && ApplicationReportService::usesStaffStatusFilters($user)
+            ? ApplicationReportService::statusFilterOptionsForUser($user)
+            : collect(ApplicationStatus::cases())
+                ->mapWithKeys(fn ($s) => [$s->value => $s->label()])->all();
+
         return [
             'years' => FinancialYear::orderByDesc('year')->get(),
-            'statusOptions' => collect(ApplicationStatus::cases())
-                ->mapWithKeys(fn ($s) => [$s->value => $s->label()])->all(),
+            'statusOptions' => $statusOptions,
         ];
     }
 }

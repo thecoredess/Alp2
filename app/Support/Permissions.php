@@ -125,6 +125,8 @@ final class Permissions
             'Pembayaran / Baucar (URS)' => [
                 'payments.view',
                 'payments.manage',
+                // Kemaskini baucar selepas direkod — Super Admin sahaja.
+                'payments.voucher_edit',
                 // SEC-007: tanpa payments.manage → senarai/eksport terhad rekod dihantar JKEW.
                 'payments.jkew_scope',
             ],
@@ -142,14 +144,13 @@ final class Permissions
 
     /**
      * Pemetaan peranan → senarai permission.
-     * SUPER_ADMIN tidak disenaraikan kerana ia melepasi semua semakan
-     * melalui Gate::before (lihat AppServiceProvider).
-     *
      * @return array<string, list<string>>
      */
     public static function forRoles(): array
     {
         return [
+            RoleName::SUPER_ADMIN->value => static::all(),
+
             RoleName::SYSTEM_ADMIN->value => [
                 'dashboard.view',
                 'users.view', 'users.create', 'users.update', 'users.deactivate', 'users.assign_role',

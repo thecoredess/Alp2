@@ -4,7 +4,7 @@
 @section('subheading', $allocation->alp->ref_code.' · Tahun '.$allocation->financialYear->year)
 
 @section('content')
-    <div class="mb-4 max-w-xl">
+    <div class="mb-4">
         <x-budget-cards :summary="$summary" />
         @if ($entitlement)
             <p class="mt-2 text-xs text-gray-500">
@@ -24,9 +24,7 @@
         </x-field>
 
         <x-field label="Jumlah (RM)" name="amount" :required="true">
-            <input id="amount" name="amount" type="number" step="0.01" min="0.01" class="inp"
-                   value="{{ old('amount') }}" required>
-            <p class="mt-1 text-xs text-gray-500">Pengurangan tidak boleh menjadikan peruntukan di bawah committed + spent.</p>
+            <x-money-amount-input id="amount" name="amount" :value="old('amount')" required />
         </x-field>
 
         <x-field label="No. Rujukan" name="reference_no">

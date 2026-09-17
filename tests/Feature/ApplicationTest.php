@@ -9,6 +9,7 @@ use App\Models\Alp;
 use App\Models\Application;
 use App\Models\FinancialYear;
 use App\Models\User;
+use App\Services\Reports\ApplicationReportService;
 use Carbon\Carbon;
 use Database\Seeders\DocumentRequirementSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -250,6 +251,41 @@ class ApplicationTest extends TestCase
         $this->actingAs($officer)->get(route('applications.show', $app))->assertOk();
     }
 
+    public function test_all_applications_uses_operational_status_filter_like_report(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = FinancialYear::factory()->active()->create(['year' => 2095]);
+        $officer = User::factory()->create()->assignRole(RoleName::PEGAWAI_URUSSETIA->value);
+
+        $inReview = Application::factory()->create([
+            'alp_id' => $alp->id,
+            'financial_year_id' => $year->id,
+            'status' => ApplicationStatus::SUBMITTED,
+            'application_number' => 'ALP-2095-IN-REVIEW',
+        ]);
+        $approved = Application::factory()->create([
+            'alp_id' => $alp->id,
+            'financial_year_id' => $year->id,
+            'status' => ApplicationStatus::APPROVED,
+            'application_number' => 'ALP-2095-APPROVED',
+        ]);
+
+        $this->actingAs($officer)
+            ->get(route('applications.all', [
+                'status' => ApplicationReportService::FILTER_IN_REVIEW,
+                'tahun' => $year->id,
+            ]))
+            ->assertOk()
+            ->assertSee('Dalam semakan JP')
+            ->assertSee($inReview->application_number)
+            ->assertDontSee($approved->application_number);
+
+        $this->actingAs($officer)
+            ->get(route('applications.all', ['status' => 'draft']))
+            ->assertOk()
+            ->assertDontSee('value="draft"', false);
+    }
+
     public function test_simulation_prefix_is_hidden_from_purpose_display(): void
     {
         $app = Application::factory()->create([
@@ -264,5 +300,28 @@ class ApplicationTest extends TestCase
             Application::SIMULATION_PREFIX.'Menunggu Peraku (TP/Pengarah JP)',
             $app->getRawOriginal('purpose'),
         );
+    }
+
+    public function test_report_program_label_ignores_workflow_placeholder_purpose(): void
+    {
+        $app = Application::factory()->create([
+            'purpose' => Application::SIMULATION_PREFIX.'Permohonan ditolak',
+            'program_category' => 'kemasyarakatan',
+            'recipient_name' => 'Persatuan Komuniti Simulasi KL',
+        ]);
+
+        $this->assertSame('Program aktiviti kemasyarakatan', $app->fresh()->programLabelForReport());
+        $this->assertSame('Persatuan Komuniti Simulasi KL', $app->fresh()->recipientLabelForReport());
+    }
+
+    public function test_report_program_label_uses_real_purpose_when_available(): void
+    {
+        $app = Application::factory()->create([
+            'purpose' => 'MAIN BOWLING',
+            'recipient_name' => 'PERSATUAN PPTM',
+        ]);
+
+        $this->assertSame('MAIN BOWLING', $app->fresh()->programLabelForReport());
+        $this->assertSame('PERSATUAN PPTM', $app->fresh()->recipientLabelForReport());
     }
 }

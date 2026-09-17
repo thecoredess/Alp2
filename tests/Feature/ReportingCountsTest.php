@@ -43,7 +43,9 @@ class ReportingCountsTest extends TestCase
 
     public function test_application_report_status_filter_options(): void
     {
-        $options = ApplicationReportService::statusFilterOptions();
+        $options = ApplicationReportService::statusFilterOptionsForUser(
+            $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value),
+        );
 
         $this->assertSame([
             'diterima' => 'Laporan aktiviti diterima',
@@ -55,6 +57,32 @@ class ReportingCountsTest extends TestCase
             'diluluskan' => 'Diluluskan',
             'ditolak' => 'Ditolak',
         ], $options);
+        $this->assertArrayNotHasKey('tertunggak', $options);
+    }
+
+    public function test_application_report_rejects_legacy_status_query(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = FinancialYear::factory()->active()->create(['year' => 2094]);
+        Application::factory()->create([
+            'alp_id' => $alp->id,
+            'financial_year_id' => $year->id,
+            'status' => ApplicationStatus::DRAFT,
+        ]);
+
+        $user = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
+
+        $this->actingAs($user)
+            ->get(route('reports.applications', ['fy' => $year->id, 'status' => 'draft']))
+            ->assertOk()
+            ->assertDontSee('value="draft"', false);
+
+        $listing = app(ApplicationReportService::class)->listing([
+            'financial_year_id' => $year->id,
+            'status' => ApplicationReportService::sanitizeStatusFilter('draft', $user),
+        ]);
+
+        $this->assertCount(1, $listing);
     }
 
     public function test_application_report_filters_by_report_received_status(): void

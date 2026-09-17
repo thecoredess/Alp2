@@ -128,17 +128,9 @@ class ApplicationTimelineService
                 ];
             }, $stages);
 
-            $stages = array_map(function (array $stage) use ($voucherAt, $isRejected) {
-                if ($stage['key'] === 'voucher' && $voucherAt && ! $isRejected) {
-                    return [
-                        ...$stage,
-                        'hint' => self::ALP_VOUCHER_PAYMENT_HINT,
-                    ];
-                }
-
-                return $stage;
-            }, $stages);
         }
+
+        $stages = $this->applyVoucherPaymentHint($stages, $application, $voucherAt, $isRejected);
 
         if ($isRejected && $rejection !== null) {
             $stages = $this->injectRejectedStage($stages, $rejection, $submittedAt);
@@ -201,6 +193,27 @@ class ApplicationTimelineService
         }
 
         return $result;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $stages
+     * @return list<array<string, mixed>>
+     */
+    private function applyVoucherPaymentHint(array $stages, Application $application, mixed $voucherAt, bool $isRejected): array
+    {
+        return array_map(function (array $stage) use ($application, $voucherAt, $isRejected) {
+            if ($stage['key'] !== 'voucher' || ! $voucherAt || $isRejected) {
+                return $stage;
+            }
+
+            return [
+                ...$stage,
+                'hint' => self::ALP_VOUCHER_PAYMENT_HINT,
+                'payment_supplier_no' => filled($application->payment_supplier_no)
+                    ? $application->payment_supplier_no
+                    : null,
+            ];
+        }, $stages);
     }
 
     private function rejectionContext(Application $application): ?object

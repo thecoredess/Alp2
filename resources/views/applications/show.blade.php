@@ -242,7 +242,7 @@
                         </h3>
                         <dl class="space-y-3">
                             <div class="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2.5">
-                                <dt class="text-sm text-gray-500">Ledger Available</dt>
+                                <dt class="text-sm text-gray-500">Baki Peruntukan Diluluskan</dt>
                                 <dd class="font-semibold text-green-700"><x-money :value="$ledgerAvailable" /></dd>
                             </div>
                             <div class="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2.5">
@@ -306,10 +306,14 @@
                     </div>
 
                     @can('payments.manage')
-                        @if (in_array($application->payment_status, [\App\Enums\ApplicationPaymentStatus::PENDING_PAYMENT, \App\Enums\ApplicationPaymentStatus::VOUCHER_PREPARED], true))
+                        @php
+                            $canRegisterVoucher = $application->payment_status === \App\Enums\ApplicationPaymentStatus::PENDING_PAYMENT;
+                            $canEditVoucher = $application->hasVoucherPrepared() && auth()->user()->can('payments.voucher_edit');
+                        @endphp
+                        @if ($canRegisterVoucher || $canEditVoucher)
                         <form method="POST" action="{{ route('payments.update', $application) }}" class="card space-y-3 p-4">
                             @csrf @method('PUT')
-                            <p class="text-xs font-semibold text-gray-800">Kemas kini baucar</p>
+                            <p class="text-xs font-semibold text-gray-800">{{ $canEditVoucher ? 'Kemaskini baucar (Super Admin)' : 'Daftar baucar' }}</p>
                             <input type="hidden" name="payment_status" value="{{ \App\Enums\ApplicationPaymentStatus::VOUCHER_PREPARED->value }}">
                             <div>
                                 <label class="mb-1 block text-xs font-medium text-gray-600">Status</label>
@@ -335,8 +339,12 @@
                                 <textarea id="payment_remarks" name="payment_remarks" rows="2" class="inp w-full text-xs" placeholder="Catatan (pilihan)">{{ old('payment_remarks', $application->payment_remarks) }}</textarea>
                                 @error('payment_remarks')<p class="mt-1 text-xs text-danger">{{ $message }}</p>@enderror
                             </div>
-                            <button type="submit" class="btn-primary w-full !py-1.5 text-xs">Simpan Baucar</button>
+                            <button type="submit" class="btn-primary w-full !py-1.5 text-xs">{{ $canEditVoucher ? 'Simpan Perubahan' : 'Simpan Baucar' }}</button>
                         </form>
+                        @elseif ($application->hasVoucherPrepared())
+                        <div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-xs text-gray-600">
+                            Baucar telah direkod. Maklumat di atas adalah baca sahaja. Hubungi Super Admin jika pembetulan diperlukan.
+                        </div>
                         @endif
                     @endcan
                 @endif

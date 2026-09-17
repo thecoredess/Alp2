@@ -3,23 +3,23 @@
 @section('heading', $scopeAll ? 'Semua Projek' : 'Projek Saya')
 
 @section('content')
-    <form method="GET" class="mb-5 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-        <input type="text" name="cari" value="{{ request('cari') }}" placeholder="No. / nama…" class="inp sm:w-48">
-        <select name="tahun" class="inp sm:w-auto"><option value="">Semua Tahun</option>
+    <form method="GET" class="mb-5 flex flex-wrap items-center gap-2">
+        <input type="text" name="cari" value="{{ request('cari') }}" placeholder="No. / nama…" class="inp w-full min-w-[12rem] shrink-0 sm:w-48">
+        <select name="tahun" class="inp-select shrink-0"><option value="">Semua Tahun</option>
             @foreach ($years as $y)<option value="{{ $y->id }}" @selected(request('tahun') == $y->id)>{{ $y->year }}</option>@endforeach
         </select>
-        <select name="jenis" class="inp sm:w-auto"><option value="">Semua Jenis</option>
+        <select name="jenis" class="inp-select shrink-0"><option value="">Semua Jenis</option>
             @foreach ($typeOptions as $val => $label)<option value="{{ $val }}" @selected(request('jenis') === $val)>{{ $label }}</option>@endforeach
         </select>
-        <select name="status" class="inp sm:w-auto"><option value="">Semua Status</option>
+        <select name="status" class="inp-select inp-select--status shrink-0"><option value="">Semua Status</option>
             @foreach ($statusOptions as $val => $label)<option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>@endforeach
         </select>
         @if ($scopeAll)
-            <select name="alp" class="inp sm:w-auto"><option value="">Semua ALP</option>
+            <select name="alp" class="inp-select inp-select--alp shrink-0"><option value="">Semua ALP</option>
                 @foreach ($alps as $alp)<option value="{{ $alp->id }}" @selected(request('alp') == $alp->id)>{{ $alp->ref_code }}</option>@endforeach
             </select>
         @endif
-        <button class="btn-white">Tapis</button>
+        <button type="submit" class="btn-white shrink-0">Tapis</button>
     </form>
 
     <div class="card overflow-x-auto">

@@ -60,7 +60,7 @@ class AdminAllocationManageTest extends TestCase
         $this->actingAs($admin)
             ->post(route('allocations.adjust.store', $allocation), [
                 'direction' => 'increase',
-                'amount' => '5000.00',
+                'amount' => '5,000.00',
                 'remarks' => 'Tambah',
             ])
             ->assertRedirect(route('allocations.show', $allocation));

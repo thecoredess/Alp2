@@ -11,7 +11,7 @@ enum ReviewType: string
     public function label(): string
     {
         return match ($this) {
-            self::SECRETARIAT => 'Semakan Pegawai JP',
+            self::SECRETARIAT => 'Semakan Urusetia JP',
             self::FINANCE => 'Semakan Kewangan (legacy)',
             self::TECHNICAL => 'Semakan Teknikal (legacy)',
         };

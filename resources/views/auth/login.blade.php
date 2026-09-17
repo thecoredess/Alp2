@@ -31,20 +31,7 @@
         <button type="submit" class="btn-navy w-full py-2.5">Log Masuk</button>
     </form>
 
-    <div class="mt-6 border-t border-gray-100 pt-5 text-center text-sm leading-normal text-gray-600">
-        <p class="font-semibold text-gray-800">Hubungi Kami :</p>
-        <p class="mt-1.5 font-medium text-gray-800">Urus setia Lembaga Penasihat Bandaraya Kuala Lumpur</p>
-        <p class="mt-1">Tingkat 4, Menara DBKL 1, Jalan Raja Laut,<br>50300, Kuala Lumpur</p>
-        <p class="mt-1">No tel: 03-26179853/9852</p>
-        <p class="mt-1">
-            Emel:
-            <a href="mailto:jptd@dbkl.gov.my" class="text-royal-700 hover:text-royal-800 hover:underline">jptd@dbkl.gov.my</a>
-            /
-            <a href="mailto:maklumbalasjp@dbkl.gov.my" class="text-royal-700 hover:text-royal-800 hover:underline">maklumbalasjp@dbkl.gov.my</a>
-        </p>
-    </div>
-
-    @unless (app()->isProduction())
+    @if (config('app.show_uat_login_helper'))
         @php
             $devAccounts = array_merge([
                 ['label' => 'Super Admin', 'email' => 'superadmin@dbkl.test'],
@@ -89,5 +76,5 @@
                 if (p) p.value = 'password';
             });
         </script>
-    @endunless
+    @endif
 @endsection

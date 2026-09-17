@@ -68,7 +68,7 @@
                     @if($canReviewJp)
                         <a href="{{ route('reviews.secretariat') }}" class="{{ $link(request()->routeIs('reviews.secretariat')) }}">
                             <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('reviews.secretariat') ? 'text-white' : 'text-navy-300' }}">2</span>
-                            {{ $user->canMakeFullJpReviewDecision() ? 'Semakan Admin JP' : 'Semakan Pegawai JP' }}
+                            {{ $user->canMakeFullJpReviewDecision() ? 'Semakan Admin JP' : 'Semakan Urusetia JP' }}
                         </a>
                     @endif
                     @if($canApprove)

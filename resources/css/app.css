@@ -63,6 +63,22 @@ body {
                focus:border-royal-500 focus:ring-royal-500;
     }
 
+    .inp-select {
+        @apply inp w-auto shrink-0 appearance-none bg-white pr-9;
+        min-width: 10.75rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m19 9-7 7-7-7'/%3E%3C/svg%3E");
+        background-position: right 0.65rem center;
+        background-repeat: no-repeat;
+        background-size: 1rem 1rem;
+    }
+    .inp-select--status {
+        min-width: 14rem;
+        max-width: 100%;
+    }
+    .inp-select--alp {
+        min-width: 9rem;
+    }
+
     .btn,
     .btn-primary,
     .btn-navy,

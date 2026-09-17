@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ApprovalDecision;
+use App\Services\Application\ApprovalMatrixService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -44,5 +45,43 @@ class ApplicationApproval extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approver_id');
+    }
+
+    /** Aras kelulusan terakhir untuk permohonan ini (cth. Kelulusan PEPU). */
+    public function isFinalLevelForApplication(?Application $application = null): bool
+    {
+        $application ??= $this->application;
+
+        if (! $application || ! $this->approval_level_id) {
+            return false;
+        }
+
+        $required = app(ApprovalMatrixService::class)
+            ->requiredLevels($application->requestedAmountMoney(), $application->financial_year_id);
+
+        return $required->last()?->id === $this->approval_level_id;
+    }
+
+    /** Label paparan — aras pengesyoran bukan "Diluluskan". */
+    public function displayDecisionLabel(?Application $application = null): string
+    {
+        if ($this->decision !== ApprovalDecision::APPROVED) {
+            return $this->decision->label();
+        }
+
+        return $this->isFinalLevelForApplication($application)
+            ? 'Diluluskan'
+            : 'Disyorkan';
+    }
+
+    public function displayDecisionBadgeClasses(?Application $application = null): string
+    {
+        if ($this->decision !== ApprovalDecision::APPROVED) {
+            return $this->decision->badgeClasses();
+        }
+
+        return $this->isFinalLevelForApplication($application)
+            ? 'bg-green-100 text-green-800'
+            : 'bg-indigo-100 text-indigo-800';
     }
 }

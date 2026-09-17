@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\ReviewDecision;
 use App\Enums\ReviewType;
+use App\Models\Application;
 use App\Support\JpReviewChecklist;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -83,13 +84,22 @@ class ApplicationReviewRequest extends FormRequest
             return;
         }
 
-        // Hanya Admin JP wajib lengkapkan senarai semak secara manual.
-        if (! ($this->user()?->canMakeFullJpReviewDecision() ?? false)) {
-            return;
-        }
-
         $validator->after(function (Validator $v) {
             if ($this->input('decision') !== ReviewDecision::RECOMMEND->value) {
+                return;
+            }
+
+            /** @var Application $application */
+            $application = $this->route('application');
+            if (! $application->hasJkewCrosscheckDocument()) {
+                $v->errors()->add(
+                    'crosscheck',
+                    'Sila muat naik Borang Ulasan JKEW sebelum hantar keputusan Disyorkan.',
+                );
+            }
+
+            // Hanya Admin JP wajib lengkapkan senarai semak secara manual.
+            if (! ($this->user()?->canMakeFullJpReviewDecision() ?? false)) {
                 return;
             }
 

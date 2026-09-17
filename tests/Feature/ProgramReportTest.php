@@ -8,6 +8,7 @@ use App\Enums\ReportCardStatus;
 use App\Enums\RoleName;
 use App\Models\Alp;
 use App\Models\FinancialYear;
+use App\Services\Reports\ApplicationReportService;
 use App\Services\Reports\ProgramReportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\BuildsWorkflow;
@@ -48,8 +49,62 @@ class ProgramReportTest extends TestCase
             ->get(route('reports.programs', ['fy' => $year->id]))
             ->assertOk()
             ->assertSee($app->application_number)
-            ->assertSee('Menunggu laporan')
-            ->assertSee('Program diluluskan');
+            ->assertSee('Menunggu baucar')
+            ->assertDontSee('Program diluluskan')
+            ->assertDontSee('Pematuhan');
+    }
+
+    public function test_staff_program_dashboard_summary_counts_approved_programs(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2500.00')));
+        $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '1500.00')));
+
+        $summary = app(ProgramReportService::class)->dashboardSummary([
+            'financial_year_id' => $year->id,
+        ], staffStatusFilters: true);
+
+        $this->assertSame(2, $summary['total']);
+        $this->assertSame(2, $summary['awaiting_voucher']);
+        $this->assertSame(0, $summary['received']);
+    }
+
+    public function test_program_report_status_badge_matches_status_filter(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+
+        $awaitingVoucher = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '1000.00')));
+        $received = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '1100.00')));
+        $received->forceFill([
+            'report_card_submitted_at' => now(),
+            'report_card_status' => ReportCardStatus::APPROVED,
+        ])->save();
+
+        $user = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
+
+        $this->actingAs($user)
+            ->get(route('reports.programs', [
+                'fy' => $year->id,
+                'laporan' => ApplicationReportService::FILTER_AWAITING_VOUCHER,
+            ]))
+            ->assertOk()
+            ->assertSee('Menunggu baucar')
+            ->assertSee($awaitingVoucher->application_number)
+            ->assertDontSee($received->application_number);
+
+        $this->actingAs($user)
+            ->get(route('reports.programs', [
+                'fy' => $year->id,
+                'laporan' => ApplicationReportService::FILTER_RECEIVED,
+            ]))
+            ->assertOk()
+            ->assertSee('Laporan aktiviti diterima')
+            ->assertSee($received->application_number)
+            ->assertDontSee($awaitingVoucher->application_number);
     }
 
     public function test_program_report_marks_received_and_overdue(): void
@@ -71,17 +126,45 @@ class ProgramReportTest extends TestCase
             'payment_voucher_date' => now()->subMonths(2)->toDateString(),
         ])->save();
 
-        $rows = app(ProgramReportService::class)->listing(['financial_year_id' => $year->id]);
-        $byId = $rows->keyBy(fn (array $row) => $row['application']->id);
+        $service = app(ProgramReportService::class);
+        $staffRows = $service->listing(['financial_year_id' => $year->id], staffStatusFilters: true);
+        $byId = $staffRows->keyBy(fn (array $row) => $row['application']->id);
 
-        $this->assertSame(ProgramReportService::STATUS_RECEIVED, $byId[$received->id]['status']);
-        $this->assertSame(ProgramReportService::STATUS_OVERDUE, $byId[$overdue->id]['status']);
+        $this->assertSame(ApplicationReportService::FILTER_RECEIVED, $byId[$received->id]['status']);
+        $this->assertSame(ApplicationReportService::FILTER_PENDING, $byId[$overdue->id]['status']);
 
         $this->actingAs($this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value))
-            ->get(route('reports.programs', ['fy' => $year->id, 'laporan' => ProgramReportService::STATUS_OVERDUE]))
+            ->get(route('reports.programs', ['fy' => $year->id, 'laporan' => ApplicationReportService::FILTER_PENDING]))
             ->assertOk()
             ->assertSee($overdue->application_number)
             ->assertDontSee($received->application_number);
+
+        $alpRows = $service->listing(['financial_year_id' => $year->id], staffStatusFilters: false);
+        $alpById = $alpRows->keyBy(fn (array $row) => $row['application']->id);
+        $this->assertSame(ProgramReportService::STATUS_OVERDUE, $alpById[$overdue->id]['status']);
+    }
+
+    public function test_staff_program_report_status_dropdown_excludes_tertunggak(): void
+    {
+        $options = ApplicationReportService::statusFilterOptionsForUser(
+            $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value),
+        );
+
+        $this->assertSame(ApplicationReportService::statusFilterOptions(), $options);
+        $this->assertArrayNotHasKey(ProgramReportService::STATUS_OVERDUE, $options);
+        $this->assertArrayHasKey(ApplicationReportService::FILTER_RECOMMENDED, $options);
+    }
+
+    public function test_alp_program_report_keeps_legacy_status_dropdown(): void
+    {
+        $alp = Alp::factory()->create();
+        $options = ApplicationReportService::statusFilterOptionsForUser(
+            $this->userWithRole(RoleName::ALP->value, $alp),
+        );
+
+        $this->assertSame(ProgramReportService::alpStatusOptions(), $options);
+        $this->assertArrayHasKey(ProgramReportService::STATUS_OVERDUE, $options);
+        $this->assertArrayNotHasKey(ApplicationReportService::FILTER_RECOMMENDED, $options);
     }
 
     public function test_alp_user_only_sees_own_programs(): void

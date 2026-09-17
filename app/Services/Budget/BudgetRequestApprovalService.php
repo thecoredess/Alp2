@@ -179,7 +179,7 @@ class BudgetRequestApprovalService
 
         if ($projectedAfter->isNegative()) {
             throw new BudgetException(sprintf(
-                'Pengurangan ditolak: Projected Available akan menjadi negatif (RM%s). '.
+                'Pengurangan ditolak: Baki Peruntukan Semasa akan menjadi negatif (RM%s). '.
                 'Terdapat permohonan aktif (Pending RM%s) yang bergantung pada peruntukan ini.',
                 $projectedAfter->format(),
                 $pending->format(),

@@ -44,7 +44,7 @@ class AuthorizationTest extends TestCase
         $this->actingAs($admin)->get(route('users.index'))->assertOk();
     }
 
-    public function test_super_admin_bypasses_all_gates(): void
+    public function test_super_admin_has_full_access_via_permissions(): void
     {
         $super = $this->userWithRole(RoleName::SUPER_ADMIN);
 

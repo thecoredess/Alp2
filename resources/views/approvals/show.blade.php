@@ -27,7 +27,7 @@
                             <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">a) Nama ALP</dt>
                             <dd class="mt-1.5 font-medium text-gray-900">
                                 @can('applications.view_all')
-                                    <a href="{{ route('applications.all', ['alp' => $application->alp_id, 'status' => \App\Enums\ApplicationStatus::APPROVED->value, 'tahun' => $application->financial_year_id]) }}"
+                                    <a href="{{ route('applications.all', ['alp' => $application->alp_id, 'status' => \App\Services\Reports\ApplicationReportService::FILTER_APPROVED, 'tahun' => $application->financial_year_id]) }}"
                                        class="text-royal-700 hover:text-royal-800 hover:underline"
                                        title="Senarai permohonan diluluskan {{ $application->alp->ref_code }}">
                                         {{ $application->alp->ref_code }} — {{ $application->alp->name }}
@@ -104,7 +104,7 @@
                                 <div class="rounded-xl border border-gray-100 bg-gray-50/50 p-4 text-sm">
                                     <div class="flex flex-wrap items-center justify-between gap-2">
                                         <span class="font-medium text-gray-900">{{ $a->approvalLevel?->name ?? '—' }}</span>
-                                        <x-status-badge :label="$a->decision->label()" :classes="$a->decision->badgeClasses()" />
+                                        <x-status-badge :label="$a->displayDecisionLabel($application)" :classes="$a->displayDecisionBadgeClasses($application)" />
                                     </div>
                                     <p class="mt-1 text-xs text-gray-500">
                                         {{ $a->decided_at?->format('d/m/Y H:i') ?? $a->created_at?->format('d/m/Y H:i') }} · {{ $a->approver?->name }}
@@ -124,7 +124,7 @@
                     @include('reviews.partials.alp-budget-detail')
                 </x-page-card>
 
-                <x-page-card title="Aras Kelulusan" icon="scale" description="Aras {{ $approvedCount }} / {{ $required->count() }} diluluskan">
+                <x-page-card title="Aras Kelulusan" icon="scale" description="Aras {{ $approvedCount }} / {{ $required->count() }} selesai">
                     <ol class="space-y-2 text-sm">
                         @foreach ($required as $i => $lvl)
                             @php $done = $i < $approvedCount; $isNext = $i === $approvedCount; @endphp
@@ -158,7 +158,7 @@
                                 <dd class="font-semibold text-navy-700"><x-money :value="$thisRequest" /></dd>
                             </div>
                             <div class="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2">
-                                <dt class="text-gray-600">Ledger Available (semasa)</dt>
+                                <dt class="text-gray-600">Baki Peruntukan Diluluskan (semasa)</dt>
                                 <dd class="font-semibold text-green-700"><x-money :value="$ledgerAvailable" /></dd>
                             </div>
                             <div class="flex items-center justify-between rounded-lg bg-orange-50 px-3 py-2">
@@ -170,7 +170,7 @@
                                 <dd class="font-semibold text-amber-700">+<x-money :value="$thisRequest" /></dd>
                             </div>
                             <div class="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2.5">
-                                <dt class="font-medium text-gray-600">Ledger Available Selepas</dt>
+                                <dt class="font-medium text-gray-600">Baki Peruntukan Diluluskan Selepas</dt>
                                 <dd class="font-semibold {{ $afterCommitAvailable->isNegative() ? 'text-danger' : 'text-green-600' }}">
                                     <x-money :value="$afterCommitAvailable" />
                                 </dd>

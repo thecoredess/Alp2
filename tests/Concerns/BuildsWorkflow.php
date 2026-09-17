@@ -4,6 +4,7 @@ namespace Tests\Concerns;
 
 use App\Enums\ApplicationStatus;
 use App\Enums\ApplicationType;
+use App\Enums\DocumentType;
 use App\Enums\ReviewDecision;
 use App\Enums\ReviewType;
 use App\Enums\RoleName;
@@ -79,6 +80,8 @@ trait BuildsWorkflow
             ApplicationDocument::factory()->type($docType)->create(['application_id' => $app->id]);
         }
 
+        ApplicationDocument::factory()->type(DocumentType::SEMAKAN_SILANG_JKEW)->create(['application_id' => $app->id]);
+
         return $app->fresh();
     }
 
@@ -103,6 +106,8 @@ trait BuildsWorkflow
         foreach (DocumentRequirement::requiredFor() as $docType) {
             ApplicationDocument::factory()->type($docType)->create(['application_id' => $app->id]);
         }
+
+        ApplicationDocument::factory()->type(DocumentType::SEMAKAN_SILANG_JKEW)->create(['application_id' => $app->id]);
 
         return $app->fresh();
     }

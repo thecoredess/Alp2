@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\ApplicationStatus;
+use App\Enums\DocumentType;
 use App\Enums\ReviewDecision;
 use App\Enums\ReviewType;
 use App\Enums\RoleName;
@@ -110,6 +111,33 @@ class ReviewWorkflowTest extends TestCase
 
         $this->assertSame(ApplicationStatus::REVISION_REQUIRED, $app->fresh()->status);
         $this->assertDatabaseHas('application_revisions', ['application_id' => $app->id, 'return_stage' => 'secretariat']);
+    }
+
+    public function test_recommend_blocked_without_jkew_crosscheck_borang(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->submitted($alp, $year, '2500.00');
+        $app->documents()->where('document_type', DocumentType::SEMAKAN_SILANG_JKEW->value)->delete();
+        $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
+
+        $this->actingAs($admin)
+            ->post(route('reviews.store', [$app, 'secretariat']), [
+                'decision' => 'recommend',
+                'checklist' => $this->lengkapChecklist(),
+            ])
+            ->assertSessionHasErrors('crosscheck');
+
+        $this->expectException(ApplicationException::class);
+        $this->reviews()->review(
+            $app->fresh(),
+            ReviewType::SECRETARIAT,
+            $admin,
+            ReviewDecision::RECOMMEND,
+            'OK',
+            $this->lengkapChecklist(),
+        );
     }
 
     public function test_recommend_blocked_when_checklist_incomplete(): void
@@ -226,7 +254,7 @@ class ReviewWorkflowTest extends TestCase
             ->assertSee('Permohonan Diluluskan')
             ->assertSee('Dalam Proses')
             ->assertSee('permohonan/semua')
-            ->assertSee('status=approved')
+            ->assertSee('status=diluluskan')
             ->assertSee('alp='.$alp->id)
             ->assertSee('Perakuan Pegawai JP')
             ->assertSee('Syor kepada Pengarah JP')

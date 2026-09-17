@@ -65,7 +65,7 @@
     <p class="section">Perakuan / Keputusan (K–L)</p>
     <table class="form">
         <tr>
-            <th>K · Semakan Pegawai JP</th>
+            <th>K · {{ \App\Enums\ReviewType::SECRETARIAT->label() }}</th>
             <td>
                 <strong>{{ $jpLabel }}</strong>
                 @if ($jpReview)
@@ -77,7 +77,7 @@
         @forelse ($application->approvals->where('decision', \App\Enums\ApprovalDecision::APPROVED) as $a)
             <tr>
                 <th>L · {{ $a->approvalLevel?->name ?? 'Kelulusan' }}</th>
-                <td>{{ $a->approver?->name ?? '—' }} · {{ $a->decided_at?->format('d/m/Y H:i') ?? '—' }} · {{ $a->decision->label() }}</td>
+                <td>{{ $a->approver?->name ?? '—' }} · {{ $a->decided_at?->format('d/m/Y H:i') ?? '—' }} · {{ $a->displayDecisionLabel($application) }}</td>
             </tr>
         @empty
             <tr><th>L · Keputusan PEPU / Pengurusan</th><td>Belum ada rekod kelulusan</td></tr>

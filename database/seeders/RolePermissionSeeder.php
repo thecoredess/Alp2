@@ -36,9 +36,6 @@ class RolePermissionSeeder extends Seeder
             $role->syncPermissions($permissions);
         }
 
-        // SUPER_ADMIN melepasi semua semakan melalui Gate::before,
-        // jadi tidak perlu permission eksplisit.
-
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

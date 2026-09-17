@@ -131,7 +131,7 @@ class PaymentController extends Controller
                 fputcsv($out, [
                     $app->application_number,
                     $app->alp?->ref_code,
-                    $app->project_title,
+                    $app->programLabelForReport(),
                     $app->financialYear?->year,
                     $app->requested_amount,
                     $app->payment_status?->label(),

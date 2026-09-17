@@ -323,7 +323,7 @@ class ReportCardTest extends TestCase
             ->assertSee('Borang Penyaluran')
             ->assertSee($app->application_number)
             ->assertSee('F · Peruntukan')
-            ->assertSee('K · Semakan Pegawai JP');
+            ->assertSee('K · Semakan Urusetia JP');
     }
 
     public function test_manual_page_is_reachable(): void

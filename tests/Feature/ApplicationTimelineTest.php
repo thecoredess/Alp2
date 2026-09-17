@@ -126,6 +126,8 @@ class ApplicationTimelineTest extends TestCase
 
         $app->update([
             'payment_status' => \App\Enums\ApplicationPaymentStatus::VOUCHER_PREPARED,
+            'payment_supplier_no' => 'SUP-2026-001',
+            'payment_voucher_no' => 'BV-2026-001',
             'payment_updated_at' => now(),
         ]);
 
@@ -140,6 +142,7 @@ class ApplicationTimelineTest extends TestCase
         $voucherStage = collect($this->timeline()->stages($app->fresh(), forAlpView: true))
             ->firstWhere('key', 'voucher');
         $this->assertSame(ApplicationTimelineService::ALP_VOUCHER_PAYMENT_HINT, $voucherStage['hint']);
+        $this->assertSame('SUP-2026-001', $voucherStage['payment_supplier_no']);
     }
 
     public function test_report_stage_skipped_when_not_approved(): void

@@ -225,12 +225,25 @@ class AllocationController extends Controller
 
         $data = $request->validate([
             'direction' => ['required', 'in:increase,decrease'],
-            'amount' => ['required', 'numeric', 'min:0.01'],
+            'amount' => [
+                'required',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    try {
+                        $amount = Money::parseInput($value);
+                        if ($amount->lessThan(Money::of('0.01'))) {
+                            $fail('Jumlah (RM) mesti melebihi 0.00.');
+                        }
+                    } catch (\InvalidArgumentException) {
+                        $fail('Jumlah (RM) tidak sah. Guna format contoh: 1,234.56');
+                    }
+                },
+            ],
             'reference_no' => ['nullable', 'string', 'max:100'],
             'remarks' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $delta = Money::of($data['amount']);
+        $delta = Money::parseInput($data['amount']);
         if ($data['direction'] === 'decrease') {
             $delta = $delta->negate();
         }

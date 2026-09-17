@@ -3,6 +3,21 @@
 @section('heading', 'Laporan Permohonan')
 @section('subheading', 'Tahun Kewangan '.$year->year)
 
+@php
+    use App\Services\Reports\ApplicationReportService;
+
+    $statusTone = [
+        ApplicationReportService::FILTER_RECEIVED => 'bg-green-100 text-green-800',
+        ApplicationReportService::FILTER_RECOMMENDED => 'bg-indigo-100 text-indigo-800',
+        ApplicationReportService::FILTER_APPROVED => 'bg-emerald-100 text-emerald-800',
+        ApplicationReportService::FILTER_REJECTED => 'bg-red-100 text-red-800',
+        ApplicationReportService::FILTER_IN_REVIEW => 'bg-blue-100 text-blue-800',
+        ApplicationReportService::FILTER_RETURNED => 'bg-orange-100 text-orange-800',
+        ApplicationReportService::FILTER_AWAITING_VOUCHER => 'bg-gray-100 text-gray-700',
+        ApplicationReportService::FILTER_PENDING => 'bg-amber-100 text-amber-800',
+    ];
+@endphp
+
 @section('content')
     <form method="GET" class="mb-4 flex flex-wrap items-end gap-3">
         @include('reports.partials.year-filter')
@@ -63,11 +78,16 @@
                         <td class="px-3 py-2 font-mono text-xs text-gray-700">{{ $a->application_number }}</td>
                         <td class="px-3 py-2 text-gray-600">{{ $a->alp?->ref_code }}</td>
                         <td class="px-3 py-2 text-gray-900">
-                            <p>{{ \Illuminate\Support\Str::limit($a->purpose, 40) }}</p>
-                            <p class="text-xs text-gray-500">{{ $a->recipient_name }}</p>
+                            <p>{{ $a->programLabelForReport(40) }}</p>
+                            <p class="text-xs text-gray-500">{{ $a->recipientLabelForReport() }}</p>
                         </td>
                         <td class="px-3 py-2 text-right"><x-money :value="$a->requested_amount" /></td>
-                        <td class="px-3 py-2"><x-status-badge :label="$a->status->label()" :classes="$a->status->badgeClasses()" /></td>
+                        <td class="px-3 py-2">
+                            @php $operationalStatus = ApplicationReportService::resolveOperationalStatus($a); @endphp
+                            <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $statusTone[$operationalStatus] ?? 'bg-gray-100 text-gray-700' }}">
+                                {{ ApplicationReportService::statusLabelFor($a, auth()->user()) }}
+                            </span>
+                        </td>
                         <td class="px-3 py-2 text-gray-500">{{ $a->created_at?->format('d/m/Y') }}</td>
                     </tr>
                 @empty

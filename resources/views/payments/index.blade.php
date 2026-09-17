@@ -11,22 +11,22 @@
         </div>
     @endif
 
-    <form method="GET" class="mb-5 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-        <input type="text" name="cari" value="{{ request('cari') }}" placeholder="No. / tajuk / baucar…" class="inp sm:w-56">
-        <select name="tahun" class="inp sm:w-auto">
+    <form method="GET" class="mb-5 flex flex-wrap items-center gap-2">
+        <input type="text" name="cari" value="{{ request('cari') }}" placeholder="No. / tajuk / baucar…" class="inp w-full min-w-[12rem] shrink-0 sm:w-56">
+        <select name="tahun" class="inp-select shrink-0">
             <option value="">Semua Tahun</option>
             @foreach ($years as $y)
                 <option value="{{ $y->id }}" @selected(request('tahun') == $y->id)>{{ $y->year }}</option>
             @endforeach
         </select>
-        <select name="status" class="inp sm:w-auto">
+        <select name="status" class="inp-select inp-select--status shrink-0">
             <option value="open" @selected(request('status', 'open') === 'open')>Belum Selesai</option>
             @foreach ($statusOptions as $val => $label)
                 <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
             @endforeach
         </select>
-        <button type="submit" class="btn-primary">Tapis</button>
-        <a href="{{ route('payments.export', request()->query()) }}" class="btn-white">Eksport CSV</a>
+        <button type="submit" class="btn-primary shrink-0">Tapis</button>
+        <a href="{{ route('payments.export', request()->query()) }}" class="btn-white shrink-0">Eksport CSV</a>
     </form>
 
     <div class="card overflow-x-auto">
@@ -48,7 +48,7 @@
                         <td class="px-4 py-3 font-mono text-xs text-gray-800">{{ $app->application_number }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $app->alp?->ref_code }}</td>
                         <td class="px-4 py-3 text-gray-900">
-                            <span class="line-clamp-1">{{ $app->project_title }}</span>
+                            <span class="line-clamp-1">{{ $app->programLabelForReport(60) }}</span>
                         </td>
                         <td class="px-4 py-3 text-right"><x-money :value="$app->requested_amount" /></td>
                         <td class="px-4 py-3">

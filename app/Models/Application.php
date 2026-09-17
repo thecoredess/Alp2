@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ApplicationStatus;
 use App\Enums\ApplicationType;
 use App\Enums\ApplicationPaymentStatus;
+use App\Enums\DocumentType;
 use App\Enums\ProgramCategory;
 use App\Enums\ReportCardStatus;
 use App\Support\Money;
@@ -106,6 +107,16 @@ class Application extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(ApplicationDocument::class);
+    }
+
+    /** Borang ulasan JKEW (semakan silang) dimuat naik. */
+    public function hasJkewCrosscheckDocument(): bool
+    {
+        $this->loadMissing('documents');
+
+        return $this->documents->contains(
+            fn (ApplicationDocument $d) => $d->document_type === DocumentType::SEMAKAN_SILANG_JKEW,
+        );
     }
 
     public function statusHistories(): HasMany
@@ -228,6 +239,70 @@ class Application extends Model
         return str_starts_with($value, self::SIMULATION_PREFIX)
             ? substr($value, strlen(self::SIMULATION_PREFIX))
             : $value;
+    }
+
+    /** Nama program / tujuan sumbangan untuk laporan (bukan label aliran kerja). */
+    public function programLabelForReport(?int $limit = null): string
+    {
+        $label = $this->resolveProgramLabelForReport();
+
+        return $limit !== null ? \Illuminate\Support\Str::limit($label, $limit) : $label;
+    }
+
+    /** Nama persatuan penerima untuk laporan. */
+    public function recipientLabelForReport(?int $limit = null): string
+    {
+        $raw = $this->getAttributes()['recipient_name'] ?? null;
+        $label = self::stripSimulationPrefix($raw) ?? '—';
+
+        return $limit !== null ? \Illuminate\Support\Str::limit($label, $limit) : $label;
+    }
+
+    public static function isWorkflowPurposePlaceholder(?string $purpose): bool
+    {
+        if ($purpose === null || $purpose === '') {
+            return true;
+        }
+
+        static $placeholders = [
+            'Permohonan ditolak',
+            'Menunggu semakan Pegawai JP',
+            'Menunggu Peraku (TP/Pengarah JP)',
+            'Menunggu kelulusan PEPU',
+            'Diluluskan — menunggu baucar',
+            'Diluluskan — baucar disedia',
+        ];
+
+        if (in_array($purpose, $placeholders, true)) {
+            return true;
+        }
+
+        return str_starts_with($purpose, 'Draf —');
+    }
+
+    protected function resolveProgramLabelForReport(): string
+    {
+        $rawPurpose = $this->getAttributes()['purpose'] ?? null;
+        $purpose = self::stripSimulationPrefix($rawPurpose);
+
+        if (filled($purpose) && ! self::isWorkflowPurposePlaceholder($purpose)) {
+            return $purpose;
+        }
+
+        $this->loadMissing(['revisions']);
+
+        $snapshotPurpose = $this->revisions
+            ->sortByDesc('id')
+            ->map(fn (ApplicationRevision $revision) => is_array($revision->snapshot)
+                ? self::stripSimulationPrefix($revision->snapshot['purpose'] ?? null)
+                : null)
+            ->first(fn (?string $value) => filled($value) && ! self::isWorkflowPurposePlaceholder($value));
+
+        if (filled($snapshotPurpose)) {
+            return $snapshotPurpose;
+        }
+
+        return $this->program_category?->label() ?? '—';
     }
 
     protected function purpose(): Attribute

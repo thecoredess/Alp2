@@ -3,7 +3,6 @@
 namespace App\Services\Reports;
 
 use App\Enums\ApplicationStatus;
-use App\Enums\ReportCardStatus;
 use App\Models\Application;
 use App\Support\Money;
 use Carbon\Carbon;
@@ -15,7 +14,7 @@ use Illuminate\Support\Collection;
  * Satu "program" ialah permohonan sumbangan yang telah DILULUSKAN. Laporan
  * aktiviti wajib dikemukakan satu bulan selepas baucar disedia.
  *
- * "Laporan diterima" hanya selepas Pegawai JP mengesahkan (report_card_status = approved).
+ * "Laporan aktiviti diterima" hanya selepas Pegawai JP mengesahkan (report_card_status = approved).
  */
 class ProgramReportService
 {
@@ -31,11 +30,11 @@ class ProgramReportService
 
     public const STATUS_OVERDUE = 'tertunggak';
 
-    /** @return array<string, string> */
-    public static function statusOptions(): array
+    /** Dropdown ALP — kekal senarai asal (termasuk tertunggak). */
+    public static function alpStatusOptions(): array
     {
         return [
-            self::STATUS_RECEIVED => 'Laporan diterima',
+            self::STATUS_RECEIVED => 'Laporan aktiviti diterima',
             self::STATUS_IN_REVIEW => 'Dalam semakan JP',
             self::STATUS_RETURNED => 'Dikembalikan untuk pembetulan',
             self::STATUS_AWAITING_VOUCHER => 'Menunggu baucar',
@@ -44,15 +43,34 @@ class ProgramReportService
         ];
     }
 
+    /** @return array<string, string> */
+    public static function statusOptions(): array
+    {
+        return self::alpStatusOptions();
+    }
+
     /**
      * Senarai program berserta status laporan aktiviti.
      *
      * @return Collection<int, array{application: Application, due_at: ?Carbon, has_report: bool, status: string}>
      */
-    public function listing(array $filters): Collection
+    public function listing(array $filters, bool $staffStatusFilters = false): Collection
     {
-        $applications = $this->base($filters)
-            ->with(['alp:id,ref_code,name', 'financialYear:id,year'])
+        $query = Application::query()
+            ->when($filters['financial_year_id'] ?? null, fn ($q, $v) => $q->where('financial_year_id', $v))
+            ->when($filters['alp_id'] ?? null, fn ($q, $v) => $q->where('alp_id', $v))
+            ->when($filters['category'] ?? null, fn ($q, $v) => $q->where('program_category', $v))
+            ->when($filters['date_from'] ?? null, fn ($q, $v) => $q->whereDate('program_date', '>=', $v))
+            ->when($filters['date_to'] ?? null, fn ($q, $v) => $q->whereDate('program_date', '<=', $v));
+
+        $reportStatus = $filters['report_status'] ?? null;
+
+        if (! $staffStatusFilters) {
+            $query->where('status', ApplicationStatus::APPROVED->value);
+        }
+
+        $applications = $query
+            ->with(['alp:id,ref_code,name', 'financialYear:id,year', 'reportCardReviews', 'approvals'])
             ->orderBy('program_date')
             ->get();
 
@@ -60,20 +78,28 @@ class ProgramReportService
             return collect();
         }
 
-        $rows = $applications->map(function (Application $application) {
+        $rows = $applications->map(function (Application $application) use ($staffStatusFilters) {
             $due = $this->dueDateFor($application);
-            $status = $this->resolveStatus($application, $due);
+            $status = $staffStatusFilters
+                ? $this->resolveStaffRowStatus($application, $due)
+                : $this->resolveAlpRowStatus($application, $due);
 
             return [
                 'application' => $application,
                 'due_at' => $due,
-                'has_report' => $status === self::STATUS_RECEIVED,
+                'has_report' => $status === self::STATUS_RECEIVED
+                    || $status === ApplicationReportService::FILTER_RECEIVED,
                 'status' => $status,
             ];
         });
 
-        if ($status = ($filters['report_status'] ?? null)) {
-            $rows = $rows->where('status', $status);
+        if ($reportStatus) {
+            $rows = $rows->filter(
+                fn (array $row) => ApplicationReportService::matchesOperationalStatusFilter(
+                    $row['application'],
+                    $reportStatus,
+                ),
+            );
         }
 
         return $rows->values();
@@ -85,10 +111,13 @@ class ProgramReportService
      */
     public function summary(Collection $rows): array
     {
-        $countBy = fn (string $status): int => $rows->where('status', $status)->count();
+        $countBy = fn (string ...$statuses): int => $rows->whereIn('status', $statuses)->count();
 
         $total = $rows->count();
-        $received = $countBy(self::STATUS_RECEIVED);
+        $received = $countBy(
+            self::STATUS_RECEIVED,
+            ApplicationReportService::FILTER_RECEIVED,
+        );
 
         return [
             'total' => $total,
@@ -97,13 +126,35 @@ class ProgramReportService
                 Money::zero(),
             ),
             'received' => $received,
-            'in_review' => $countBy(self::STATUS_IN_REVIEW),
-            'returned' => $countBy(self::STATUS_RETURNED),
-            'awaiting_voucher' => $countBy(self::STATUS_AWAITING_VOUCHER),
-            'pending' => $countBy(self::STATUS_PENDING),
+            'in_review' => $countBy(
+                self::STATUS_IN_REVIEW,
+                ApplicationReportService::FILTER_IN_REVIEW,
+                ApplicationReportService::FILTER_RECOMMENDED,
+            ),
+            'returned' => $countBy(
+                self::STATUS_RETURNED,
+                ApplicationReportService::FILTER_RETURNED,
+            ),
+            'awaiting_voucher' => $countBy(
+                self::STATUS_AWAITING_VOUCHER,
+                ApplicationReportService::FILTER_AWAITING_VOUCHER,
+            ),
+            'pending' => $countBy(
+                self::STATUS_PENDING,
+                ApplicationReportService::FILTER_PENDING,
+            ),
             'overdue' => $countBy(self::STATUS_OVERDUE),
             'compliance' => $total > 0 ? round(($received / $total) * 100, 1) : 0.0,
         ];
+    }
+
+    /** Ringkasan kad atas — kira semua program diluluskan dalam skop (tanpa tapisan status). */
+    public function dashboardSummary(array $filters, bool $staffStatusFilters = false): array
+    {
+        $summaryFilters = $filters;
+        unset($summaryFilters['report_status']);
+
+        return $this->summary($this->listing($summaryFilters, $staffStatusFilters));
     }
 
     /**
@@ -132,29 +183,29 @@ class ProgramReportService
             ->all();
     }
 
-    private function resolveStatus(Application $application, ?Carbon $due): string
+    private function resolveStaffRowStatus(Application $application, ?Carbon $due): string
     {
-        $rcStatus = $application->report_card_status;
+        return ApplicationReportService::resolveOperationalStatus($application);
+    }
 
-        if ($rcStatus === ReportCardStatus::APPROVED) {
-            return self::STATUS_RECEIVED;
+    private function resolveAlpRowStatus(Application $application, ?Carbon $due): string
+    {
+        return $this->resolveApprovedReportStatus($application, $due, includeOverdue: true);
+    }
+
+    private function resolveApprovedReportStatus(Application $application, ?Carbon $due, bool $includeOverdue = false): string
+    {
+        $status = ApplicationReportService::resolveOperationalStatus($application);
+
+        if ($includeOverdue
+            && $status === ApplicationReportService::FILTER_PENDING
+            && $due !== null
+            && now()->greaterThan($due)
+        ) {
+            return self::STATUS_OVERDUE;
         }
 
-        if (in_array($rcStatus, [ReportCardStatus::AWAITING_ADMIN_JP, ReportCardStatus::AWAITING_PEGAWAI_JP], true)) {
-            return self::STATUS_IN_REVIEW;
-        }
-
-        if ($rcStatus === ReportCardStatus::RETURNED) {
-            return self::STATUS_RETURNED;
-        }
-
-        if (! $application->hasVoucherPrepared()) {
-            return self::STATUS_AWAITING_VOUCHER;
-        }
-
-        return $due !== null && now()->greaterThan($due)
-            ? self::STATUS_OVERDUE
-            : self::STATUS_PENDING;
+        return $status;
     }
 
     private function dueDateFor(Application $application): ?Carbon
@@ -168,16 +219,5 @@ class ProgramReportService
             ?? $application->updated_at;
 
         return $start?->copy()->startOfDay()->addMonthNoOverflow()->endOfDay();
-    }
-
-    private function base(array $filters)
-    {
-        return Application::query()
-            ->where('status', ApplicationStatus::APPROVED->value)
-            ->when($filters['financial_year_id'] ?? null, fn ($q, $v) => $q->where('financial_year_id', $v))
-            ->when($filters['alp_id'] ?? null, fn ($q, $v) => $q->where('alp_id', $v))
-            ->when($filters['category'] ?? null, fn ($q, $v) => $q->where('program_category', $v))
-            ->when($filters['date_from'] ?? null, fn ($q, $v) => $q->whereDate('program_date', '>=', $v))
-            ->when($filters['date_to'] ?? null, fn ($q, $v) => $q->whereDate('program_date', '<=', $v));
     }
 }

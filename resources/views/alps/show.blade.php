@@ -35,7 +35,7 @@
             Bajet {{ $activeYear ? $activeYear->year : '' }}
         </h3>
         @if($allocation)
-            <a href="{{ route('allocations.show', $allocation) }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">Lihat ledger →</a>
+            <a href="{{ route('allocations.show', $allocation) }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">Lihat Peruntukkan →</a>
         @elseif($activeYear)
             <span class="text-xs text-gray-400">Peruntukan: urus melalui ledger/pentadbir (cadangan bajet maker-checker telah dinyahaktif)</span>
         @endif
@@ -48,7 +48,7 @@
                 <p class="mt-1 text-lg font-semibold text-orange-600"><x-money :value="$pending" /></p>
             </div>
             <div class="card p-4">
-                <p class="text-xs text-gray-500">Projected Available (Ledger Available − Pending)</p>
+                <p class="text-xs text-gray-500">Baki Peruntukan Semasa (Baki Peruntukan Diluluskan − Pending Request)</p>
                 <p class="mt-1 text-lg font-semibold {{ $projected->isNegative() ? 'text-danger' : 'text-green-600' }}"><x-money :value="$projected" /></p>
             </div>
         </div>

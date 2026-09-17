@@ -32,6 +32,18 @@ final class Money implements Stringable
      * Cipta Money daripada string atau integer.
      * Float TIDAK diterima (union int|string) untuk mengelakkan ketidaktepatan.
      */
+    /** Tafsir input borang (cth. "1,234.56") sebelum disimpan. */
+    public static function parseInput(int|string|null $value): self
+    {
+        if ($value === null || trim((string) $value) === '') {
+            throw new InvalidArgumentException('Nilai wang tidak boleh kosong.');
+        }
+
+        $normalized = str_replace(',', '', trim((string) $value));
+
+        return self::of($normalized);
+    }
+
     public static function of(int|string $value): self
     {
         $raw = trim((string) $value);

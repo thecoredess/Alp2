@@ -21,7 +21,7 @@ class ApprovalLevelSeeder extends Seeder
     public function run(): void
     {
         $levels = [
-            ['Pengesyoran PEPU', '0.00', '999999999.98', RoleName::PELULUS->value, 1],
+            ['Pengesyoran TP/Pengarah', '0.00', '999999999.98', RoleName::PELULUS->value, 1],
             ['Kelulusan PEPU / Pengurusan Tertinggi', '999999999.99', null, RoleName::PENGURUSAN->value, 2],
         ];
 

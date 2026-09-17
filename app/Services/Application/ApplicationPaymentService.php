@@ -72,14 +72,26 @@ class ApplicationPaymentService
                 }
             }
 
+            $voucherLocked = $application->hasVoucherPrepared() && ! $actor->can('payments.voucher_edit');
+
+            if ($voucherLocked && $this->voucherFieldsChanged($application, $data)) {
+                throw new InvalidArgumentException('Baucar telah direkod dan tidak boleh dikemaskini. Hubungi Super Admin.');
+            }
+
             $application->payment_status = $status;
-            $application->payment_voucher_no = $data['payment_voucher_no'] ?? $application->payment_voucher_no;
-            $application->payment_supplier_no = $data['payment_supplier_no'] ?? $application->payment_supplier_no;
-            $application->payment_voucher_date = array_key_exists('payment_voucher_date', $data)
-                ? $data['payment_voucher_date']
-                : $application->payment_voucher_date;
+
+            if ($voucherLocked) {
+                // Kekalkan nilai baucar sedia ada; staf kewangan masih boleh kemas kini status bayaran lain.
+            } else {
+                $application->payment_voucher_no = $data['payment_voucher_no'] ?? $application->payment_voucher_no;
+                $application->payment_supplier_no = $data['payment_supplier_no'] ?? $application->payment_supplier_no;
+                $application->payment_voucher_date = array_key_exists('payment_voucher_date', $data)
+                    ? $data['payment_voucher_date']
+                    : $application->payment_voucher_date;
+                $application->payment_remarks = $data['payment_remarks'] ?? $application->payment_remarks;
+            }
+
             $application->payment_reference = $data['payment_reference'] ?? $application->payment_reference;
-            $application->payment_remarks = $data['payment_remarks'] ?? $application->payment_remarks;
             $application->payment_updated_by = $actor->id;
             $application->payment_updated_at = now();
 
@@ -137,5 +149,21 @@ class ApplicationPaymentService
             ApplicationPaymentStatus::SENT_TO_JKEW,
             ApplicationPaymentStatus::PAID,
         ], true);
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function voucherFieldsChanged(Application $application, array $data): bool
+    {
+        $voucherNo = $data['payment_voucher_no'] ?? $application->payment_voucher_no;
+        $supplierNo = $data['payment_supplier_no'] ?? $application->payment_supplier_no;
+        $voucherDate = array_key_exists('payment_voucher_date', $data)
+            ? $data['payment_voucher_date']
+            : $application->payment_voucher_date?->format('Y-m-d');
+
+        return $voucherNo !== $application->payment_voucher_no
+            || $supplierNo !== $application->payment_supplier_no
+            || $voucherDate !== $application->payment_voucher_date?->format('Y-m-d')
+            || (array_key_exists('payment_remarks', $data)
+                && (string) ($data['payment_remarks'] ?? '') !== (string) ($application->payment_remarks ?? ''));
     }
 }

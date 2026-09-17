@@ -74,8 +74,8 @@
                     <div class="flex justify-between"><dt class="text-gray-500">Committed</dt><dd class="text-amber-600"><x-money :value="$position['summary']->committed" /></dd></div>
                     <div class="flex justify-between"><dt class="text-gray-500">Spent</dt><dd class="text-purple-600"><x-money :value="$position['summary']->spent" /></dd></div>
                     <div class="flex justify-between"><dt class="text-gray-500">Pending Application</dt><dd class="text-orange-600"><x-money :value="$position['pending']" /></dd></div>
-                    <div class="flex justify-between border-t border-gray-100 pt-2"><dt class="text-gray-600 font-medium">Ledger Available</dt><dd class="font-semibold text-green-600"><x-money :value="$position['available']" /></dd></div>
-                    <div class="flex justify-between"><dt class="text-gray-500">Projected Available</dt><dd class="{{ $position['projected']->isNegative() ? 'text-danger' : 'text-green-600' }}"><x-money :value="$position['projected']" /></dd></div>
+                    <div class="flex justify-between border-t border-gray-100 pt-2"><dt class="text-gray-600 font-medium">Baki Peruntukan Diluluskan</dt><dd class="font-semibold text-green-600"><x-money :value="$position['available']" /></dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">Baki Peruntukan Semasa</dt><dd class="{{ $position['projected']->isNegative() ? 'text-danger' : 'text-green-600' }}"><x-money :value="$position['projected']" /></dd></div>
                     <div class="flex justify-between border-t border-gray-100 pt-2"><dt class="text-gray-500">Available Selepas</dt><dd class="font-semibold"><x-money :value="$position['available_after']" /></dd></div>
                     <div class="flex justify-between"><dt class="text-gray-500">Projected Selepas</dt><dd class="font-semibold {{ $position['projected_after']->isNegative() ? 'text-danger' : 'text-green-600' }}"><x-money :value="$position['projected_after']" /></dd></div>
                 </dl>

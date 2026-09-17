@@ -15,8 +15,13 @@ class ApplicationDocumentRequest extends FormRequest
 
     public function rules(): array
     {
+        $allowedTypes = array_map(
+            fn (DocumentType $type) => $type->value,
+            DocumentType::contributionAttachments(),
+        );
+
         return [
-            'document_type' => ['required', Rule::enum(DocumentType::class)],
+            'document_type' => ['required', Rule::in($allowedTypes)],
             'file' => [
                 'required',
                 'file',

@@ -38,6 +38,7 @@ class ManualController extends Controller
 
     public function download(Request $request): StreamedResponse
     {
+        abort_unless($request->user()->can('dashboard.view'), 403);
         abort_unless(OfficialManual::exists(), 404, 'Manual PDF rasmi belum dimuat naik.');
 
         return Storage::disk('local')->download(

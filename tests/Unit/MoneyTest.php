@@ -128,4 +128,10 @@ class MoneyTest extends TestCase
         $this->assertSame('1,000,000.30', Money::of('1000000.30')->format());
         $this->assertSame('-25,000.00', Money::of('-25000')->format());
     }
+
+    public function test_parse_input_accepts_formatted_amount(): void
+    {
+        $this->assertSame('1234.56', Money::parseInput('1,234.56')->value());
+        $this->assertSame('5000.00', Money::parseInput('5,000.00')->value());
+    }
 }

@@ -145,7 +145,7 @@ class ApprovalService
         $ledgerAvailable = $this->budget->summaryFor($application->alp_id, $application->financial_year_id)->available();
         if ($amount->greaterThan($ledgerAvailable)) {
             throw new ApplicationException(sprintf(
-                'Baki peruntukan tidak mencukupi untuk komitmen. Ledger Available: RM%s; jumlah: RM%s.',
+                'Baki peruntukan tidak mencukupi untuk komitmen. Baki Peruntukan Diluluskan: RM%s; jumlah: RM%s.',
                 $ledgerAvailable->format(),
                 $amount->format(),
             ));

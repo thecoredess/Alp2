@@ -52,6 +52,18 @@ class ApplicationDocumentTest extends TestCase
         $this->assertStringStartsWith('applications/', $doc->stored_path);
     }
 
+    public function test_internal_document_type_cannot_be_uploaded_via_wizard(): void
+    {
+        $file = UploadedFile::fake()->create('laporan.pdf', 100, 'application/pdf');
+
+        $this->actingAs($this->user)->post(route('applications.documents.store', $this->application), [
+            'document_type' => DocumentType::LAPORAN_AKTIVITI->value,
+            'file' => $file,
+        ])->assertSessionHasErrors('document_type');
+
+        $this->assertDatabaseCount('application_documents', 0);
+    }
+
     public function test_invalid_file_type_is_rejected(): void
     {
         $exe = UploadedFile::fake()->create('malware.exe', 50, 'application/octet-stream');

@@ -162,8 +162,8 @@ final class JpReviewChecklist
             'baki' => [
                 'ok' => $bakiOk,
                 'note' => $bakiOk
-                    ? 'Projected Available: RM'.$projectedAvailable->format()
-                    : 'Projected Available negatif (RM'.$projectedAvailable->format().')',
+                    ? 'Baki Peruntukan Semasa: RM'.$projectedAvailable->format()
+                    : 'Baki Peruntukan Semasa negatif (RM'.$projectedAvailable->format().')',
             ],
             'polisi' => [
                 'ok' => true,

@@ -2,6 +2,7 @@
     'application',
     'crosscheckDocument' => null,
     'uploadAction' => null,
+    'uploadRequiredForRecommend' => false,
 ])
 
 @php
@@ -55,13 +56,19 @@
                     </div>
                 </div>
             @elseif ($canViewReference)
-                <p class="text-sm text-gray-500">Belum ada borang ulasan JKEW dimuat naik.</p>
+                <p @class(['text-sm', 'text-danger font-medium' => $uploadRequiredForRecommend && ! $crosscheckDocument, 'text-gray-500' => ! ($uploadRequiredForRecommend && ! $crosscheckDocument)])>
+                    Belum ada borang ulasan JKEW dimuat naik.@if ($uploadRequiredForRecommend) Wajib sebelum hantar keputusan Disyorkan.@endif
+                </p>
             @endif
+
+            @error('crosscheck')
+                <p class="text-sm text-danger">{{ $message }}</p>
+            @enderror
 
             @if ($canUpload && $uploadAction)
                 <form method="POST" action="{{ $uploadAction }}" enctype="multipart/form-data" class="space-y-3 border-t border-gray-100 pt-4">
                     @csrf
-                    <x-field label="Muat Naik Borang Ulasan JKEW" name="file" hint="PDF atau Word (.doc/.docx) selepas JKEW mengisi ulasan. Gantikan fail sedia ada jika dimuat naik semula.">
+                    <x-field label="Muat Naik Borang Ulasan JKEW" name="file" :required="$uploadRequiredForRecommend && ! $crosscheckDocument" hint="{{ $uploadRequiredForRecommend ? 'Wajib sebelum hantar keputusan Disyorkan. ' : '' }}PDF atau Word (.doc/.docx) selepas JKEW mengisi ulasan. Gantikan fail sedia ada jika dimuat naik semula.">
                         <input type="file" name="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required class="inp file:mr-3 file:rounded-lg file:border-0 file:bg-royal-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-royal-700">
                     </x-field>
                     @error('file')

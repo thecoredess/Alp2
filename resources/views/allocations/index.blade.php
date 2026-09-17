@@ -30,7 +30,7 @@
             <p class="mt-1 text-lg font-semibold text-orange-600"><x-money :value="$totalPending" /></p>
         </div>
         <div class="card p-4">
-            <p class="text-xs text-gray-500">Projected Available (Ledger Available − Pending Request)</p>
+            <p class="text-xs text-gray-500">Baki Peruntukan Semasa (Baki Peruntukan Diluluskan − Pending Request)</p>
             <p class="mt-1 text-lg font-semibold {{ $projectedTotal->isNegative() ? 'text-danger' : 'text-green-600' }}"><x-money :value="$projectedTotal" /></p>
         </div>
     </div>

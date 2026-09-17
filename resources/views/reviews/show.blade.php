@@ -31,7 +31,7 @@
                             <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">a) Nama ALP</dt>
                             <dd class="mt-1.5 font-medium text-gray-900">
                                 @can('applications.view_all')
-                                    <a href="{{ route('applications.all', ['alp' => $application->alp_id, 'status' => \App\Enums\ApplicationStatus::APPROVED->value, 'tahun' => $application->financial_year_id]) }}"
+                                    <a href="{{ route('applications.all', ['alp' => $application->alp_id, 'status' => \App\Services\Reports\ApplicationReportService::FILTER_APPROVED, 'tahun' => $application->financial_year_id]) }}"
                                        class="text-royal-700 hover:text-royal-800 hover:underline"
                                        title="Senarai permohonan diluluskan {{ $application->alp->ref_code }}">
                                         {{ $application->alp->ref_code }} — {{ $application->alp->name }}
@@ -91,6 +91,7 @@
                     'application' => $application,
                     'crosscheckDocument' => $crosscheckDocument ?? null,
                     'uploadAction' => route('applications.crosscheck.store', $application),
+                    'uploadRequiredForRecommend' => true,
                 ])
 
                 @if ($application->reviews->isNotEmpty())
@@ -136,6 +137,10 @@
                     <div x-data="{ act: '{{ old('decision', $fullJpDecision ? '' : 'recommend') }}' }" class="space-y-5">
                         <form method="POST" action="{{ route('reviews.store', [$application, $reviewType->value]) }}" class="space-y-5">
                             @csrf
+
+                            @error('crosscheck')
+                                <p class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-danger">{{ $message }}</p>
+                            @enderror
 
                             @if ($fullJpDecision)
                                 <div>
