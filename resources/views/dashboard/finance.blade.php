@@ -45,7 +45,7 @@
     @can('reports.financial')
         <div class="mt-6 flex flex-wrap gap-2">
             <a href="{{ route('reports.allocation', ['fy'=>$year?->id]) }}" class="btn-white">Laporan Peruntukan</a>
-            <a href="{{ route('reports.ledger', ['fy'=>$year?->id]) }}" class="btn-white">Ledger Bajet</a>
+            <a href="{{ route('reports.ledger', ['fy'=>$year?->id]) }}" class="btn-white">Lejar Bajet</a>
             <a href="{{ route('reports.reconciliation', ['fy'=>$year?->id]) }}" class="btn-white">Rekonsiliasi</a>
         </div>
     @endcan

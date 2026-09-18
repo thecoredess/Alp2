@@ -63,7 +63,7 @@ class BudgetRequestApprovalService
 
             // (9) Belum diposkan (idempotensi).
             if ($request->transaction()->exists()) {
-                throw new BudgetException('Cadangan ini telah diposkan ke ledger.');
+                throw new BudgetException('Cadangan ini telah diposkan ke lejar.');
             }
 
             $alp = Alp::findOrFail($request->alp_id);
@@ -99,7 +99,7 @@ class BudgetRequestApprovalService
             ]);
 
             // (13) Sejarah + audit.
-            $this->history($request, $from, BudgetRequestStatus::APPROVED, $checker, 'Diluluskan & diposkan ke ledger');
+            $this->history($request, $from, BudgetRequestStatus::APPROVED, $checker, 'Diluluskan & diposkan ke lejar');
             $this->audit->log($this->prefix($request).'_APPROVED', $request, null, [
                 'amount' => $amount->value(), 'checker_id' => $checker->id,
             ]);

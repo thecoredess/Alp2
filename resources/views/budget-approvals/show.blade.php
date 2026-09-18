@@ -56,14 +56,14 @@
                     </div>
 
                     <form x-show="act==='approve'" method="POST" action="{{ route('budget-approvals.approve', $request) }}"
-                          onsubmit="return confirm('Sahkan kelulusan? Transaksi ledger akan dicipta.')" class="space-y-3">
+                          onsubmit="return confirm('Sahkan kelulusan? Transaksi lejar akan dicipta.')" class="space-y-3">
                         @csrf
                         <div class="rounded-lg bg-navy-50 px-3 py-2 text-xs text-navy-800">
                             Anda akan meluluskan <strong>{{ $request->request_type->label() }}</strong> berjumlah
                             <strong><x-money :value="$request->amount" /></strong>. Peruntukan baharu: <strong><x-money :value="$newAllocation" /></strong>.
                         </div>
                         <textarea name="comments" rows="2" class="inp" placeholder="Ulasan (pilihan)"></textarea>
-                        <button class="btn-navy w-full">Luluskan &amp; Poskan Ledger</button>
+                        <button class="btn-navy w-full">Luluskan &amp; Poskan Lejar</button>
                     </form>
 
                     <form x-show="act==='return'" x-cloak method="POST" action="{{ route('budget-approvals.return', $request) }}" class="space-y-3">

@@ -18,7 +18,7 @@
 
 <div class="mt-4 rounded-lg bg-teal-50 border border-teal-200 px-4 py-3 text-sm text-teal-800">
     Baki boleh dipulangkan: <strong><x-money :value="$refundable->value()" /></strong>.
-    Refund hanya akan diposkan ke ledger (transaksi REFUND baharu) <strong>selepas disahkan</strong> oleh checker.
+    Refund hanya akan diposkan ke lejar (transaksi REFUND baharu) <strong>selepas disahkan</strong> oleh checker.
     Perbelanjaan asal yang telah disahkan <strong>tidak dipadam atau disunting</strong>.
 </div>
 

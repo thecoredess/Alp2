@@ -35,7 +35,7 @@
             <div class="card p-5"><p class="text-sm text-gray-500">Refund</p><p class="mt-2 text-xl font-semibold text-green-600"><x-money :value="$totals->refunded" /></p></div>
             <div class="card p-5"><p class="text-sm text-gray-500">Released Commitment</p><p class="mt-2 text-xl font-semibold text-gray-600"><x-money :value="$totals->released" /></p></div>
         </div>
-        <p class="mt-2 text-[11px] text-gray-400">Pending Application ≠ Committed. Net Spent = Gross − Refund. Semua dari ledger.</p>
+        <p class="mt-2 text-[11px] text-gray-400">Pending Application ≠ Committed. Net Spent = Gross − Refund. Semua dari lejar.</p>
 
         {{-- Kad operasi --}}
         <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">

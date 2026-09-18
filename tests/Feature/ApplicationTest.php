@@ -327,6 +327,16 @@ class ApplicationTest extends TestCase
             ->assertDontSee($approved->application_number);
     }
 
+    public function test_display_heading_maps_approval_placeholders_to_kelulusan_pepu(): void
+    {
+        $app = Application::factory()->create([
+            'purpose' => Application::SIMULATION_PREFIX.'Menunggu Peraku (TP/Pengarah JP)',
+            'program_category' => 'komuniti',
+        ]);
+
+        $this->assertSame('Kelulusan PEPU', $app->fresh()->displayHeading());
+    }
+
     public function test_simulation_prefix_is_hidden_from_purpose_display(): void
     {
         $app = Application::factory()->create([

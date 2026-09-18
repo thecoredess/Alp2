@@ -14,4 +14,4 @@
         </div>
     @endforeach
 </div>
-<p class="mt-2 text-xs text-gray-400">Belanja Bersih = Perbelanjaan − Refund, mengikut bulan diposkan ke ledger.</p>
+<p class="mt-2 text-xs text-gray-400">Belanja Bersih = Perbelanjaan − Refund, mengikut bulan diposkan ke lejar.</p>

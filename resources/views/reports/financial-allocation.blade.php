@@ -63,5 +63,5 @@
             </tbody>
         </table>
     </div>
-    <p class="mt-2 text-xs text-gray-400">Guna Bersih % = (Belanja Bersih ÷ Peruntukan) × 100. Menunggu ≠ Komitmen. Semua nilai dari ledger.</p>
+    <p class="mt-2 text-xs text-gray-400">Guna Bersih % = (Belanja Bersih ÷ Peruntukan) × 100. Menunggu ≠ Komitmen. Semua nilai dari lejar.</p>
 @endsection

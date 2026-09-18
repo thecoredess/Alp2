@@ -52,11 +52,11 @@ class BudgetTransaction extends Model
     {
         // Kuatkuasakan sifat immutable.
         static::updating(function () {
-            throw new RuntimeException('Transaksi ledger bajet tidak boleh diubah. Gunakan transaksi pembalikan.');
+            throw new RuntimeException('Transaksi lejar bajet tidak boleh diubah. Gunakan transaksi pembalikan.');
         });
 
         static::deleting(function () {
-            throw new RuntimeException('Transaksi ledger bajet tidak boleh dipadam.');
+            throw new RuntimeException('Transaksi lejar bajet tidak boleh dipadam.');
         });
     }
 

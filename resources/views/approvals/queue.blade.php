@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Peraku / PEPU')
-@section('heading', 'Menunggu Peraku PEPU')
+@section('heading', 'Menunggu Kelulusan PEPU')
 @section('subheading', 'Peraku (TP/Pengarah JP) kemudian PEPU / Pengurusan Tertinggi')
 
 @section('content')

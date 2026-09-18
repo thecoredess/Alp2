@@ -21,4 +21,4 @@
         <p class="mt-2 text-2xl font-semibold text-teal-600"><x-money :value="$finance['released']" /></p>
     </div>
 </div>
-<p class="mt-2 text-[11px] text-gray-400">Rekonsiliasi: Diluluskan = Baki Komitmen + Perbelanjaan + Dilepaskan (dari ledger).</p>
+<p class="mt-2 text-[11px] text-gray-400">Rekonsiliasi: Diluluskan = Baki Komitmen + Perbelanjaan + Dilepaskan (dari lejar).</p>

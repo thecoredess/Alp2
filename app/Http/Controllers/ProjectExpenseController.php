@@ -98,7 +98,7 @@ class ProjectExpenseController extends Controller
     {
         $this->authorize('verify', $expense);
 
-        return $this->act(fn () => $this->checker->verify($expense, $request->user()), $expense, 'Perbelanjaan disahkan & diposkan ke ledger.');
+        return $this->act(fn () => $this->checker->verify($expense, $request->user()), $expense, 'Perbelanjaan disahkan & diposkan ke lejar.');
     }
 
     public function reject(Request $request, ProjectExpense $expense): RedirectResponse

@@ -41,9 +41,9 @@
         </div>
 
         <div class="lg:col-span-2">
-            <h3 class="mb-3 text-sm font-semibold text-gray-900">Ledger Transaksi</h3>
+            <h3 class="mb-3 text-sm font-semibold text-gray-900">Lejar Transaksi</h3>
             <x-ledger-table :statement="$statement" />
-            <p class="mt-2 text-xs text-gray-400">Ledger bersifat kekal (immutable). Sebarang perubahan direkodkan sebagai transaksi baharu.</p>
+            <p class="mt-2 text-xs text-gray-400">Lejar bersifat kekal (immutable). Sebarang perubahan direkodkan sebagai transaksi baharu.</p>
         </div>
     </div>
 @endsection

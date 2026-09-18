@@ -34,9 +34,9 @@
 
             @if ($refund->transaction)
                 <div class="card p-5 border-teal-200 bg-teal-50">
-                    <h3 class="text-sm font-semibold text-teal-800">Transaksi Ledger (REFUND)</h3>
+                    <h3 class="text-sm font-semibold text-teal-800">Transaksi Lejar (REFUND)</h3>
                     <p class="mt-1 text-sm text-teal-900"><x-money :value="$refund->transaction->amount" /> · {{ $refund->transaction->created_at?->format('d/m/Y H:i') }}</p>
-                    <p class="mt-1 text-xs text-teal-700">Transaksi baharu yang membalikkan sebahagian perbelanjaan — ledger asal kekal utuh.</p>
+                    <p class="mt-1 text-xs text-teal-700">Transaksi baharu yang membalikkan sebahagian perbelanjaan — lejar asal kekal utuh.</p>
                 </div>
             @endif
 
@@ -82,7 +82,7 @@
                                 <button @click="act='return'" :class="act==='return' ? 'bg-orange-500 text-white' : 'text-gray-600'" class="flex-1 rounded-lg px-2 py-1.5">Kembali</button>
                                 <button @click="act='reject'" :class="act==='reject' ? 'bg-danger text-white' : 'text-gray-600'" class="flex-1 rounded-lg px-2 py-1.5">Tolak</button>
                             </div>
-                            <form x-show="act==='verify'" method="POST" action="{{ route('refunds.verify', $refund) }}" onsubmit="return confirm('Sahkan & poskan REFUND ke ledger?')">@csrf<button class="btn-navy w-full">Sahkan &amp; Poskan Ledger</button></form>
+                            <form x-show="act==='verify'" method="POST" action="{{ route('refunds.verify', $refund) }}" onsubmit="return confirm('Sahkan & poskan REFUND ke lejar?')">@csrf<button class="btn-navy w-full">Sahkan &amp; Poskan Lejar</button></form>
                             <form x-show="act==='return'" x-cloak method="POST" action="{{ route('refunds.return', $refund) }}" class="space-y-2">@csrf<textarea name="comments" rows="3" required class="inp" placeholder="Sebab pembetulan (wajib)"></textarea><button class="btn-white w-full">Kembalikan</button></form>
                             <form x-show="act==='reject'" x-cloak method="POST" action="{{ route('refunds.reject', $refund) }}" class="space-y-2" onsubmit="return confirm('Tolak refund?')">@csrf<textarea name="comments" rows="3" required class="inp" placeholder="Sebab penolakan (wajib)"></textarea><button class="btn-danger w-full">Tolak</button></form>
                         </div>

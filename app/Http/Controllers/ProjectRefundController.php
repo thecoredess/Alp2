@@ -104,7 +104,7 @@ class ProjectRefundController extends Controller
     {
         $this->authorize('verify', $refund);
 
-        return $this->act(fn () => $this->checker->verify($refund, $request->user()), $refund, 'Refund disahkan & diposkan ke ledger.');
+        return $this->act(fn () => $this->checker->verify($refund, $request->user()), $refund, 'Refund disahkan & diposkan ke lejar.');
     }
 
     public function reject(Request $request, ProjectExpenseRefund $refund): RedirectResponse

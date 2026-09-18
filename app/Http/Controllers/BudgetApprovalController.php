@@ -77,7 +77,7 @@ class BudgetApprovalController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('budget-requests.show', $budgetRequest)->with('status', 'Cadangan diluluskan & diposkan ke ledger.');
+        return redirect()->route('budget-requests.show', $budgetRequest)->with('status', 'Cadangan diluluskan & diposkan ke lejar.');
     }
 
     public function reject(Request $request, BudgetRequest $budgetRequest): RedirectResponse

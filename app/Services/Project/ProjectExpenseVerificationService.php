@@ -55,7 +55,7 @@ class ProjectExpenseVerificationService
 
             // (9) Belum diposkan (idempotensi).
             if ($expense->transaction()->exists()) {
-                throw new ProjectException('Perbelanjaan ini telah diposkan ke ledger.');
+                throw new ProjectException('Perbelanjaan ini telah diposkan ke lejar.');
             }
 
             // (4) Kunci allocation.
@@ -86,7 +86,7 @@ class ProjectExpenseVerificationService
             // (12) Poskan EXPENDITURE (immutable ledger; unique project_expense_id).
             $this->budget->recordExpenditure($allocation, $amount, $project, $expense);
 
-            $this->history($expense, $from, ProjectExpenseStatus::VERIFIED, $checker, 'Disahkan & diposkan ke ledger');
+            $this->history($expense, $from, ProjectExpenseStatus::VERIFIED, $checker, 'Disahkan & diposkan ke lejar');
             $this->audit->log('EXPENSE_VERIFIED', $expense, null, ['amount' => $amount->value(), 'checker_id' => $checker->id]);
 
             return $expense;

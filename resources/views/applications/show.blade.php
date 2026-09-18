@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', $application->application_number)
-@section('heading', $application->purpose)
+@section('heading', $application->displayHeading())
 @section('subheading', $application->application_number.' · Sumbangan ALP')
 
 @php

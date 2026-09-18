@@ -41,7 +41,7 @@
 
             @if ($request->transaction)
                 <div class="card p-5 border-green-200 bg-green-50">
-                    <h3 class="text-sm font-semibold text-green-800">Transaksi Ledger Diposkan</h3>
+                    <h3 class="text-sm font-semibold text-green-800">Transaksi Lejar Diposkan</h3>
                     <dl class="mt-2 space-y-1 text-sm text-green-900">
                         <div class="flex justify-between"><dt>Jenis</dt><dd>{{ $request->transaction->type->label() }}</dd></div>
                         <div class="flex justify-between"><dt>Jumlah</dt><dd><x-money :value="$request->transaction->amount" :signed="true" /></dd></div>

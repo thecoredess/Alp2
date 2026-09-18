@@ -241,6 +241,28 @@ class Application extends Model
             : $value;
     }
 
+    /** Tajuk halaman butiran — elak placeholder status aliran kerja. */
+    public function displayHeading(): string
+    {
+        $purpose = $this->purpose;
+
+        if (in_array($purpose, [
+            'Menunggu Peraku (TP/Pengarah JP)',
+            'Menunggu kelulusan PEPU',
+            'Kelulusan PEPU',
+        ], true)) {
+            return 'Kelulusan PEPU';
+        }
+
+        if (filled($purpose) && ! self::isWorkflowPurposePlaceholder($purpose)) {
+            return $purpose;
+        }
+
+        $fallback = $this->resolveProgramLabelForReport();
+
+        return $fallback !== '—' ? $fallback : ($purpose ?? '—');
+    }
+
     /** Nama program / tujuan sumbangan untuk laporan (bukan label aliran kerja). */
     public function programLabelForReport(?int $limit = null): string
     {
@@ -277,6 +299,7 @@ class Application extends Model
             'Menunggu semakan Pegawai JP',
             'Menunggu Peraku (TP/Pengarah JP)',
             'Menunggu kelulusan PEPU',
+            'Kelulusan PEPU',
             'Diluluskan — menunggu baucar',
             'Diluluskan — baucar disedia',
         ];

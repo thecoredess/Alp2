@@ -37,7 +37,7 @@
         @if($allocation)
             <a href="{{ route('allocations.show', $allocation) }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">Lihat Peruntukkan →</a>
         @elseif($activeYear)
-            <span class="text-xs text-gray-400">Peruntukan: urus melalui ledger/pentadbir (cadangan bajet maker-checker telah dinyahaktif)</span>
+            <span class="text-xs text-gray-400">Peruntukan: urus melalui lejar/pentadbir (cadangan bajet maker-checker telah dinyahaktif)</span>
         @endif
     </div>
     @if($activeYear)

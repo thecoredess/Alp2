@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Set Peruntukan')
 @section('heading', 'Set Peruntukan Awal')
-@section('subheading', 'Admin JP — tetapkan peruntukan terus ke ledger (URS Fasa 7.12)')
+@section('subheading', 'Admin JP — tetapkan peruntukan terus ke lejar (URS Fasa 7.12)')
 
 @section('content')
     <div class="mb-4 max-w-xl rounded-lg border border-royal-200 bg-royal-50 px-4 py-3 text-sm text-royal-900">

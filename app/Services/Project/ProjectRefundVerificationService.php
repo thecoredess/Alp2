@@ -52,7 +52,7 @@ class ProjectRefundVerificationService
 
             // Idempotensi — belum diposkan.
             if ($refund->transaction()->exists()) {
-                throw new ProjectException('Refund ini telah diposkan ke ledger.');
+                throw new ProjectException('Refund ini telah diposkan ke lejar.');
             }
 
             // Had terkumpul: refund disahkan (termasuk yang ini) ≤ jumlah perbelanjaan.
@@ -83,7 +83,7 @@ class ProjectRefundVerificationService
             // Poskan REFUND (immutable ledger; unique project_expense_refund_id).
             $this->budget->recordRefund($allocation, $amount, $project, $refund);
 
-            $this->history($refund, $from, RefundStatus::VERIFIED, $checker, 'Disahkan & diposkan ke ledger');
+            $this->history($refund, $from, RefundStatus::VERIFIED, $checker, 'Disahkan & diposkan ke lejar');
             $this->audit->log('REFUND_VERIFIED', $refund, null, ['amount' => $amount->value(), 'checker_id' => $checker->id]);
 
             return $refund;

@@ -12,8 +12,10 @@
                 <input type="text" name="cari" value="{{ request('cari') }}"
                        placeholder="Cari nama / kod / zon…" class="inp w-full pl-9">
             </div>
-            <button type="submit" class="btn-primary shrink-0">Cari</button>
-            <x-filter-reset />
+            <div class="flex shrink-0 items-center gap-2">
+                <button type="submit" class="btn-primary">Cari</button>
+                <x-filter-reset />
+            </div>
         </form>
         @can('alps.create')
             <a href="{{ route('alps.create') }}" class="btn-primary shrink-0">

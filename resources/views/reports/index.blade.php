@@ -10,7 +10,7 @@
         $categories = [
             ['perm' => 'reports.financial', 'title' => 'Kewangan / Peruntukan', 'icon' => 'wallet', 'items' => [
                 ['reports.allocation', 'Peruntukan Mengikut ALP'],
-                ['reports.ledger', 'Ledger Bajet'],
+                ['reports.ledger', 'Lejar Bajet'],
             ]],
             ['perm' => 'reports.applications', 'title' => 'Permohonan', 'icon' => 'clipboard', 'items' => [
                 ['reports.applications', 'Laporan Permohonan'],

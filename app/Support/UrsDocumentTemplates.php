@@ -91,7 +91,7 @@ final class UrsDocumentTemplates
     {
         return [
             self::KEY_LETTER_HEADER => 'Dewan Bandaraya Kuala Lumpur',
-            self::KEY_LETTER_BODY => 'Permohonan di atas telah DILULUSKAN melalui aliran kelulusan sistem ALP DBKL. Jumlah diluluskan ialah snapshot pada masa kelulusan dan direkod dalam ledger bajet sebagai komitmen.',
+            self::KEY_LETTER_BODY => 'Permohonan di atas telah DILULUSKAN melalui aliran kelulusan sistem ALP DBKL. Jumlah diluluskan ialah snapshot pada masa kelulusan dan direkod dalam lejar bajet sebagai komitmen.',
             self::KEY_LETTER_FOOTER => 'Dokumen dijana oleh Sistem ALP DBKL. Sila rujuk rekod sistem untuk pengesahan rasmi.',
             self::KEY_LETTER_REFERENCE => 'DBKL.JP.100-19/1/3 Jld. 4',
             self::KEY_LETTER_SIGNATORY_NAME => 'NORHASLINDA BINTI NORDIN',

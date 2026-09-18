@@ -31,7 +31,7 @@
 
             @if ($expense->transaction)
                 <div class="card p-5 border-green-200 bg-green-50">
-                    <h3 class="text-sm font-semibold text-green-800">Transaksi Ledger (EXPENDITURE)</h3>
+                    <h3 class="text-sm font-semibold text-green-800">Transaksi Lejar (EXPENDITURE)</h3>
                     <p class="mt-1 text-sm text-green-900"><x-money :value="$expense->transaction->amount" /> · {{ $expense->transaction->created_at?->format('d/m/Y H:i') }}</p>
                 </div>
             @endif
@@ -112,7 +112,7 @@
                                 <button @click="act='return'" :class="act==='return' ? 'bg-orange-500 text-white' : 'text-gray-600'" class="flex-1 rounded-lg px-2 py-1.5">Kembali</button>
                                 <button @click="act='reject'" :class="act==='reject' ? 'bg-danger text-white' : 'text-gray-600'" class="flex-1 rounded-lg px-2 py-1.5">Tolak</button>
                             </div>
-                            <form x-show="act==='verify'" method="POST" action="{{ route('expenses.verify', $expense) }}" onsubmit="return confirm('Sahkan & poskan ke ledger?')">@csrf<button class="btn-navy w-full">Sahkan &amp; Poskan Ledger</button></form>
+                            <form x-show="act==='verify'" method="POST" action="{{ route('expenses.verify', $expense) }}" onsubmit="return confirm('Sahkan & poskan ke lejar?')">@csrf<button class="btn-navy w-full">Sahkan &amp; Poskan Lejar</button></form>
                             <form x-show="act==='return'" x-cloak method="POST" action="{{ route('expenses.return', $expense) }}" class="space-y-2">@csrf<textarea name="comments" rows="3" required class="inp" placeholder="Sebab pembetulan (wajib)"></textarea><button class="btn-white w-full">Kembalikan</button></form>
                             <form x-show="act==='reject'" x-cloak method="POST" action="{{ route('expenses.reject', $expense) }}" class="space-y-2" onsubmit="return confirm('Tolak perbelanjaan?')">@csrf<textarea name="comments" rows="3" required class="inp" placeholder="Sebab penolakan (wajib)"></textarea><button class="btn-danger w-full">Tolak</button></form>
                         </div>

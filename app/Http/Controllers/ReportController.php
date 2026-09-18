@@ -90,7 +90,7 @@ class ReportController extends Controller
         $result = $this->financial->ledgerRows($filters);
 
         $data = new ReportData(
-            'Laporan Ledger Bajet',
+            'Laporan Lejar Bajet',
             [
                 ['label' => 'Tarikh', 'type' => 'date', 'width' => 2], ['label' => 'Rujukan', 'width' => 2],
                 ['label' => 'ALP', 'width' => 1], ['label' => 'Jenis', 'width' => 2], ['label' => 'Amaun', 'type' => 'money', 'width' => 2],
@@ -106,7 +106,7 @@ class ReportController extends Controller
 
         return $this->respond($request, $data, 'reports.financial-ledger',
             $this->shell($request) + ['year' => $year, 'result' => $result, 'types' => BudgetTransactionType::cases(), 'filters' => $filters],
-            'ledger-bajet', true);
+            'lejar-bajet', true);
     }
 
     public function reconciliation(Request $request)

@@ -36,15 +36,15 @@ class DataQualityService
                 'items' => $this->approvedWithoutProject($financialYearId),
             ],
             'approved_without_commitment' => [
-                'label' => 'Permohonan diluluskan tanpa komitmen ledger',
+                'label' => 'Permohonan diluluskan tanpa komitmen lejar',
                 'items' => $this->approvedWithoutCommitment($financialYearId),
             ],
             'verified_expense_no_ledger' => [
-                'label' => 'Perbelanjaan disahkan tanpa transaksi ledger',
+                'label' => 'Perbelanjaan disahkan tanpa transaksi lejar',
                 'items' => $this->verifiedExpenseMissingLedger($financialYearId),
             ],
             'verified_refund_no_ledger' => [
-                'label' => 'Refund disahkan tanpa transaksi ledger',
+                'label' => 'Refund disahkan tanpa transaksi lejar',
                 'items' => $this->verifiedRefundMissingLedger($financialYearId),
             ],
             'closed_with_outstanding' => [
@@ -94,7 +94,7 @@ class DataQualityService
             ->whereHas('project', fn ($q) => $q->where('financial_year_id', $fyId))
             ->whereDoesntHave('transaction')
             ->get(['id', 'reference_number', 'project_id'])
-            ->map(fn ($e) => ['ref' => $e->reference_number, 'detail' => 'Tiada transaksi EXPENDITURE dalam ledger']);
+            ->map(fn ($e) => ['ref' => $e->reference_number, 'detail' => 'Tiada transaksi EXPENDITURE dalam lejar']);
     }
 
     private function verifiedRefundMissingLedger(int $fyId): Collection
@@ -104,7 +104,7 @@ class DataQualityService
             ->whereHas('project', fn ($q) => $q->where('financial_year_id', $fyId))
             ->whereDoesntHave('transaction')
             ->get(['id', 'reference_number', 'project_id'])
-            ->map(fn ($r) => ['ref' => $r->reference_number ?? ('RF#'.$r->id), 'detail' => 'Tiada transaksi REFUND dalam ledger']);
+            ->map(fn ($r) => ['ref' => $r->reference_number ?? ('RF#'.$r->id), 'detail' => 'Tiada transaksi REFUND dalam lejar']);
     }
 
     private function closedWithOutstanding(int $fyId): Collection

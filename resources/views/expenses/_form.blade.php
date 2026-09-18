@@ -20,7 +20,7 @@
 </div>
 
 <div class="mt-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-    Perbelanjaan hanya akan diposkan ke ledger <strong>selepas disahkan</strong> oleh pegawai kewangan (checker).
+    Perbelanjaan hanya akan diposkan ke lejar <strong>selepas disahkan</strong> oleh pegawai kewangan (checker).
     Anda tidak boleh mengesahkan perbelanjaan yang anda cipta/hantar.
 </div>
 
