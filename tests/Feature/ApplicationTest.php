@@ -286,6 +286,47 @@ class ApplicationTest extends TestCase
             ->assertDontSee('value="draft"', false);
     }
 
+    public function test_alp_applications_use_operational_status_filter_without_recommended(): void
+    {
+        $alp = Alp::factory()->create();
+        $user = $this->alpUser($alp);
+        $year = FinancialYear::first();
+
+        $inReview = Application::factory()->create([
+            'alp_id' => $alp->id,
+            'financial_year_id' => $year->id,
+            'status' => ApplicationStatus::SUBMITTED,
+        ]);
+        $approved = Application::factory()->create([
+            'alp_id' => $alp->id,
+            'financial_year_id' => $year->id,
+            'status' => ApplicationStatus::APPROVED,
+        ]);
+
+        $options = ApplicationReportService::statusFilterOptionsForAlpApplications();
+
+        $this->assertArrayNotHasKey(ApplicationReportService::FILTER_RECOMMENDED, $options);
+        $this->assertArrayHasKey(ApplicationReportService::FILTER_IN_REVIEW, $options);
+        $this->assertArrayHasKey(ApplicationReportService::FILTER_APPROVED, $options);
+
+        $this->actingAs($user)
+            ->get(route('applications.index'))
+            ->assertOk()
+            ->assertSee('Menunggu laporan')
+            ->assertSee('Diluluskan')
+            ->assertDontSee('value="disyorkan"', false)
+            ->assertDontSee('>Disyorkan<', false);
+
+        $this->actingAs($user)
+            ->get(route('applications.index', [
+                'status' => ApplicationReportService::FILTER_IN_REVIEW,
+                'tahun' => $year->id,
+            ]))
+            ->assertOk()
+            ->assertSee($inReview->application_number)
+            ->assertDontSee($approved->application_number);
+    }
+
     public function test_simulation_prefix_is_hidden_from_purpose_display(): void
     {
         $app = Application::factory()->create([

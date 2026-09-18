@@ -58,7 +58,7 @@
             <thead class="bg-gray-50">
                 <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     <th class="px-4 py-3">No. Permohonan</th>
-                    <th class="px-4 py-3">Tujuan / Penerima</th>
+                    <th class="px-4 py-3">Kategori / Penerima</th>
                     @if ($scopeAll)<th class="px-4 py-3">ALP</th>@endif
                     <th class="px-4 py-3">Tahun</th>
                     <th class="px-4 py-3">Tarikh</th>
@@ -72,7 +72,7 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-mono text-xs text-gray-700">{{ $app->application_number }}</td>
                         <td class="px-4 py-3 text-gray-900">
-                            <p>{{ $app->programLabelForReport(60) }}</p>
+                            <p>{{ $app->programCategoryLabelForReport(60) }}</p>
                             <p class="text-xs text-gray-500">{{ $app->recipientLabelForReport() }}</p>
                         </td>
                         @if ($scopeAll)<td class="px-4 py-3 text-gray-600">{{ $app->alp->ref_code }}</td>@endif
@@ -82,7 +82,9 @@
                         </td>
                         <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$app->requested_amount" /></td>
                         <td class="px-4 py-3">
-                            @if ($usesOperationalStatus ?? false)
+                            @if ($app->isDraft())
+                                <x-status-badge :label="$app->status->label()" :classes="$app->status->badgeClasses()" />
+                            @elseif ($usesOperationalStatus ?? false)
                                 @php $operationalStatus = ApplicationReportService::resolveOperationalStatus($app); @endphp
                                 <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $statusTone[$operationalStatus] ?? 'bg-gray-100 text-gray-700' }}">
                                     {{ ApplicationReportService::statusLabelFor($app, auth()->user()) }}

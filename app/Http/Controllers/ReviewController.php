@@ -41,12 +41,12 @@ class ReviewController extends Controller
 
     public function finance(Request $request): View
     {
-        abort(404, 'Semakan Kewangan pra-kelulusan telah dinyahaktif (URS v1.2).');
+        abort(404, 'Semakan Kewangan pra-kelulusan telah dinyahaktif.');
     }
 
     public function technical(Request $request): View
     {
-        abort(404, 'Semakan Teknikal telah dinyahaktif (URS v1.2).');
+        abort(404, 'Semakan Teknikal telah dinyahaktif.');
     }
 
     /** Admin JP: SUBMITTED · Pegawai JP: UNDER_SECRETARIAT_REVIEW. */

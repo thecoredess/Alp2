@@ -53,6 +53,15 @@ class ApplicationReportService
         ];
     }
 
+    /** Senarai Permohonan Saya (ALP) — sama seperti staf, tanpa Disyorkan. */
+    public static function statusFilterOptionsForAlpApplications(): array
+    {
+        $options = self::statusFilterOptions();
+        unset($options[self::FILTER_RECOMMENDED]);
+
+        return $options;
+    }
+
     /** Staf DBKL — senarai 8 status operasi; peranan ALP kecualikan. */
     public static function usesStaffStatusFilters(User $user): bool
     {
@@ -67,13 +76,16 @@ class ApplicationReportService
             : ProgramReportService::alpStatusOptions();
     }
 
-    public static function sanitizeStatusFilter(?string $status, User $user): ?string
+    /** @param  array<string, string>|null  $allowedOptions */
+    public static function sanitizeStatusFilter(?string $status, User $user, ?array $allowedOptions = null): ?string
     {
         if ($status === null || $status === '') {
             return null;
         }
 
-        return array_key_exists($status, self::statusFilterOptionsForUser($user)) ? $status : null;
+        $options = $allowedOptions ?? self::statusFilterOptionsForUser($user);
+
+        return array_key_exists($status, $options) ? $status : null;
     }
 
     public function applyStatusFilterToQuery(Builder $query, string $status): Builder
@@ -119,7 +131,7 @@ class ApplicationReportService
         $status = self::resolveOperationalStatus($application);
         $options = self::statusFilterOptionsForUser($user);
 
-        return $options[$status] ?? $status;
+        return $options[$status] ?? self::statusFilterOptions()[$status] ?? $status;
     }
 
     public static function matchesOperationalStatusFilter(Application $application, string $status): bool

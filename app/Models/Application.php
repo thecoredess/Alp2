@@ -249,6 +249,14 @@ class Application extends Model
         return $limit !== null ? \Illuminate\Support\Str::limit($label, $limit) : $label;
     }
 
+    /** Label kategori program untuk senarai permohonan. */
+    public function programCategoryLabelForReport(?int $limit = null): string
+    {
+        $label = $this->program_category?->label() ?? '—';
+
+        return $limit !== null ? \Illuminate\Support\Str::limit($label, $limit) : $label;
+    }
+
     /** Nama persatuan penerima untuk laporan. */
     public function recipientLabelForReport(?int $limit = null): string
     {

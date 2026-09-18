@@ -277,7 +277,7 @@
         </div>
 
         <footer class="guest-site-footer">
-            <p>Hak Cipta Terpelihara &copy; {{ date('Y') }} Dewan Bandaraya Kuala Lumpur (DBKL)</p>
+            <p>Sistem Sumbangan ALP &copy; {{ date('Y') }} DBKL</p>
             <p class="guest-jpm-credit">
                 <img
                     src="{{ asset('images/jpm-logo.png') }}?v={{ @filemtime(public_path('images/jpm-logo.png')) ?: time() }}"

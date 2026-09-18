@@ -33,12 +33,13 @@
 @endphp
 
 <div class="flex h-full flex-col">
-    <div class="flex h-16 items-center gap-3 border-b border-white/10 px-5">
-        <span class="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-sm font-bold text-white ring-1 ring-white/20">DBKL</span>
-        <div class="leading-tight">
-            <p class="text-sm font-semibold text-white">Sistem ALP</p>
-            <p class="text-[11px] text-navy-200">Sumbangan · URS v1.2</p>
+    <div class="flex h-16 items-center gap-2.5 border-b border-white/10 px-4">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white p-1 ring-1 ring-white/20">
+            <x-brand-logo variant="sidebar" />
         </div>
+        <p class="min-w-0 flex-1 text-[11px] font-semibold uppercase leading-snug tracking-[0.06em] text-white">
+            Sistem Sumbangan ALP
+        </p>
     </div>
 
     <nav class="flex-1 space-y-6 overflow-y-auto px-3 py-5">
@@ -167,6 +168,6 @@
     </nav>
 
     <div class="border-t border-white/10 px-5 py-3">
-        <p class="text-[11px] text-navy-300">URS v1.2 &middot; Sistem Aktif</p>
+        <p class="text-[11px] text-navy-300">Sistem Aktif</p>
     </div>
 </div>

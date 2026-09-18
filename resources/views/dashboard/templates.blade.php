@@ -290,7 +290,7 @@
             <p class="font-semibold text-gray-900">Sumber data bila disambung nanti</p>
             <ul class="mt-2 list-inside list-disc space-y-1">
                 <li>KPI RM — <code>requested_amount</code> mengikut status permohonan</li>
-                <li>Donut baki penggal — kuota tempoh URS (jika dasar diaktifkan)</li>
+                <li>Donut baki penggal — kuota tempoh (jika dasar diaktifkan)</li>
                 <li>Donut status — kiraan / jumlah RM mengikut status</li>
                 <li>Garis bulanan — <code>submitted_at</code> atau tarikh kelulusan</li>
                 <li>Jadual — permohonan tahun aktif + no. pembekal, no. baucar, tarikh bayar (borang JKEW)</li>

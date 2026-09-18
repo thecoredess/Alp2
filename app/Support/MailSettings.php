@@ -93,9 +93,9 @@ final class MailSettings
     }
 
     /** Guna tetapan DB jika diaktifkan; jika tidak kekal pada .env. */
-    public static function applyToConfig(): void
+    public static function applyToConfig(bool $force = false): void
     {
-        if (! self::isEnabled()) {
+        if (! $force && ! self::isEnabled()) {
             return;
         }
 

@@ -89,12 +89,12 @@
     {{-- Kuota tempoh — hanya jika polisi aktif & pengguna ALP --}}
     @if (! $suppressLegacyDashboardCards && $periodSummary)
         <div class="mt-8">
-            <h3 class="dashboard-section-title">Kuota Tempoh URS · {{ $periodSummary['label'] }}@if($activeYear)<span class="font-normal text-gray-400"> · {{ $activeYear->year }}</span>@endif</h3>
+            <h3 class="dashboard-section-title">Kuota Tempoh · {{ $periodSummary['label'] }}@if($activeYear)<span class="font-normal text-gray-400"> · {{ $activeYear->year }}</span>@endif</h3>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <x-stat-card label="Kuota tempoh" icon="banknotes" tone="navy">
                     <x-money :value="$periodSummary['quota']" />
                 </x-stat-card>
-                <x-stat-card label="Digunakan (pending + diluluskan)" icon="arrow-path" tone="amber">
+                <x-stat-card label="Dalam Proses + Kelulusan" icon="arrow-path" tone="amber">
                     <x-money :value="$periodSummary['used']" />
                 </x-stat-card>
                 <x-stat-card
@@ -230,7 +230,7 @@
         </div>
     @endif
 
-    {{-- Modul projek diasingkan (URS v1.2) — kad projek tidak lagi dipaparkan --}}
+    {{-- Modul projek diasingkan — kad projek tidak lagi dipaparkan --}}
 
     {{-- Ringkasan bajet — pegawai sahaja (ALP guna halaman Bajet Saya) --}}
     @if ($summary && $scope === 'all')

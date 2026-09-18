@@ -71,7 +71,7 @@
         <table class="min-w-full divide-y divide-gray-200 text-sm">
             <thead class="bg-gray-50"><tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                 <th class="px-3 py-3">No. Permohonan</th><th class="px-3 py-3">ALP</th>
-                <th class="px-3 py-3">Tujuan / Penerima</th><th class="px-3 py-3 text-right">Amaun</th><th class="px-3 py-3">Status</th><th class="px-3 py-3">Tarikh</th>
+                <th class="px-3 py-3">Kategori / Penerima</th><th class="px-3 py-3 text-right">Amaun</th><th class="px-3 py-3">Status</th><th class="px-3 py-3">Tarikh</th>
             </tr></thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($listing as $a)
@@ -79,7 +79,7 @@
                         <td class="px-3 py-2 font-mono text-xs text-gray-700">{{ $a->application_number }}</td>
                         <td class="px-3 py-2 text-gray-600">{{ $a->alp?->ref_code }}</td>
                         <td class="px-3 py-2 text-gray-900">
-                            <p>{{ $a->programLabelForReport(40) }}</p>
+                            <p>{{ $a->programCategoryLabelForReport(40) }}</p>
                             <p class="text-xs text-gray-500">{{ $a->recipientLabelForReport() }}</p>
                         </td>
                         <td class="px-3 py-2 text-right"><x-money :value="$a->requested_amount" /></td>

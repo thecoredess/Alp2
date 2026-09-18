@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Peraku / PEPU')
 @section('heading', 'Menunggu Peraku PEPU')
-@section('subheading', 'Aliran URS v1.2: Peraku (TP/Pengarah JP) kemudian PEPU / Pengurusan Tertinggi')
+@section('subheading', 'Peraku (TP/Pengarah JP) kemudian PEPU / Pengurusan Tertinggi')
 
 @section('content')
     <form method="GET" class="mb-5 flex flex-wrap items-center gap-2">
@@ -26,7 +26,7 @@
         <table class="min-w-full divide-y divide-gray-200 text-sm">
             <thead class="bg-gray-50">
                 <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    <th class="px-4 py-3">No. Permohonan</th><th class="px-4 py-3">Tujuan / Penerima</th>
+                    <th class="px-4 py-3">No. Permohonan</th><th class="px-4 py-3">Kategori / Penerima</th>
                     <th class="px-4 py-3">Kategori</th><th class="px-4 py-3">ALP</th>
                     <th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3 text-right">Tindakan</th>
                 </tr>
@@ -36,7 +36,7 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-mono text-xs text-gray-700">{{ $app->application_number }}</td>
                         <td class="px-4 py-3 text-gray-900">
-                            <p>{{ $app->programLabelForReport(60) }}</p>
+                            <p>{{ $app->programCategoryLabelForReport(60) }}</p>
                             <p class="text-xs text-gray-500">{{ $app->recipientLabelForReport() }}</p>
                         </td>
                         <td class="px-4 py-3 text-gray-600">{{ $app->program_category?->label() ?? '—' }}</td>

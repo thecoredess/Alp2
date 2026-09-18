@@ -77,28 +77,36 @@ class MailSettingController extends Controller
     {
         abort_unless($request->user()->hasRole(RoleName::SUPER_ADMIN->value), 403);
 
-        MailSettings::applyToConfig();
+        $data = $request->validate([
+            'test_email' => ['required', 'email', 'max:255'],
+        ]);
+
+        $recipient = $data['test_email'];
+
+        // Ujian SMTP sentiasa guna tetapan DB walaupun toggle penghantaran dimatikan.
+        MailSettings::applyToConfig(force: true);
         Mail::purge((string) config('mail.default'));
 
         try {
             Mail::raw(
                 'Ini ujian e-mel dari Sistem ALP DBKL. Jika anda menerima mesej ini, konfigurasi SMTP berjaya.',
                 fn ($message) => $message
-                    ->to($request->user()->email)
+                    ->to($recipient)
                     ->subject('[ALP] Ujian E-mel SMTP'),
             );
         } catch (\Throwable $e) {
             return redirect()
                 ->route('settings.mail.edit')
+                ->withInput()
                 ->with('error', 'Gagal hantar e-mel ujian: '.$e->getMessage());
         }
 
         $this->audit->log('SETTINGS_MAIL_TEST_SENT', null, null, [
-            'recipient' => $request->user()->email,
+            'recipient' => $recipient,
         ]);
 
         return redirect()
             ->route('settings.mail.edit')
-            ->with('status', 'E-mel ujian dihantar ke '.$request->user()->email.'.');
+            ->with('status', 'E-mel ujian dihantar ke '.$recipient.'.');
     }
 }

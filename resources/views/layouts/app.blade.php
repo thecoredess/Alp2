@@ -85,7 +85,7 @@
         </main>
 
         <footer class="border-t border-gray-200 px-6 py-4 text-center text-xs text-gray-400">
-            Sistem ALP DBKL &middot; {{ config('app.name') }} &middot; &copy; {{ date('Y') }} DBKL
+            Sistem Sumbangan ALP &copy; {{ date('Y') }} DBKL
         </footer>
     </div>
 </div>

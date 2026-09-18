@@ -85,9 +85,14 @@
                 </div>
             </form>
 
-            <form method="POST" action="{{ route('settings.mail.test') }}" class="mt-4 border-t border-gray-100 pt-4">
+            <form method="POST" action="{{ route('settings.mail.test') }}" class="mt-4 space-y-4 border-t border-gray-100 pt-4">
                 @csrf
-                <button type="submit" class="btn-white text-sm">Hantar e-mel ujian ke {{ auth()->user()->email }}</button>
+                <x-field label="E-mel penerima ujian" name="test_email" :required="true" hint="Guna alamat domain DBKL (cth. @dbkl.gov.my). Ujian guna tetapan SMTP di atas walaupun penghantaran belum diaktifkan.">
+                    <input type="email" name="test_email" class="inp" value="{{ old('test_email', auth()->user()->email) }}" required placeholder="contoh@dbkl.test">
+                </x-field>
+                <div class="flex justify-end">
+                    <button type="submit" class="btn-white text-sm">Hantar e-mel ujian</button>
+                </div>
             </form>
         </x-page-card>
     </div>

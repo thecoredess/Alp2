@@ -12,6 +12,7 @@ use App\Support\MailSettings;
 use App\Support\NotificationTemplates;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Tests\Concerns\BuildsWorkflow;
 use Tests\TestCase;
@@ -113,6 +114,28 @@ class EmailSettingsTest extends TestCase
 
         $this->assertStringContainsString('Tindakan diperlukan', (string) $mail->subject);
         $this->assertStringContainsString(route('reviews.show', [$app, 'secretariat'], false), (string) $mail->render());
+    }
+
+    public function test_super_admin_can_send_test_email_to_custom_address(): void
+    {
+        Mail::fake();
+
+        $super = User::factory()->create(['email' => 'superadmin@dbkl.test'])
+            ->assignRole(RoleName::SUPER_ADMIN->value);
+
+        $this->actingAs($super)
+            ->post(route('settings.mail.test'), ['test_email' => 'ujian@dbkl.test'])
+            ->assertRedirect(route('settings.mail.edit'))
+            ->assertSessionHas('status', 'E-mel ujian dihantar ke ujian@dbkl.test.');
+    }
+
+    public function test_mail_test_requires_valid_email(): void
+    {
+        $super = User::factory()->create()->assignRole(RoleName::SUPER_ADMIN->value);
+
+        $this->actingAs($super)
+            ->post(route('settings.mail.test'), ['test_email' => 'bukan-emel'])
+            ->assertSessionHasErrors('test_email');
     }
 
     public function test_verify_peer_can_be_disabled_in_mail_settings(): void

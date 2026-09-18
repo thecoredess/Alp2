@@ -46,9 +46,15 @@ class ApplicationController extends Controller
         $this->authorize('viewAny', Application::class);
         abort_if($request->user()->alp_id === null, 403, 'Akaun anda tidak dikaitkan dengan mana-mana ALP.');
 
-        $applications = $this->filteredQuery($request)
+        $statusOptions = ApplicationReportService::statusFilterOptionsForAlpApplications();
+
+        $applications = $this->filteredQuery(
+            $request,
+            useOperationalStatus: true,
+            allowedStatusOptions: $statusOptions,
+        )
             ->where('alp_id', $request->user()->alp_id)
-            ->with(['financialYear', 'alp'])
+            ->with(['financialYear', 'alp', 'approvals', 'reportCardReviews'])
             ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
@@ -56,7 +62,8 @@ class ApplicationController extends Controller
         return view('applications.index', [
             'applications' => $applications,
             'scopeAll' => false,
-        ] + $this->filterOptions($request, scopeAll: false));
+            'usesOperationalStatus' => true,
+        ] + $this->filterOptions($request, scopeAll: false, statusOptions: $statusOptions));
     }
 
     /** Semua Permohonan (staf DBKL berkuasa). */
@@ -284,7 +291,8 @@ class ApplicationController extends Controller
 
     // ── Bantuan ─────────────────────────────────────────────────
 
-    private function filteredQuery(Request $request, bool $useOperationalStatus = false)
+    /** @param  array<string, string>|null  $allowedStatusOptions */
+    private function filteredQuery(Request $request, bool $useOperationalStatus = false, ?array $allowedStatusOptions = null)
     {
         $query = Application::query()
             ->when($request->filled('tahun'), fn ($q) => $q->where('financial_year_id', $request->integer('tahun')))
@@ -302,6 +310,7 @@ class ApplicationController extends Controller
                 $status = ApplicationReportService::sanitizeStatusFilter(
                     $request->string('status')->toString(),
                     $request->user(),
+                    $allowedStatusOptions,
                 );
                 if ($status !== null) {
                     $this->applicationReports->applyStatusFilterToQuery($query, $status);
@@ -314,13 +323,17 @@ class ApplicationController extends Controller
         return $query;
     }
 
-    private function filterOptions(Request $request, bool $scopeAll): array
+    /** @param  array<string, string>|null  $statusOptions */
+    private function filterOptions(Request $request, bool $scopeAll, ?array $statusOptions = null): array
     {
         $user = $request->user();
-        $statusOptions = $scopeAll && ApplicationReportService::usesStaffStatusFilters($user)
-            ? ApplicationReportService::statusFilterOptionsForUser($user)
-            : collect(ApplicationStatus::cases())
-                ->mapWithKeys(fn ($s) => [$s->value => $s->label()])->all();
+
+        if ($statusOptions === null) {
+            $statusOptions = $scopeAll && ApplicationReportService::usesStaffStatusFilters($user)
+                ? ApplicationReportService::statusFilterOptionsForUser($user)
+                : collect(ApplicationStatus::cases())
+                    ->mapWithKeys(fn ($s) => [$s->value => $s->label()])->all();
+        }
 
         return [
             'years' => FinancialYear::orderByDesc('year')->get(),

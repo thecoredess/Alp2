@@ -9,7 +9,7 @@
                 <p class="mt-2 text-2xl font-semibold text-navy-700"><x-money :value="$periodSummary['quota']" /></p>
             </div>
             <div class="card p-5">
-                <p class="text-sm text-gray-500">Digunakan (pending + diluluskan)</p>
+                <p class="text-sm text-gray-500">Dalam Proses + Kelulusan</p>
                 <p class="mt-2 text-2xl font-semibold text-amber-600"><x-money :value="$periodSummary['used']" /></p>
             </div>
             <div class="card p-5">

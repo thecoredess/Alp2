@@ -50,7 +50,7 @@
     @endif
 
     <div class="mb-4 rounded-lg border border-royal-200 bg-royal-50 px-4 py-3 text-sm text-royal-900">
-        Dokumen ini merumuskan aliran URS v1.2 untuk peranan anda.
+        Dokumen ini merumuskan aliran sistem untuk peranan anda.
         Kandungan penuh boleh disahkan/dikemas kini oleh pemilik proses.
         Peranan semasa: <strong>{{ $audienceLabel }}</strong>.
     </div>

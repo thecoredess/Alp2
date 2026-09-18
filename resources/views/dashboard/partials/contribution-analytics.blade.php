@@ -59,11 +59,11 @@
         <h2 id="contribution-analysis-title" class="sr-only">Analisa Sumbangan — graf & jadual</h2>
     @endif
 
-    {{-- Kuota tempoh URS — ALP sahaja --}}
+    {{-- Kuota tempoh — ALP sahaja --}}
     @if ($periodSummary ?? null)
         <div class="mb-5">
             <h3 class="dashboard-section-title mb-4">
-                Kuota Tempoh URS · {{ $periodSummary['label'] }}
+                Kuota Tempoh · {{ $periodSummary['label'] }}
                 @if ($activeYear ?? null)
                     <span class="font-normal text-gray-400"> · {{ $activeYear->year }}</span>
                 @endif
@@ -72,7 +72,7 @@
                 <x-stat-card label="Kuota tempoh" icon="banknotes" tone="navy">
                     <x-money :value="$periodSummary['quota']" />
                 </x-stat-card>
-                <x-stat-card label="Digunakan (pending + diluluskan)" icon="arrow-path" tone="amber">
+                <x-stat-card label="Dalam Proses + Kelulusan" icon="arrow-path" tone="amber">
                     <x-money :value="$periodSummary['used']" />
                 </x-stat-card>
                 <x-stat-card
@@ -158,19 +158,27 @@
             </form>
         </div>
 
+        @php
+            $isAlpTable = ($analytics['scope_label'] ?? '') === 'ALP sendiri';
+            $tableColspan = $isAlpTable ? 5 : 9;
+        @endphp
         <div class="overflow-x-auto">
-            <table class="min-w-[1100px] w-full text-sm">
+            <table @class(['w-full text-sm', 'min-w-[640px]' => $isAlpTable, 'min-w-[1100px]' => ! $isAlpTable])>
                 <thead class="bg-purple-200 text-xs font-bold uppercase text-gray-800">
                     <tr>
                         <th class="border border-gray-300 px-3 py-2.5 text-left">ALP</th>
                         <th class="border border-gray-300 px-3 py-2.5 text-right">Dalam Proses (RM)</th>
-                        <th class="border border-gray-300 px-3 py-2.5 text-right">Diluluskan (RM)</th>
+                        @unless ($isAlpTable)
+                            <th class="border border-gray-300 px-3 py-2.5 text-right">Diluluskan (RM)</th>
+                        @endunless
                         <th class="border border-gray-300 px-3 py-2.5 text-right">Ditolak (RM)</th>
                         <th class="border border-gray-300 px-3 py-2.5 text-right">Baki Sumbangan (RM)</th>
                         <th class="border border-gray-300 px-3 py-2.5 text-right">Jumlah Sumbangan (RM)</th>
-                        <th class="border border-gray-300 px-3 py-2.5 text-left">Nombor Pembekal</th>
-                        <th class="border border-gray-300 px-3 py-2.5 text-left">Nombor Bayaran</th>
-                        <th class="border border-gray-300 px-3 py-2.5 text-left">Tarikh Bayaran</th>
+                        @unless ($isAlpTable)
+                            <th class="border border-gray-300 px-3 py-2.5 text-left">Nombor Pembekal</th>
+                            <th class="border border-gray-300 px-3 py-2.5 text-left">Nombor Bayaran</th>
+                            <th class="border border-gray-300 px-3 py-2.5 text-left">Tarikh Bayaran</th>
+                        @endunless
                     </tr>
                 </thead>
                 <tbody>
@@ -180,16 +188,23 @@
                                 <span class="block font-mono text-xs font-semibold text-gray-900">{{ $row['alp']?->ref_code ?? '—' }}</span>
                                 <span class="block max-w-44 truncate text-xs text-gray-500" title="{{ $row['alp']?->name }}">{{ $row['alp']?->name }}</span>
                             </td>
-                            @foreach (['in_process', 'approved', 'rejected', 'remaining', 'total'] as $key)
-                                <td class="border border-gray-200 px-3 py-2 text-right tabular-nums text-gray-800">{{ number_format($row[$key], 2) }}</td>
-                            @endforeach
-                            <td class="border border-gray-200 px-3 py-2 font-mono text-xs text-gray-600">{{ $row['supplier_no'] ?: '—' }}</td>
-                            <td class="border border-gray-200 px-3 py-2 font-mono text-xs text-gray-600">{{ $row['payment_no'] ?: '—' }}</td>
-                            <td class="border border-gray-200 px-3 py-2 text-xs text-gray-600">{{ $row['payment_date']?->format('d/m/Y') ?? '—' }}</td>
+                            @if ($isAlpTable)
+                                @foreach (['in_process', 'rejected', 'remaining'] as $key)
+                                    <td class="border border-gray-200 px-3 py-2 text-right tabular-nums text-gray-800">{{ number_format($row[$key], 2) }}</td>
+                                @endforeach
+                                <td class="border border-gray-200 px-3 py-2 text-right tabular-nums text-gray-800">{{ number_format($row['approved'], 2) }}</td>
+                            @else
+                                @foreach (['in_process', 'approved', 'rejected', 'remaining', 'total'] as $key)
+                                    <td class="border border-gray-200 px-3 py-2 text-right tabular-nums text-gray-800">{{ number_format($row[$key], 2) }}</td>
+                                @endforeach
+                                <td class="border border-gray-200 px-3 py-2 font-mono text-xs text-gray-600">{{ $row['supplier_no'] ?: '—' }}</td>
+                                <td class="border border-gray-200 px-3 py-2 font-mono text-xs text-gray-600">{{ $row['payment_no'] ?: '—' }}</td>
+                                <td class="border border-gray-200 px-3 py-2 text-xs text-gray-600">{{ $row['payment_date']?->format('d/m/Y') ?? '—' }}</td>
+                            @endif
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-5 py-10 text-center text-sm text-gray-400">
+                            <td colspan="{{ $tableColspan }}" class="px-5 py-10 text-center text-sm text-gray-400">
                                 Tiada data sumbangan bagi tempoh dipilih.
                             </td>
                         </tr>

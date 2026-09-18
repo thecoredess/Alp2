@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Laporan')
 @section('heading', 'Laporan')
-@section('subheading', 'Peruntukan · Permohonan · Program · Audit (URS v1.2)')
+@section('subheading', 'Peruntukan · Permohonan · Program · Audit')
 
 @php $u = auth()->user(); @endphp
 

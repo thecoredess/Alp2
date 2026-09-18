@@ -73,6 +73,8 @@
     @include('applications.partials.jp-incomplete-banner')
 
     <div x-data="{ tab: '{{ $initialTab }}' }">
+        @include('applications.partials.timeline-summary', ['isAlpView' => $isAlpView])
+
         <nav class="mb-6 flex gap-1 rounded-xl border border-gray-200 bg-gray-100 p-1" aria-label="Tab permohonan">
             @foreach ($tabs as $key => $label)
                 <button type="button"

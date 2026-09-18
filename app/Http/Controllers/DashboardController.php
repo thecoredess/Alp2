@@ -420,7 +420,13 @@ class DashboardController extends Controller
                     ->first();
 
                 $sum = fn (array $statuses): float => (float) $items
-                    ->whereIn('status', $statuses)
+                    ->filter(function (Application $app) use ($statuses) {
+                        $value = $app->status instanceof ApplicationStatus
+                            ? $app->status->value
+                            : (string) $app->status;
+
+                        return in_array($value, $statuses, true);
+                    })
                     ->sum(fn (Application $app) => (float) $app->requested_amount);
 
                 return [
