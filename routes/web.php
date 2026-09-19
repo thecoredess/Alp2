@@ -27,11 +27,11 @@ use App\Http\Controllers\ReportCardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AlpController;
 use App\Http\Controllers\AuditTrailController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
-use App\Enums\RoleName;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect()->route('dashboard'));
+Route::get('/', [HomeController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
@@ -66,17 +66,8 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     Route::put('profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('profil/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
 
-    Route::get('tetapan', function () {
-        $user = auth()->user();
-        $canSystem = $user->can('users.view')
-            || $user->can('financial_years.view')
-            || $user->can('settings.manage')
-            || $user->can('approval_matrix.view')
-            || $user->hasRole(RoleName::SUPER_ADMIN->value);
-
-        return redirect()->route($canSystem ? 'settings.hub' : 'profile.edit');
-    })->name('settings.index');
-    Route::get('ketetapan', fn () => redirect()->route('settings.index'));
+    Route::get('tetapan', [SystemSettingController::class, 'entry'])->name('settings.index');
+    Route::get('ketetapan', [SystemSettingController::class, 'entry']);
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

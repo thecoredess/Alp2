@@ -128,12 +128,15 @@ return [
     | UAT Login Helper (halaman log masuk)
     |--------------------------------------------------------------------------
     |
-    | Papar dropdown akaun ujian pada halaman log masuk. Sentiasa dimatikan
-    | apabila APP_ENV=production. Hidupkan secara eksplisit untuk staging/UAT.
+    | Papar dropdown akaun ujian pada halaman log masuk.
+    | Untuk staging/UAT: SHOW_UAT_LOGIN_HELPER=true (walaupun APP_ENV=production).
+    | Lalai: hidup jika bukan production.
     |
     */
 
-    'show_uat_login_helper' => env('APP_ENV') !== 'production'
-        && filter_var(env('SHOW_UAT_LOGIN_HELPER', env('APP_ENV') === 'local'), FILTER_VALIDATE_BOOL),
+    'show_uat_login_helper' => filter_var(
+        env('SHOW_UAT_LOGIN_HELPER', env('APP_ENV') !== 'production'),
+        FILTER_VALIDATE_BOOL
+    ),
 
 ];

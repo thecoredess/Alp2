@@ -30,7 +30,8 @@ class ProfileUpdateTest extends TestCase
             ->assertOk()
             ->assertSee('Profil')
             ->assertSee('Tukar Kata Laluan')
-            ->assertSee($user->email);
+            ->assertSee($user->email)
+            ->assertDontSee('E-mel Hubungan');
     }
 
     public function test_user_can_update_account_fields(): void
@@ -67,13 +68,19 @@ class ProfileUpdateTest extends TestCase
             'alp_id' => $alp->id,
         ])->assignRole(RoleName::ALP->value);
 
+        $this->actingAs($user)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertDontSee('E-mel Hubungan')
+            ->assertSee('E-mel Log Masuk');
+
         $this->actingAs($user)->put(route('profile.update'), [
             'name' => 'ALP Dikemas',
             'email' => 'alp99@dbkl.test',
             'phone' => '012-9998877',
-            'contact_email' => 'hubungi@example.com',
             'address' => 'No. 1, Jalan DBKL',
-        ])->assertRedirect(route('profile.edit'));
+        ])->assertRedirect(route('profile.edit'))
+            ->assertSessionDoesntHaveErrors();
 
         $user->refresh();
         $alp->refresh();
@@ -81,7 +88,7 @@ class ProfileUpdateTest extends TestCase
         $this->assertSame('ALP Dikemas', $user->name);
         $this->assertSame('ALP Dikemas', $alp->name);
         $this->assertSame('012-9998877', $alp->phone);
-        $this->assertSame('hubungi@example.com', $alp->email);
+        $this->assertSame('lama@example.com', $alp->email);
         $this->assertSame('No. 1, Jalan DBKL', $alp->address);
     }
 

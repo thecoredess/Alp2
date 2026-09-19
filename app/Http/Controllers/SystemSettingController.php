@@ -21,6 +21,14 @@ class SystemSettingController extends Controller
         return view('admin.settings.index');
     }
 
+    /** Pintu /tetapan — hub sistem atau profil, mengikut kebenaran. */
+    public function entry(Request $request): RedirectResponse
+    {
+        return redirect()->route(
+            $this->canAccessSystemSettings($request->user()) ? 'settings.hub' : 'profile.edit'
+        );
+    }
+
     public function edit(Request $request): View
     {
         abort_unless($request->user()->can('settings.manage'), 403);

@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 /**
- * Profil kendiri — kemaskini nama / e-mel / avatar / unit,
- * serta maklumat hubungan ALP (jika akaun dikaitkan).
+ * Profil kendiri — kemaskini nama / e-mel log masuk / avatar / unit,
+ * serta telefon dan alamat ALP (jika akaun dikaitkan).
  */
 class ProfileController extends Controller
 {
@@ -64,7 +64,6 @@ class ProfileController extends Controller
                 $user->alp->forceFill([
                     'name' => $data['name'],
                     'phone' => $data['phone'] ?? null,
-                    'email' => $data['contact_email'] ?? null,
                     'address' => $data['address'] ?? null,
                 ])->save();
             }

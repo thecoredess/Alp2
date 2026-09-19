@@ -36,7 +36,6 @@ class ProfileUpdateRequest extends FormRequest
 
         if ($hasAlp) {
             $rules['phone'] = ['nullable', 'string', 'max:30'];
-            $rules['contact_email'] = ['nullable', 'email', 'max:255'];
             $rules['address'] = ['nullable', 'string', 'max:500'];
         } else {
             $rules['unit'] = ['nullable', 'string', 'max:255'];
@@ -55,7 +54,6 @@ class ProfileUpdateRequest extends FormRequest
             'email' => 'e-mel log masuk',
             'unit' => 'unit',
             'phone' => 'telefon',
-            'contact_email' => 'e-mel hubungan',
             'address' => 'alamat',
             'avatar' => 'gambar profil',
             'avatar_icon' => 'ikon profil',
