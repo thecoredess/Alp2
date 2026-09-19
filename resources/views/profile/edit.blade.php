@@ -71,7 +71,7 @@
                         <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required class="inp">
                     </x-field>
 
-                    <x-field label="E-mel Log Masuk" name="email" :required="true" class="sm:col-span-2" hint="Digunakan untuk log masuk dan notifikasi.">
+                    <x-field label="E-mel Log Masuk" name="email" :required="true" class="sm:col-span-2" hint="Digunakan untuk log masuk dan menerima semua e-mel notifikasi.">
                         <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required autocomplete="email" class="inp">
                     </x-field>
 
@@ -103,10 +103,6 @@
                     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                         <x-field label="Telefon" name="phone">
                             <input id="phone" name="phone" type="text" value="{{ old('phone', $user->alp->phone) }}" class="inp">
-                        </x-field>
-
-                        <x-field label="E-mel Hubungan" name="contact_email" hint="E-mel rasmi / hubungan (boleh berbeza daripada e-mel log masuk).">
-                            <input id="contact_email" name="contact_email" type="email" value="{{ old('contact_email', $user->alp->email) }}" class="inp">
                         </x-field>
 
                         <x-field label="Alamat" name="address" class="sm:col-span-2">
