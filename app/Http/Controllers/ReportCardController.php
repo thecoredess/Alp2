@@ -68,7 +68,7 @@ class ReportCardController extends Controller
         $search = $request->string('cari')->trim()->toString();
 
         $apps = Application::query()
-            ->with(['alp:id,ref_code,name', 'financialYear:id,year'])
+            ->with(['alp:id,ref_code,name', 'financialYear:id,year', 'revisions:id,application_id,snapshot'])
             ->where('status', ApplicationStatus::APPROVED->value)
             ->where('report_card_status', $queueStatus)
             ->when($yearId, fn ($q) => $q->where('financial_year_id', $yearId))

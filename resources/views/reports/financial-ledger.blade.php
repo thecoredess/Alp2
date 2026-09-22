@@ -27,8 +27,8 @@
             <thead class="bg-gray-50"><tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                 <th class="px-3 py-3">Tarikh</th><th class="px-3 py-3">Rujukan</th><th class="px-3 py-3">ALP</th>
                 <th class="px-3 py-3">Jenis</th><th class="px-3 py-3 text-right">Amaun</th>
-                <th class="px-3 py-3 text-right">Baki Peruntukan</th><th class="px-3 py-3 text-right">Baki Komitmen</th>
-                <th class="px-3 py-3 text-right">Baki Belanja</th><th class="px-3 py-3">Keterangan</th>
+                <th class="px-3 py-3 text-right">Baki Peruntukan</th><th class="px-3 py-3 text-right">Baki Diluluskan</th>
+                <th class="px-3 py-3">Keterangan</th>
             </tr></thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($result['rows'] as $r)
@@ -40,11 +40,10 @@
                         <td class="px-3 py-2 text-right text-gray-900"><x-money :value="$r['amount']" /></td>
                         <td class="px-3 py-2 text-right text-navy-700"><x-money :value="$r['run_allocation']" /></td>
                         <td class="px-3 py-2 text-right text-amber-600"><x-money :value="$r['run_committed']" /></td>
-                        <td class="px-3 py-2 text-right text-purple-700"><x-money :value="$r['run_spent']" /></td>
                         <td class="px-3 py-2 text-gray-500">{{ $r['description'] }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="9" class="px-4 py-10 text-center text-gray-400">Tiada transaksi lejar untuk tapisan ini.</td></tr>
+                    <tr><td colspan="8" class="px-4 py-10 text-center text-gray-400">Tiada transaksi lejar untuk tapisan ini.</td></tr>
                 @endforelse
             </tbody>
         </table>

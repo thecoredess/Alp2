@@ -372,8 +372,20 @@ class ApplicationTest extends TestCase
             'recipient_name' => 'PERSATUAN PPTM',
         ]);
 
+        $this->assertSame('MAIN BOWLING', $app->fresh()->purposeLabelForReport());
         $this->assertSame('MAIN BOWLING', $app->fresh()->programLabelForReport());
         $this->assertSame('PERSATUAN PPTM', $app->fresh()->recipientLabelForReport());
+    }
+
+    public function test_purpose_label_for_report_does_not_fall_back_to_program_category(): void
+    {
+        $app = Application::factory()->create([
+            'purpose' => Application::SIMULATION_PREFIX.'Diluluskan — baucar disedia',
+            'program_category' => 'sukan',
+        ]);
+
+        $this->assertSame('—', $app->fresh()->purposeLabelForReport());
+        $this->assertSame('Program sukan', $app->fresh()->programLabelForReport());
     }
 
     public function test_report_program_label_ignores_simulation_workflow_placeholders(): void

@@ -36,7 +36,7 @@
         <div>
             <label class="block text-xs text-gray-500">Status laporan</label>
             <select name="laporan" class="inp">
-                <option value="">Semua</option>
+                <option value="">Semua Status</option>
                 @foreach ($statusLabels as $value => $label)
                     <option value="{{ $value }}" @selected(request('laporan') === $value)>{{ $label }}</option>
                 @endforeach

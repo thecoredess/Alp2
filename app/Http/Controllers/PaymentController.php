@@ -29,7 +29,7 @@ class PaymentController extends Controller
         $jkewScoped = $this->usesJkewScope($request->user());
 
         $query = Application::query()
-            ->with(['alp:id,ref_code,name', 'financialYear:id,year'])
+            ->with(['alp:id,ref_code,name', 'financialYear:id,year', 'revisions:id,application_id,snapshot'])
             ->where('status', ApplicationStatus::APPROVED->value)
             ->whereNotNull('payment_status')
             ->when($request->filled('tahun'), fn ($q) => $q->where('financial_year_id', $request->integer('tahun')))
@@ -98,7 +98,7 @@ class PaymentController extends Controller
         $statusFilter = $this->resolvePaymentStatusFilter($request);
 
         $rows = Application::query()
-            ->with(['alp:id,ref_code,name', 'financialYear:id,year'])
+            ->with(['alp:id,ref_code,name', 'financialYear:id,year', 'revisions:id,application_id,snapshot'])
             ->where('status', ApplicationStatus::APPROVED->value)
             ->whereNotNull('payment_status')
             ->when($request->filled('tahun'), fn ($q) => $q->where('financial_year_id', $request->integer('tahun')))
@@ -113,7 +113,7 @@ class PaymentController extends Controller
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8 untuk Excel
             fputcsv($out, [
-                'No. Permohonan', 'ALP', 'Tajuk', 'Tahun', 'Jumlah (RM)',
+                'No. Permohonan', 'ALP', 'Tujuan', 'Tahun', 'Jumlah (RM)',
                 'Status Bayaran', 'No. Pembekal', 'No. Baucar', 'Tarikh Baucar', 'Rujukan', 'Dihantar JKEW', 'Semakan Silang', 'Tarikh Bayar', 'Catatan',
             ]);
 
@@ -121,7 +121,7 @@ class PaymentController extends Controller
                 fputcsv($out, [
                     $app->application_number,
                     $app->alp?->ref_code,
-                    $app->programLabelForReport(),
+                    $app->purposeLabelForReport(),
                     $app->financialYear?->year,
                     $app->requested_amount,
                     $app->payment_status?->label(),

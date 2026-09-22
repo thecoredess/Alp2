@@ -27,7 +27,7 @@
                 <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     <th class="px-4 py-3">No. Permohonan</th>
                     <th class="px-4 py-3">Kategori / Penerima</th>
-                    <th class="px-4 py-3">Kategori</th>
+                    <th class="px-4 py-3">Tujuan</th>
                     <th class="px-4 py-3">ALP</th>
                     <th class="px-4 py-3 text-right">Jumlah</th>
                     <th class="px-4 py-3">Dihantar</th>
@@ -42,7 +42,9 @@
                             <p>{{ $app->programCategoryLabelForReport(60) }}</p>
                             <p class="text-xs text-gray-500">{{ $app->recipientLabelForReport() }}</p>
                         </td>
-                        <td class="px-4 py-3 text-gray-600">{{ $app->program_category?->label() ?? '—' }}</td>
+                        <td class="px-4 py-3 text-gray-600">
+                            <span class="line-clamp-1">{{ $app->purposeLabelForReport(60) }}</span>
+                        </td>
                         <td class="px-4 py-3 text-gray-600">{{ $app->alp->ref_code }}</td>
                         <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$app->requested_amount" /></td>
                         <td class="px-4 py-3 text-gray-500">{{ $app->submitted_at?->format('d/m/Y') ?? '—' }}</td>

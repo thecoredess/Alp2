@@ -13,7 +13,7 @@
         @endif
     </div>
     <div class="card p-5">
-        <p class="text-sm text-gray-500">Baki Komitmen</p>
+        <p class="text-sm text-gray-500">Baki Diluluskan</p>
         <p class="mt-2 text-2xl font-semibold text-amber-600"><x-money :value="$finance['outstanding']" /></p>
     </div>
     <div class="card p-5">
@@ -21,4 +21,4 @@
         <p class="mt-2 text-2xl font-semibold text-teal-600"><x-money :value="$finance['released']" /></p>
     </div>
 </div>
-<p class="mt-2 text-[11px] text-gray-400">Rekonsiliasi: Diluluskan = Baki Komitmen + Perbelanjaan + Dilepaskan (dari lejar).</p>
+<p class="mt-2 text-[11px] text-gray-400">Rekonsiliasi: Jumlah Diluluskan = Baki Diluluskan + Perbelanjaan + Dilepaskan (dari lejar).</p>

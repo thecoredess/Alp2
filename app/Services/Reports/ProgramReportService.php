@@ -190,7 +190,7 @@ class ProgramReportService
 
     private function resolveAlpRowStatus(Application $application, ?Carbon $due): string
     {
-        return $this->resolveApprovedReportStatus($application, $due, includeOverdue: true);
+        return $this->resolveApprovedReportStatus($application, $due, includeOverdue: false);
     }
 
     private function resolveApprovedReportStatus(Application $application, ?Carbon $due, bool $includeOverdue = false): string

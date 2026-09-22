@@ -7,7 +7,7 @@
     <form method="GET" class="mb-5 flex flex-wrap items-end gap-3">
         <div>
             <label class="block text-xs text-gray-500">Tahun Kewangan</label>
-            <select name="fy" class="inp" onchange="this.form.requestSubmit()">
+            <select name="fy" class="inp-select inp-select--year" onchange="this.form.requestSubmit()">
                 @foreach ($years as $y)
                     <option value="{{ $y->id }}" @selected($year?->id === $y->id)>{{ $y->year }} @if($y->is_active) (Aktif) @endif</option>
                 @endforeach
@@ -36,7 +36,7 @@
     {{-- Ringkasan kewangan --}}
     <h3 class="mb-3 mt-6 text-sm font-semibold text-gray-900">Ringkasan Kewangan</h3>
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div class="card p-5"><p class="text-sm text-gray-500">Baki Komitmen</p><p class="mt-2 text-xl font-semibold text-amber-600"><x-money :value="$totals->committed" /></p></div>
+        <div class="card p-5"><p class="text-sm text-gray-500">Diluluskan</p><p class="mt-2 text-xl font-semibold text-amber-600"><x-money :value="$totals->committed" /></p></div>
         <div class="card p-5"><p class="text-sm text-gray-500">Belanja Kasar</p><p class="mt-2 text-xl font-semibold text-gray-700"><x-money :value="$totals->grossSpent" /></p></div>
         <div class="card p-5"><p class="text-sm text-gray-500">Refund</p><p class="mt-2 text-xl font-semibold text-teal-600"><x-money :value="$totals->refunded" /></p></div>
         <div class="card p-5"><p class="text-sm text-gray-500">Belanja Bersih</p><p class="mt-2 text-xl font-semibold text-purple-700"><x-money :value="$totals->netSpent()" /></p></div>

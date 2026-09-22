@@ -147,7 +147,7 @@
                             </li>
                         @endforeach
                     </ol>
-                    <p class="mt-3 text-xs text-gray-400">Komitmen bajet dicipta pada aras terakhir sahaja.</p>
+                    <p class="mt-3 text-xs text-gray-400">Peruntukan diluluskan dicatat pada aras kelulusan terakhir sahaja.</p>
                 </x-page-card>
 
                 @if ($isFinalNext)
@@ -162,11 +162,11 @@
                                 <dd class="font-semibold text-green-700"><x-money :value="$ledgerAvailable" /></dd>
                             </div>
                             <div class="flex items-center justify-between rounded-lg bg-orange-50 px-3 py-2">
-                                <dt class="text-gray-600">Pending Request</dt>
+                                <dt class="text-gray-600">Peruntukan Permohonan Dalam Proses (Belum diluluskan)</dt>
                                 <dd class="font-semibold text-orange-700">−<x-money :value="$thisRequest" /></dd>
                             </div>
                             <div class="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2">
-                                <dt class="text-gray-600">Committed</dt>
+                                <dt class="text-gray-600">Diluluskan</dt>
                                 <dd class="font-semibold text-amber-700">+<x-money :value="$thisRequest" /></dd>
                             </div>
                             <div class="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2.5">

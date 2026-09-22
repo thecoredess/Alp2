@@ -12,7 +12,7 @@
 
     <div class="mb-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div class="card p-4"><p class="text-xs text-gray-500">Peruntukan</p><p class="mt-1 text-lg font-semibold text-navy-700"><x-money :value="$totals->allocation" /></p></div>
-        <div class="card p-4"><p class="text-xs text-gray-500">Komitmen</p><p class="mt-1 text-lg font-semibold text-amber-600"><x-money :value="$totals->committed" /></p></div>
+        <div class="card p-4"><p class="text-xs text-gray-500">Diluluskan</p><p class="mt-1 text-lg font-semibold text-amber-600"><x-money :value="$totals->committed" /></p></div>
         <div class="card p-4"><p class="text-xs text-gray-500">Belanja Bersih</p><p class="mt-1 text-lg font-semibold text-purple-700"><x-money :value="$totals->netSpent()" /></p></div>
         <div class="card p-4"><p class="text-xs text-gray-500">Baki + Dilepaskan</p><p class="mt-1 text-lg font-semibold text-teal-600"><x-money :value="$totals->available()->plus($totals->released)" /></p></div>
     </div>
@@ -26,7 +26,7 @@
                 <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800">{{ $exceptions->count() }} pengecualian</span>
             @endif
         </div>
-        <p class="mt-1 text-xs text-gray-500">Invarian: Diluluskan = Baki Komitmen + Belanja Bersih + Dilepaskan (setiap projek).</p>
+        <p class="mt-1 text-xs text-gray-500">Invarian: Jumlah Diluluskan = Baki Diluluskan + Belanja Bersih + Dilepaskan (setiap projek).</p>
 
         @if ($exceptions->isNotEmpty())
             <div class="mt-4 overflow-x-auto">

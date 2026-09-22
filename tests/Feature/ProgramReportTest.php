@@ -141,7 +141,7 @@ class ProgramReportTest extends TestCase
 
         $alpRows = $service->listing(['financial_year_id' => $year->id], staffStatusFilters: false);
         $alpById = $alpRows->keyBy(fn (array $row) => $row['application']->id);
-        $this->assertSame(ProgramReportService::STATUS_OVERDUE, $alpById[$overdue->id]['status']);
+        $this->assertSame(ApplicationReportService::FILTER_PENDING, $alpById[$overdue->id]['status']);
     }
 
     public function test_staff_program_report_status_dropdown_excludes_tertunggak(): void
@@ -155,16 +155,18 @@ class ProgramReportTest extends TestCase
         $this->assertArrayHasKey(ApplicationReportService::FILTER_RECOMMENDED, $options);
     }
 
-    public function test_alp_program_report_keeps_legacy_status_dropdown(): void
+    public function test_alp_program_report_uses_operational_status_dropdown(): void
     {
         $alp = Alp::factory()->create();
         $options = ApplicationReportService::statusFilterOptionsForUser(
             $this->userWithRole(RoleName::ALP->value, $alp),
         );
 
-        $this->assertSame(ProgramReportService::alpStatusOptions(), $options);
-        $this->assertArrayHasKey(ProgramReportService::STATUS_OVERDUE, $options);
+        $this->assertSame(ApplicationReportService::statusFilterOptionsForAlpApplications(), $options);
+        $this->assertArrayNotHasKey(ProgramReportService::STATUS_OVERDUE, $options);
         $this->assertArrayNotHasKey(ApplicationReportService::FILTER_RECOMMENDED, $options);
+        $this->assertArrayHasKey(ApplicationReportService::FILTER_APPROVED, $options);
+        $this->assertArrayHasKey(ApplicationReportService::FILTER_REJECTED, $options);
     }
 
     public function test_alp_user_only_sees_own_programs(): void

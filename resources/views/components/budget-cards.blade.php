@@ -1,7 +1,7 @@
 @props(['summary'])
 {{-- Memerlukan $summary (App\Services\Budget\BudgetSummary) --}}
 
-<div class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+<div class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
     <div class="card min-w-0 p-4 sm:p-5">
         <p class="text-xs text-gray-500 sm:text-sm">Peruntukan Tahunan</p>
         <p class="mt-2 text-base font-semibold tabular-nums leading-tight text-navy-700 sm:text-lg xl:text-2xl">
@@ -9,15 +9,9 @@
         </p>
     </div>
     <div class="card min-w-0 p-4 sm:p-5">
-        <p class="text-xs text-gray-500 sm:text-sm">Committed</p>
+        <p class="text-xs text-gray-500 sm:text-sm">Diluluskan</p>
         <p class="mt-2 text-base font-semibold tabular-nums leading-tight text-amber-600 sm:text-lg xl:text-2xl">
             <x-money :value="$summary->committed" />
-        </p>
-    </div>
-    <div class="card min-w-0 p-4 sm:p-5">
-        <p class="text-xs text-gray-500 sm:text-sm">Perbelanjaan Sebenar</p>
-        <p class="mt-2 text-base font-semibold tabular-nums leading-tight text-purple-600 sm:text-lg xl:text-2xl">
-            <x-money :value="$summary->spent" />
         </p>
     </div>
     <div class="card min-w-0 p-4 sm:p-5">

@@ -12,7 +12,7 @@
     @endif
 
     <form method="GET" class="mb-5 flex flex-wrap items-center gap-2">
-        <input type="text" name="cari" value="{{ request('cari') }}" placeholder="No. / tajuk / baucar…" class="inp w-full min-w-[12rem] shrink-0 sm:w-56">
+        <input type="text" name="cari" value="{{ request('cari') }}" placeholder="No. / tujuan / baucar…" class="inp w-full min-w-[12rem] shrink-0 sm:w-56">
         <select name="tahun" class="inp-select shrink-0">
             <option value="">Semua Tahun</option>
             @foreach ($years as $y)
@@ -37,7 +37,7 @@
                 <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     <th class="px-4 py-3">No.</th>
                     <th class="px-4 py-3">ALP</th>
-                    <th class="px-4 py-3">Tajuk</th>
+                    <th class="px-4 py-3">Tujuan</th>
                     <th class="px-4 py-3 text-right">Jumlah</th>
                     <th class="px-4 py-3">Status Bayaran</th>
                     <th class="px-4 py-3">Baucar</th>
@@ -50,7 +50,7 @@
                         <td class="px-4 py-3 font-mono text-xs text-gray-800">{{ $app->application_number }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ $app->alp?->ref_code }}</td>
                         <td class="px-4 py-3 text-gray-900">
-                            <span class="line-clamp-1">{{ $app->programLabelForReport(60) }}</span>
+                            <span class="line-clamp-1">{{ $app->purposeLabelForReport(60) }}</span>
                         </td>
                         <td class="px-4 py-3 text-right"><x-money :value="$app->requested_amount" /></td>
                         <td class="px-4 py-3">

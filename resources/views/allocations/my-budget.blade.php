@@ -37,11 +37,11 @@
 
         <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="card p-4">
-                <p class="text-xs text-gray-500">Pending Request (permohonan belum diluluskan — <strong>bukan</strong> Committed)</p>
+                <p class="text-xs text-gray-500">Peruntukan Permohonan Dalam Proses (Belum diluluskan)</p>
                 <p class="mt-1 text-lg font-semibold text-orange-600"><x-money :value="$pending" /></p>
             </div>
             <div class="card p-4">
-                <p class="text-xs text-gray-500">Baki Peruntukan Semasa (Baki Peruntukan Diluluskan − Pending Request)</p>
+                <p class="text-xs text-gray-500">Baki Peruntukan Semasa (Peruntukan Diluluskan + Permohonan Dalam Proses)</p>
                 <p class="mt-1 text-lg font-semibold {{ $projected->isNegative() ? 'text-danger' : 'text-green-600' }}"><x-money :value="$projected" /></p>
             </div>
         </div>

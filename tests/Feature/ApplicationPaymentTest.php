@@ -122,6 +122,15 @@ class ApplicationPaymentTest extends TestCase
             'purpose' => \App\Models\Application::SIMULATION_PREFIX.'Diluluskan — menunggu baucar',
             'program_category' => \App\Enums\ProgramCategory::KOMUNITI,
         ])->save();
+        $app->revisions()->create([
+            'revision_number' => 0,
+            'requested_amount' => $app->requested_amount,
+            'snapshot' => ['purpose' => 'untuk program masyarakat asli'],
+            'submitted_by' => $app->created_by,
+            'submitted_at' => now(),
+            'review_type' => 'secretariat',
+            'remarks' => 'Ujian pembayaran',
+        ]);
 
         $finance = User::factory()->create()->assignRole(RoleName::PEGAWAI_KEWANGAN->value);
 
@@ -129,8 +138,10 @@ class ApplicationPaymentTest extends TestCase
             ->get(route('payments.index'))
             ->assertOk()
             ->assertSee($app->application_number)
-            ->assertSee('Program komuniti')
+            ->assertSee('Tujuan')
+            ->assertSee('untuk program masyarakat asli')
             ->assertDontSee('Diluluskan — menunggu baucar')
+            ->assertDontSee('Program komuniti')
             ->assertSee('Pembayaran');
 
         $this->actingAs($finance)

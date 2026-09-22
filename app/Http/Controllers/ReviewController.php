@@ -76,7 +76,7 @@ class ReviewController extends Controller
                 ->where('application_number', 'like', '%'.$request->string('cari').'%')
                 ->orWhere('purpose', 'like', '%'.$request->string('cari').'%')
                 ->orWhere('recipient_name', 'like', '%'.$request->string('cari').'%')))
-            ->with(['alp', 'financialYear'])
+            ->with(['alp', 'financialYear', 'revisions:id,application_id,snapshot'])
             ->latest('submitted_at')
             ->paginate(15)
             ->withQueryString();

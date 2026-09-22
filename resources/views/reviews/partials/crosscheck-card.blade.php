@@ -44,15 +44,12 @@
                     <p class="mt-1 truncate text-xs text-gray-500" title="{{ $crosscheckDocument->original_filename }}">
                         {{ $crosscheckDocument->original_filename }}
                     </p>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        <a href="{{ route('applications.documents.view', [$application, $crosscheckDocument]) }}"
-                           target="_blank" rel="noopener noreferrer" class="btn-white text-xs">
-                            Lihat
-                        </a>
-                        <a href="{{ route('applications.documents.download', [$application, $crosscheckDocument]) }}"
-                           class="btn-white text-xs">
-                            Muat Turun
-                        </a>
+                    <div class="mt-3">
+                        <x-document-preview
+                            :application="$application"
+                            :documents="collect([$crosscheckDocument])"
+                            layout="actions"
+                        />
                     </div>
                 </div>
             @elseif ($canViewReference)

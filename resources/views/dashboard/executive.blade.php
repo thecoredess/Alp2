@@ -7,7 +7,7 @@
     <form method="GET" class="mb-5 flex flex-wrap items-end gap-3">
         <div>
             <label class="block text-xs text-gray-500">Tahun Kewangan</label>
-            <select name="fy" class="inp" onchange="this.form.requestSubmit()">
+            <select name="fy" class="inp-select inp-select--year" onchange="this.form.requestSubmit()">
                 @foreach ($years as $y)
                     <option value="{{ $y->id }}" @selected($year?->id === $y->id)>{{ $y->year }} @if($y->is_active) (Aktif) @endif</option>
                 @endforeach
@@ -23,19 +23,19 @@
         {{-- Baris utama --}}
         <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <div class="card p-5"><p class="text-sm text-gray-500">Jumlah Peruntukan</p><p class="mt-2 text-2xl font-semibold text-navy-700"><x-money :value="$totals->allocation" /></p></div>
-            <div class="card p-5"><p class="text-sm text-gray-500">Committed</p><p class="mt-2 text-2xl font-semibold text-amber-600"><x-money :value="$totals->committed" /></p></div>
+            <div class="card p-5"><p class="text-sm text-gray-500">Diluluskan</p><p class="mt-2 text-2xl font-semibold text-amber-600"><x-money :value="$totals->committed" /></p></div>
             <div class="card p-5"><p class="text-sm text-gray-500">Net Spent</p><p class="mt-2 text-2xl font-semibold text-purple-700"><x-money :value="$totals->netSpent()" /></p></div>
             <div class="card p-5"><p class="text-sm text-gray-500">Baki Tersedia</p><p class="mt-2 text-2xl font-semibold text-teal-600"><x-money :value="$totals->available()" /></p></div>
         </div>
 
         {{-- Baris kedua --}}
         <div class="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <div class="card p-5"><p class="text-sm text-gray-500">Pending Application</p><p class="mt-2 text-xl font-semibold text-gray-700"><x-money :value="$totals->pending" /></p></div>
-            <div class="card p-5"><p class="text-sm text-gray-500">Baki Peruntukan Semasa</p><p class="mt-2 text-xl font-semibold text-teal-700"><x-money :value="$totals->projectedAvailable()" /></p></div>
+            <div class="card p-5"><p class="text-sm text-gray-500">Peruntukan Permohonan Dalam Proses (Belum diluluskan)</p><p class="mt-2 text-xl font-semibold text-gray-700"><x-money :value="$totals->pending" /></p></div>
+            <div class="card p-5"><p class="text-sm text-gray-500">Baki Peruntukan Semasa (Peruntukan Diluluskan + Permohonan Dalam Proses)</p><p class="mt-2 text-xl font-semibold text-teal-700"><x-money :value="$totals->projectedAvailable()" /></p></div>
             <div class="card p-5"><p class="text-sm text-gray-500">Refund</p><p class="mt-2 text-xl font-semibold text-green-600"><x-money :value="$totals->refunded" /></p></div>
             <div class="card p-5"><p class="text-sm text-gray-500">Released Commitment</p><p class="mt-2 text-xl font-semibold text-gray-600"><x-money :value="$totals->released" /></p></div>
         </div>
-        <p class="mt-2 text-[11px] text-gray-400">Pending Application ≠ Committed. Net Spent = Gross − Refund. Semua dari lejar.</p>
+        <p class="mt-2 text-[11px] text-gray-400">Menunggu ≠ Diluluskan. Belanja Bersih = Kasar − Refund. Semua dari lejar.</p>
 
         {{-- Kad operasi --}}
         <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">

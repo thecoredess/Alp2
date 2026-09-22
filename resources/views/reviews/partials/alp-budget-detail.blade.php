@@ -16,12 +16,8 @@
                 <dd class="font-semibold text-navy-700"><x-money :value="$summary->allocation" /></dd>
             </div>
             <div class="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2">
-                <dt class="text-gray-600">Permohonan Peruntukkan</dt>
+                <dt class="text-gray-600">Diluluskan</dt>
                 <dd class="font-semibold text-amber-700"><x-money :value="$summary->committed" /></dd>
-            </div>
-            <div class="flex items-center justify-between rounded-lg bg-purple-50 px-3 py-2">
-                <dt class="text-gray-600">Perbelanjaan Sebenar</dt>
-                <dd class="font-semibold text-purple-700"><x-money :value="$summary->spent" /></dd>
             </div>
             <div class="flex items-center justify-between rounded-lg bg-green-50 px-3 py-2.5">
                 <dt class="text-gray-600">Baki Peruntukkan Diluluskan</dt>

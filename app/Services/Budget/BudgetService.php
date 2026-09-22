@@ -252,7 +252,7 @@ class BudgetService
             BudgetTransactionType::COMMITMENT,
             $amount,
             $referenceNo ?? $application->application_number,
-            'Komitmen bajet — permohonan diluluskan',
+            'Diluluskan — permohonan diluluskan',
             $application->id,
             null,
             $project?->id,

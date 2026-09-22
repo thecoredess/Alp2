@@ -34,9 +34,9 @@ enum BudgetTransactionType: string
         return match ($this) {
             self::INITIAL_ALLOCATION => 'Peruntukan Awal',
             self::ALLOCATION_ADJUSTMENT => 'Pelarasan Peruntukan',
-            self::COMMITMENT => 'Komitmen',
-            self::COMMITMENT_REVERSAL => 'Pembalikan Komitmen',
-            self::COMMITMENT_RELEASE => 'Pelepasan Komitmen',
+            self::COMMITMENT => 'Diluluskan',
+            self::COMMITMENT_REVERSAL => 'Pembalikan Diluluskan',
+            self::COMMITMENT_RELEASE => 'Pelepasan Diluluskan',
             self::EXPENDITURE => 'Perbelanjaan',
             self::REFUND => 'Bayaran Balik',
             self::PROJECT_CLOSURE_ADJUSTMENT => 'Pelarasan Penutupan Projek',

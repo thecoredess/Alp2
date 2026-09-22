@@ -44,7 +44,7 @@
         <div class="card p-4"><p class="text-xs text-gray-500">Kasar</p><p class="mt-1 text-base font-semibold text-gray-700"><x-money :value="$totals['gross']" /></p></div>
         <div class="card p-4"><p class="text-xs text-gray-500">Refund</p><p class="mt-1 text-base font-semibold text-teal-600"><x-money :value="$totals['refunded']" /></p></div>
         <div class="card p-4"><p class="text-xs text-gray-500">Bersih</p><p class="mt-1 text-base font-semibold text-purple-700"><x-money :value="$totals['net']" /></p></div>
-        <div class="card p-4"><p class="text-xs text-gray-500">Baki Komitmen</p><p class="mt-1 text-base font-semibold text-amber-600"><x-money :value="$totals['outstanding']" /></p></div>
+        <div class="card p-4"><p class="text-xs text-gray-500">Baki Diluluskan</p><p class="mt-1 text-base font-semibold text-amber-600"><x-money :value="$totals['outstanding']" /></p></div>
         <div class="card p-4"><p class="text-xs text-gray-500">Dilepaskan</p><p class="mt-1 text-base font-semibold text-teal-700"><x-money :value="$totals['released']" /></p></div>
     </div>
 
@@ -72,7 +72,7 @@
             <thead class="bg-gray-50"><tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                 <th class="px-3 py-3">No. Projek</th><th class="px-3 py-3">ALP</th><th class="px-3 py-3 text-right">Diluluskan</th>
                 <th class="px-3 py-3 text-right">Kasar</th><th class="px-3 py-3 text-right">Refund</th><th class="px-3 py-3 text-right">Bersih</th>
-                <th class="px-3 py-3 text-right">Baki Komitmen</th><th class="px-3 py-3 text-right">Dilepaskan</th><th class="px-3 py-3">Status</th>
+                <th class="px-3 py-3 text-right">Baki Diluluskan</th><th class="px-3 py-3 text-right">Dilepaskan</th><th class="px-3 py-3">Status</th>
             </tr></thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($listing as $r)

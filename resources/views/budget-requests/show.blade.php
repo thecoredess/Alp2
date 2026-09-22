@@ -71,9 +71,8 @@
                 <h3 class="mb-3 text-sm font-semibold text-gray-900">Kedudukan Bajet ALP</h3>
                 <dl class="space-y-2 text-sm">
                     <div class="flex justify-between"><dt class="text-gray-500">Peruntukan Semasa</dt><dd class="font-medium text-navy-700"><x-money :value="$position['summary']->allocation" /></dd></div>
-                    <div class="flex justify-between"><dt class="text-gray-500">Committed</dt><dd class="text-amber-600"><x-money :value="$position['summary']->committed" /></dd></div>
-                    <div class="flex justify-between"><dt class="text-gray-500">Spent</dt><dd class="text-purple-600"><x-money :value="$position['summary']->spent" /></dd></div>
-                    <div class="flex justify-between"><dt class="text-gray-500">Pending Application</dt><dd class="text-orange-600"><x-money :value="$position['pending']" /></dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">Diluluskan</dt><dd class="text-amber-600"><x-money :value="$position['summary']->committed" /></dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">Peruntukan Permohonan Dalam Proses (Belum diluluskan)</dt><dd class="text-orange-600"><x-money :value="$position['pending']" /></dd></div>
                     <div class="flex justify-between border-t border-gray-100 pt-2"><dt class="text-gray-600 font-medium">Baki Peruntukan Diluluskan</dt><dd class="font-semibold text-green-600"><x-money :value="$position['available']" /></dd></div>
                     <div class="flex justify-between"><dt class="text-gray-500">Baki Peruntukan Semasa</dt><dd class="{{ $position['projected']->isNegative() ? 'text-danger' : 'text-green-600' }}"><x-money :value="$position['projected']" /></dd></div>
                     <div class="flex justify-between border-t border-gray-100 pt-2"><dt class="text-gray-500">Available Selepas</dt><dd class="font-semibold"><x-money :value="$position['available_after']" /></dd></div>

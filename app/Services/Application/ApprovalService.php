@@ -138,7 +138,7 @@ class ApprovalService
 
         // Idempotensi: komitmen tidak boleh wujud lebih daripada sekali.
         if ($application->commitmentTransaction()->exists()) {
-            throw new ApplicationException('Komitmen telah wujud untuk permohonan ini.');
+            throw new ApplicationException('Peruntukan diluluskan telah wujud untuk permohonan ini.');
         }
 
         // Semakan baki menggunakan Ledger Available SEBENAR (bukan tolak pending sendiri).

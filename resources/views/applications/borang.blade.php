@@ -55,7 +55,7 @@
     <p class="section">Ruang kegunaan JP (F–J)</p>
     <table class="form">
         <tr><th>F · Peruntukan</th><td>RM {{ number_format((float) $tbl10->allocation->value(), 2) }}</td></tr>
-        <tr><th>G · Komitmen / belanja diluluskan</th><td>RM {{ number_format((float) $tbl10->approvedSpend->value(), 2) }}</td></tr>
+        <tr><th>G · Belanja diluluskan</th><td>RM {{ number_format((float) $tbl10->approvedSpend->value(), 2) }}</td></tr>
         <tr><th>H · Baki peruntukan</th><td>RM {{ number_format((float) $tbl10->balance->value(), 2) }}</td></tr>
         <tr><th>I · Permohonan semasa</th><td>RM {{ number_format((float) $tbl10->currentRequest->value(), 2) }}</td></tr>
         <tr><th>J · Baki selepas pending / permohonan</th><td>RM {{ number_format((float) $tbl10->balanceAfter->value(), 2) }}</td></tr>

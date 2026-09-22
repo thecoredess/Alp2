@@ -134,6 +134,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $activeYear = FinancialYear::active();
+        $isPepuDashboard = $user->hasRole(RoleName::PENGURUSAN->value);
 
         $isManager = $user->hasAnyRole([
             RoleName::SUPER_ADMIN->value, RoleName::SYSTEM_ADMIN->value,
@@ -207,7 +208,7 @@ class DashboardController extends Controller
                     'tone' => 'amber',
                 ];
             }
-            if ($user->can('payments.view')) {
+            if ($user->can('payments.view') && ! $isPepuDashboard) {
                 $officerQueues[] = [
                     'label' => 'Pembayaran / Baucar',
                     'description' => 'Permohonan diluluskan — kemas kini baucar & status bayaran',
@@ -227,11 +228,13 @@ class DashboardController extends Controller
 
         $stats = null;
         if ($user->hasAnyRole([RoleName::SUPER_ADMIN->value, RoleName::SYSTEM_ADMIN->value, RoleName::PENGURUSAN->value])) {
-            $stats = [
-                'alp_count' => Alp::where('status', 'active')->count(),
-                'user_count' => User::where('status', 'active')->count(),
-                'financial_year' => $activeYear?->year,
-            ];
+            $stats = $isPepuDashboard
+                ? ['alp_count' => Alp::where('status', 'active')->count()]
+                : [
+                    'alp_count' => Alp::where('status', 'active')->count(),
+                    'user_count' => User::where('status', 'active')->count(),
+                    'financial_year' => $activeYear?->year,
+                ];
         }
 
         $periodSummary = null;
@@ -257,14 +260,18 @@ class DashboardController extends Controller
             ];
         }
 
-        $overdueApplications = $this->overdueApplications(
-            $activeYear?->id,
-            $user->alp_id && ! $user->can('applications.view_all') ? $user->alp_id : null,
-        );
+        $overdueApplications = $isPepuDashboard
+            ? collect()
+            : $this->overdueApplications(
+                $activeYear?->id,
+                $user->alp_id && ! $user->can('applications.view_all') ? $user->alp_id : null,
+            );
 
-        $kpiWatchlist = $user->can('applications.view_all')
-            ? $this->kpiWatchlist($activeYear?->id, null)
-            : collect();
+        $kpiWatchlist = $isPepuDashboard
+            ? collect()
+            : ($user->can('applications.view_all')
+                ? $this->kpiWatchlist($activeYear?->id, null)
+                : collect());
 
         $isAlpUser = $user->alp_id !== null;
 
@@ -306,6 +313,7 @@ class DashboardController extends Controller
             'contributionAnalytics' => $contributionAnalytics,
             'contributionKpi' => $contributionKpi,
             'suppressLegacyDashboardCards' => $suppressLegacyDashboardCards,
+            'isPepuDashboard' => $isPepuDashboard,
         ]);
     }
 

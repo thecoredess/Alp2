@@ -57,11 +57,11 @@
     <p class="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">Ruang JP (F–J)</p>
     <dl class="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
         <div><dt class="text-gray-500">F · Peruntukan</dt><dd><x-money :value="$f" /></dd></div>
-        <div><dt class="text-gray-500">G · Komitmen / belanja diluluskan</dt><dd><x-money :value="$g" /></dd></div>
+        <div><dt class="text-gray-500">G · Belanja diluluskan</dt><dd><x-money :value="$g" /></dd></div>
         <div><dt class="text-gray-500">H · Baki peruntukan</dt><dd><x-money :value="$h" /></dd></div>
         <div><dt class="text-gray-500">I · Permohonan semasa</dt><dd><x-money :value="$i" /></dd></div>
         <div><dt class="text-gray-500">J · Baki selepas pending / permohonan</dt><dd><x-money :value="$j" /></dd></div>
-        <div><dt class="text-gray-500">Pending request (rujukan)</dt><dd><x-money :value="$pendingAmt" /></dd></div>
+        <div><dt class="text-gray-500">Permohonan dalam proses (rujukan)</dt><dd><x-money :value="$pendingAmt" /></dd></div>
     </dl>
 
     @if ($jpLabel || ($application->relationLoaded('approvals') && $application->approvals->isNotEmpty()))

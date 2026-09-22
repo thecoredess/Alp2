@@ -2,7 +2,7 @@
 @php($submitOnChange = $submitOnChange ?? true)
 <div>
     <label class="block text-xs text-gray-500">Tahun Kewangan</label>
-    <select name="fy" class="inp"@if ($submitOnChange) onchange="this.form.requestSubmit()" @endif>
+    <select name="fy" class="inp-select inp-select--year"@if ($submitOnChange) onchange="this.form.requestSubmit()" @endif>
         @foreach ($years as $y)
             <option value="{{ $y->id }}" @selected(($selectedYear ?? $year)?->id === $y->id)>{{ $y->year }} @if($y->is_active) (Aktif) @endif</option>
         @endforeach

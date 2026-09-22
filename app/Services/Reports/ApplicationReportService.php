@@ -73,7 +73,7 @@ class ApplicationReportService
     {
         return self::usesStaffStatusFilters($user)
             ? self::statusFilterOptions()
-            : ProgramReportService::alpStatusOptions();
+            : self::statusFilterOptionsForAlpApplications();
     }
 
     /** @param  array<string, string>|null  $allowedOptions */

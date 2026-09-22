@@ -60,6 +60,18 @@ class ReportingCountsTest extends TestCase
         $this->assertArrayNotHasKey('tertunggak', $options);
     }
 
+    public function test_alp_application_report_status_filter_options(): void
+    {
+        $alp = Alp::factory()->create();
+        $options = ApplicationReportService::statusFilterOptionsForUser(
+            $this->userWithRole(RoleName::ALP->value, $alp),
+        );
+
+        $this->assertSame(ApplicationReportService::statusFilterOptionsForAlpApplications(), $options);
+        $this->assertArrayNotHasKey('disyorkan', $options);
+        $this->assertArrayNotHasKey('tertunggak', $options);
+    }
+
     public function test_application_report_rejects_legacy_status_query(): void
     {
         $alp = Alp::factory()->create();

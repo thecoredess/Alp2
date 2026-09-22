@@ -81,7 +81,7 @@
                     <div class="flex justify-between"><dt class="text-gray-500">Belanja Kasar</dt><dd class="text-purple-600"><x-money :value="$finance['gross']" /></dd></div>
                     <div class="flex justify-between"><dt class="text-gray-500">Refund Disahkan</dt><dd class="text-teal-600">(<x-money :value="$finance['refunded']" />)</dd></div>
                     <div class="flex justify-between border-t border-gray-100 pt-2"><dt class="text-gray-500">Belanja Bersih</dt><dd class="font-semibold text-purple-700"><x-money :value="$finance['spent']" /></dd></div>
-                    <div class="flex justify-between"><dt class="text-gray-500">Baki Komitmen</dt><dd class="font-semibold text-amber-600"><x-money :value="$finance['outstanding']" /></dd></div>
+                    <div class="flex justify-between"><dt class="text-gray-500">Baki Diluluskan</dt><dd class="font-semibold text-amber-600"><x-money :value="$finance['outstanding']" /></dd></div>
                 </dl>
             </div>
 

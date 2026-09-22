@@ -13,7 +13,7 @@
     {{-- Ringkasan --}}
     <div class="mb-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div class="card p-4"><p class="text-xs text-gray-500">Jumlah Peruntukan</p><p class="mt-1 text-lg font-semibold text-navy-700"><x-money :value="$totals->allocation" /></p></div>
-        <div class="card p-4"><p class="text-xs text-gray-500">Komitmen</p><p class="mt-1 text-lg font-semibold text-amber-600"><x-money :value="$totals->committed" /></p></div>
+        <div class="card p-4"><p class="text-xs text-gray-500">Diluluskan</p><p class="mt-1 text-lg font-semibold text-amber-600"><x-money :value="$totals->committed" /></p></div>
         <div class="card p-4"><p class="text-xs text-gray-500">Belanja Bersih</p><p class="mt-1 text-lg font-semibold text-purple-700"><x-money :value="$totals->netSpent()" /></p></div>
         <div class="card p-4"><p class="text-xs text-gray-500">Baki Tersedia</p><p class="mt-1 text-lg font-semibold text-teal-600"><x-money :value="$totals->available()" /></p></div>
     </div>
@@ -32,7 +32,7 @@
                 <th class="px-3 py-3">ALP</th>
                 <th class="px-3 py-3 text-right">Peruntukan</th>
                 <th class="px-3 py-3 text-right">Menunggu</th>
-                <th class="px-3 py-3 text-right">Komitmen</th>
+                <th class="px-3 py-3 text-right">Diluluskan</th>
                 <th class="px-3 py-3 text-right">Kasar</th>
                 <th class="px-3 py-3 text-right">Refund</th>
                 <th class="px-3 py-3 text-right">Bersih</th>
@@ -63,5 +63,5 @@
             </tbody>
         </table>
     </div>
-    <p class="mt-2 text-xs text-gray-400">Guna Bersih % = (Belanja Bersih ÷ Peruntukan) × 100. Menunggu ≠ Komitmen. Semua nilai dari lejar.</p>
+    <p class="mt-2 text-xs text-gray-400">Guna Bersih % = (Belanja Bersih ÷ Peruntukan) × 100. Menunggu ≠ Diluluskan. Semua nilai dari lejar.</p>
 @endsection

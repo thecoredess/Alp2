@@ -23,7 +23,8 @@
                 <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     <th class="px-4 py-3">No.</th>
                     <th class="px-4 py-3">ALP</th>
-                    <th class="px-4 py-3">Program</th>
+                    <th class="px-4 py-3">Kategori / Penerima</th>
+                    <th class="px-4 py-3">Tujuan</th>
                     <th class="px-4 py-3">Dimuat naik</th>
                     <th class="px-4 py-3 text-right">Tindakan</th>
                 </tr>
@@ -34,8 +35,11 @@
                         <td class="px-4 py-3 font-mono text-xs">{{ $app->application_number }}</td>
                         <td class="px-4 py-3">{{ $app->alp?->ref_code }}</td>
                         <td class="px-4 py-3">
-                            <p>{{ $app->programLabelForReport(60) }}</p>
+                            <p>{{ $app->programCategoryLabelForReport(60) }}</p>
                             <p class="text-xs text-gray-500">{{ $app->recipientLabelForReport() }}</p>
+                        </td>
+                        <td class="px-4 py-3 text-gray-600">
+                            <span class="line-clamp-1">{{ $app->purposeLabelForReport(60) }}</span>
                         </td>
                         <td class="px-4 py-3 text-xs text-gray-600">{{ $app->report_card_submitted_at?->format('d/m/Y H:i') ?? '—' }}</td>
                         <td class="px-4 py-3 text-right">
@@ -46,7 +50,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-4 py-10 text-center text-gray-400">
+                        <td colspan="6" class="px-4 py-10 text-center text-gray-400">
                             Tiada laporan menunggu {{ $fullJpDecision ? 'semakan Admin JP' : 'pengesahan Pegawai JP' }}.
                         </td>
                     </tr>

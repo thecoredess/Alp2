@@ -46,26 +46,12 @@
                 @endphp
 
                 <x-page-card title="Dokumen Laporan Aktiviti" icon="paper-clip">
-                    @if ($reportDocs->isEmpty())
-                        <p class="text-sm text-gray-500">Tiada dokumen laporan.</p>
-                    @else
-                        <div class="space-y-3">
-                            @foreach ($reportDocs as $doc)
-                                <div class="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
-                                    <div>
-                                        <p class="font-medium text-gray-900">{{ $doc->document_type->label() }}</p>
-                                        <p class="text-xs text-gray-500">{{ $doc->original_filename }} · {{ $doc->created_at?->format('d/m/Y H:i') }}</p>
-                                    </div>
-                                    <a href="{{ route('applications.documents.view', [$application, $doc]) }}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="btn-primary !py-1 !px-3 text-xs">
-                                        Lihat
-                                    </a>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
+                    <x-document-preview
+                        :application="$application"
+                        :documents="$reportDocs"
+                        layout="rows"
+                        empty="Tiada dokumen laporan."
+                    />
                 </x-page-card>
 
                 @if ($application->reportCardReviews->isNotEmpty())

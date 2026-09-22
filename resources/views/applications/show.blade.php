@@ -252,7 +252,7 @@
                                 <dd class="font-semibold text-navy-700"><x-money :value="$application->requested_amount" /></dd>
                             </div>
                             <div class="flex items-center justify-between rounded-lg bg-orange-50 px-3 py-2.5">
-                                <dt class="text-sm text-gray-500">Pending Request</dt>
+                                <dt class="text-sm text-gray-500">Peruntukan Permohonan Dalam Proses (Belum diluluskan)</dt>
                                 <dd class="font-semibold text-orange-700"><x-money :value="$pending" /></dd>
                             </div>
                         </dl>
@@ -261,7 +261,7 @@
                     @if ($application->commitmentTransaction)
                         <div class="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-4">
                             <p class="flex items-center gap-2 text-sm font-semibold text-green-800">
-                                <x-icon name="check" class="h-4 w-4" /> Komitmen Bajet
+                                <x-icon name="check" class="h-4 w-4" /> Bajet Diluluskan
                             </p>
                             <p class="mt-2 text-sm text-green-900">
                                 <x-money :value="$application->commitmentTransaction->amount" />
@@ -364,33 +364,12 @@
                 <div class="mb-4 flex items-center justify-between">
                     <p class="text-sm text-gray-500">{{ $attachmentCount }} fail dimuat naik</p>
                 </div>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    @foreach ($attachmentDocs as $doc)
-                        <div @class([
-                            'group card flex items-center gap-4 p-5 transition',
-                            'border-2 border-red-400 bg-red-50 ring-1 ring-red-200' => \App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'dokumen'),
-                            'hover:border-royal-200 hover:shadow-md' => ! \App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'dokumen'),
-                        ])>
-                            <span @class([
-                                'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition',
-                                'bg-red-100 text-red-600' => \App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'dokumen'),
-                                'bg-royal-50 text-royal-600 group-hover:bg-royal-100' => ! \App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'dokumen'),
-                            ])>
-                                <x-icon name="document" class="h-6 w-6" />
-                            </span>
-                            <div class="min-w-0 flex-1">
-                                <p class="font-semibold text-gray-900">{{ $doc->document_type->simpleLabel() }}</p>
-                                <p class="truncate text-sm text-gray-500" title="{{ $doc->original_filename }}">{{ $doc->original_filename }}</p>
-                            </div>
-                            <a href="{{ route('applications.documents.view', [$application, $doc]) }}"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               class="btn-white shrink-0 !px-3 !py-2 text-xs">
-                                Lihat
-                            </a>
-                        </div>
-                    @endforeach
-                </div>
+                <x-document-preview
+                    :application="$application"
+                    :documents="$attachmentDocs"
+                    layout="cards"
+                    :highlight-incomplete="\App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'dokumen')"
+                />
             @else
                 <div @class([
                     'card p-12 text-center',
@@ -472,13 +451,11 @@
                                         <p class="font-medium text-gray-900">{{ $reportCardDraft->original_filename }}</p>
                                         <p class="text-xs text-gray-500">{{ number_format($reportCardDraft->file_size / 1024, 1) }} KB</p>
                                     </div>
-                                    <a href="{{ route('applications.documents.view', [$application, $reportCardDraft]) }}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="btn-white text-xs !px-3 !py-1.5">
-                                        <x-icon name="eye" class="h-4 w-4" />
-                                        Preview
-                                    </a>
+                                    <x-document-preview
+                                        :application="$application"
+                                        :documents="collect([$reportCardDraft])"
+                                        layout="button"
+                                    />
                                 </div>
 
                                 @can('submitReportCard', $application)
@@ -514,17 +491,12 @@
                                 @endcan
                             </div>
                         @else
-                            @foreach ($reportDocs as $doc)
-                                <div class="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
-                                    <span class="font-medium text-gray-900">{{ $doc->document_type->label() }}</span>
-                                    <a href="{{ route('applications.documents.view', [$application, $doc]) }}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="inline-flex items-center gap-1 text-xs font-semibold text-royal-600 hover:text-royal-700">
-                                        Lihat
-                                    </a>
-                                </div>
-                            @endforeach
+                            <x-document-preview
+                                :application="$application"
+                                :documents="$reportDocs"
+                                layout="rows"
+                                empty="Tiada dokumen laporan."
+                            />
                         @endif
 
                         @can('uploadReportCard', $application)

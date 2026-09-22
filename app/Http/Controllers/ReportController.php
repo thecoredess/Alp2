@@ -56,7 +56,7 @@ class ReportController extends Controller
             'Laporan Peruntukan Mengikut ALP',
             [
                 ['label' => 'ALP', 'width' => 3], ['label' => 'Peruntukan', 'type' => 'money', 'width' => 3],
-                ['label' => 'Menunggu', 'type' => 'money', 'width' => 3], ['label' => 'Komitmen', 'type' => 'money', 'width' => 3],
+                ['label' => 'Menunggu', 'type' => 'money', 'width' => 3], ['label' => 'Diluluskan', 'type' => 'money', 'width' => 3],
                 ['label' => 'Belanja Kasar', 'type' => 'money', 'width' => 3], ['label' => 'Refund', 'type' => 'money', 'width' => 2],
                 ['label' => 'Belanja Bersih', 'type' => 'money', 'width' => 3], ['label' => 'Dilepaskan', 'type' => 'money', 'width' => 2],
                 ['label' => 'Baki', 'type' => 'money', 'width' => 3], ['label' => 'Unjuran Baki', 'type' => 'money', 'width' => 3],
@@ -94,12 +94,12 @@ class ReportController extends Controller
             [
                 ['label' => 'Tarikh', 'type' => 'date', 'width' => 2], ['label' => 'Rujukan', 'width' => 2],
                 ['label' => 'ALP', 'width' => 1], ['label' => 'Jenis', 'width' => 2], ['label' => 'Amaun', 'type' => 'money', 'width' => 2],
-                ['label' => 'Baki Peruntukan', 'type' => 'money', 'width' => 2], ['label' => 'Baki Komitmen', 'type' => 'money', 'width' => 2],
-                ['label' => 'Baki Belanja', 'type' => 'money', 'width' => 2], ['label' => 'Keterangan', 'width' => 4],
+                ['label' => 'Baki Peruntukan', 'type' => 'money', 'width' => 2], ['label' => 'Baki Diluluskan', 'type' => 'money', 'width' => 2],
+                ['label' => 'Keterangan', 'width' => 4],
             ],
             array_map(fn ($r) => [
                 $r['date']?->format('d/m/Y'), $r['reference'], $r['alp'], $r['type']->label(), $r['amount']->value(),
-                $r['run_allocation']->value(), $r['run_committed']->value(), $r['run_spent']->value(), $r['description'],
+                $r['run_allocation']->value(), $r['run_committed']->value(), $r['description'],
             ], $result['rows']),
             $this->meta($request, $year),
         );
@@ -207,7 +207,7 @@ class ReportController extends Controller
             $this->shell($request) + [
                 'year' => $year, 'listing' => $listing, 'filters' => $filters,
                 'counts' => $this->applications->statusCounts($filters), 'amounts' => $this->applications->amounts($filters),
-                'pipeline' => $this->applications->pipeline($filters), 'byType' => $this->applications->byType($filters),
+                'byType' => $this->applications->byType($filters),
                 'statusFilterOptions' => ApplicationReportService::statusFilterOptionsForUser($request->user()),
             ], 'permohonan', true);
     }
@@ -268,7 +268,7 @@ class ReportController extends Controller
             [
                 ['label' => 'No. Projek', 'width' => 3], ['label' => 'ALP', 'width' => 2], ['label' => 'Diluluskan', 'type' => 'money', 'width' => 3],
                 ['label' => 'Belanja Kasar', 'type' => 'money', 'width' => 3], ['label' => 'Refund', 'type' => 'money', 'width' => 2],
-                ['label' => 'Belanja Bersih', 'type' => 'money', 'width' => 3], ['label' => 'Baki Komitmen', 'type' => 'money', 'width' => 3],
+                ['label' => 'Belanja Bersih', 'type' => 'money', 'width' => 3], ['label' => 'Baki Diluluskan', 'type' => 'money', 'width' => 3],
                 ['label' => 'Dilepaskan', 'type' => 'money', 'width' => 2], ['label' => 'Status', 'width' => 2],
             ],
             $listing->map(fn ($r) => [

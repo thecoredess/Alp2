@@ -5,16 +5,19 @@
 
 @section('content')
     <div class="mb-8 rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
-        <div class="flex items-start gap-4">
-            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-navy-600 to-royal-500 text-white shadow-sm">
-                <x-icon name="dashboard" class="h-6 w-6" />
-            </span>
-            <div>
-                <h2 class="text-lg font-semibold text-gray-900">Selamat datang, {{ auth()->user()->name }}</h2>
-                <p class="mt-1 text-sm text-gray-500">
-                    Peranan: {{ auth()->user()->roles->first()?->name ? \App\Enums\RoleName::from(auth()->user()->roles->first()->name)->label() : '—' }}
-                </p>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex min-w-0 flex-1 items-start gap-4">
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-navy-600 to-royal-500 text-white shadow-sm">
+                    <x-icon name="dashboard" class="h-6 w-6" />
+                </span>
+                <div class="min-w-0">
+                    <h2 class="text-lg font-semibold text-gray-900">Selamat datang, {{ auth()->user()->name }}</h2>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Peranan: {{ auth()->user()->roles->first()?->name ? \App\Enums\RoleName::from(auth()->user()->roles->first()->name)->label() : '—' }}
+                    </p>
+                </div>
             </div>
+            <x-welcome-datetime class="w-full sm:w-auto" />
         </div>
     </div>
 
@@ -27,37 +30,42 @@
         </div>
     @endif
 
-    {{-- Kad statistik pentadbir --}}
-    @if ($stats)
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <x-stat-card label="Ahli Lembaga Aktif" icon="users-group" tone="navy">{{ $stats['alp_count'] }}</x-stat-card>
-            <x-stat-card label="Pengguna Aktif" icon="user-cog" tone="royal">{{ $stats['user_count'] }}</x-stat-card>
-            <x-stat-card label="Tahun Kewangan Aktif" icon="calendar" tone="teal">{{ $stats['financial_year'] ?? '—' }}</x-stat-card>
-        </div>
-    @endif
-
-    {{-- Giliran pegawai — blok tindakan --}}
-    @if ($officerQueues)
-        <div class="mt-8">
-            <h3 class="dashboard-section-title">Tindakan Diperlukan</h3>
-            <div @class([
-                'grid gap-4',
-                'grid-cols-1' => count($officerQueues) === 1,
-                'grid-cols-1 sm:grid-cols-2' => count($officerQueues) === 2,
-                'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' => count($officerQueues) >= 3,
-            ])>
-                @foreach ($officerQueues as $q)
-                    <x-action-block
-                        :label="$q['label']"
-                        :description="$q['description'] ?? null"
-                        :icon="$q['icon'] ?? 'inbox'"
-                        :tone="$q['tone'] ?? 'royal'"
-                        :count="$q['count']"
-                        :href="route($q['route'])"
-                    />
-                @endforeach
+    {{-- PEPU: Tindakan Diperlukan --}}
+    @if ($isPepuDashboard && $officerQueues)
+        @include('dashboard.partials.pepu-overview-card')
+    @else
+        {{-- Kad statistik pentadbir --}}
+        @if ($stats)
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <x-stat-card label="Ahli Lembaga Aktif" icon="users-group" tone="navy">{{ $stats['alp_count'] }}</x-stat-card>
+                <x-stat-card label="Pengguna Aktif" icon="user-cog" tone="royal">{{ $stats['user_count'] }}</x-stat-card>
+                <x-stat-card label="Tahun Kewangan Aktif" icon="calendar" tone="teal">{{ $stats['financial_year'] ?? '—' }}</x-stat-card>
             </div>
-        </div>
+        @endif
+
+        {{-- Giliran pegawai — blok tindakan --}}
+        @if ($officerQueues)
+            <div class="mt-8">
+                <h3 class="dashboard-section-title">Tindakan Diperlukan</h3>
+                <div @class([
+                    'grid gap-4',
+                    'grid-cols-1' => count($officerQueues) === 1,
+                    'grid-cols-1 sm:grid-cols-2' => count($officerQueues) === 2,
+                    'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' => count($officerQueues) >= 3,
+                ])>
+                    @foreach ($officerQueues as $q)
+                        <x-action-block
+                            :label="$q['label']"
+                            :description="$q['description'] ?? null"
+                            :icon="$q['icon'] ?? 'inbox'"
+                            :tone="$q['tone'] ?? 'royal'"
+                            :count="$q['count']"
+                            :href="route($q['route'])"
+                        />
+                    @endforeach
+                </div>
+            </div>
+        @endif
     @endif
 
     @if ($contributionKpi && ! auth()->user()->alp_id)
@@ -109,7 +117,8 @@
         </div>
     @endif
 
-    {{-- Pemantauan KPI 14 hari — pegawai sahaja (bukan ALP) --}}
+    {{-- Pemantauan KPI 14 hari — pegawai sahaja (bukan ALP, bukan PEPU) --}}
+    @unless ($isPepuDashboard)
     @can('applications.view_all')
         @if (($kpiWatchlist ?? collect())->isNotEmpty())
             <div class="mt-6">
@@ -150,8 +159,10 @@
             </div>
         @endif
     @endcan
+    @endunless
 
     {{-- Permohonan tertunggak --}}
+    @unless ($isPepuDashboard)
     @if ($overdueApplications->isNotEmpty())
         <div class="mt-6">
             <div class="mb-3 flex items-center justify-between">
@@ -202,6 +213,7 @@
             </div>
         </div>
     @endif
+    @endunless
 
     {{-- Kad permohonan --}}
     @if (! $suppressLegacyDashboardCards && $appStats && $scope === 'own')
@@ -219,14 +231,18 @@
         @include('dashboard.partials.alp-charts')
     @elseif ($appStats && $scope === 'all')
         <div class="mt-8">
-            <h3 class="dashboard-section-title">Ringkasan Permohonan</h3>
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                <x-stat-card label="Jumlah Permohonan" icon="clipboard" tone="navy">{{ $appStats['total'] }}</x-stat-card>
-                <x-stat-card label="Dalam Semakan" icon="search" tone="blue">{{ $appStats['under_review'] }}</x-stat-card>
-                <x-stat-card label="Menunggu Kelulusan" icon="scale" tone="amber">{{ $appStats['pending_approval'] }}</x-stat-card>
-                <x-stat-card label="Diluluskan" icon="check" tone="green">{{ $appStats['approved'] }}</x-stat-card>
-                <x-stat-card label="Ditolak" icon="x-circle" tone="red">{{ $appStats['rejected'] }}</x-stat-card>
-            </div>
+            @if ($isPepuDashboard)
+                @include('dashboard.partials.pepu-application-summary-card')
+            @else
+                <h3 class="dashboard-section-title">Ringkasan Permohonan</h3>
+                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                    <x-stat-card label="Jumlah Permohonan" icon="clipboard" tone="navy">{{ $appStats['total'] }}</x-stat-card>
+                    <x-stat-card label="Dalam Semakan" icon="search" tone="blue">{{ $appStats['under_review'] }}</x-stat-card>
+                    <x-stat-card label="Menunggu Kelulusan" icon="scale" tone="amber">{{ $appStats['pending_approval'] }}</x-stat-card>
+                    <x-stat-card label="Diluluskan" icon="check" tone="green">{{ $appStats['approved'] }}</x-stat-card>
+                    <x-stat-card label="Ditolak" icon="x-circle" tone="red">{{ $appStats['rejected'] }}</x-stat-card>
+                </div>
+            @endif
         </div>
     @endif
 
@@ -235,43 +251,44 @@
     {{-- Ringkasan bajet — pegawai sahaja (ALP guna halaman Bajet Saya) --}}
     @if ($summary && $scope === 'all')
         <div class="mt-8">
+            @if ($isPepuDashboard)
+                @include('dashboard.partials.pepu-budget-card')
+            @else
             <div class="mb-4 flex items-center justify-between">
                 <h3 class="dashboard-section-title mb-0">Bajet Keseluruhan ALP @if($activeYear)<span class="font-normal text-gray-400">· {{ $activeYear->year }}</span>@endif</h3>
                 <a href="{{ route('allocations.index') }}" class="text-sm font-medium text-royal-600 hover:text-royal-700">Lihat peruntukan →</a>
             </div>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <x-stat-card label="Peruntukan Tahunan" icon="banknotes" tone="navy">
-                    <x-money :value="$summary->allocation" />
-                </x-stat-card>
-                <x-stat-card label="Committed" icon="scale" tone="amber">
-                    <x-money :value="$summary->committed" />
-                </x-stat-card>
-                <x-stat-card label="Perbelanjaan Sebenar" icon="chart" tone="purple">
-                    <x-money :value="$summary->spent" />
-                </x-stat-card>
-                <x-stat-card label="Baki Tersedia" icon="wallet" :tone="$summary->available()->isNegative() ? 'red' : 'green'">
-                    <x-money :value="$summary->available()" />
-                </x-stat-card>
-            </div>
-            @if($summary->allocation->isPositive())
-                <div class="mt-4 card p-4">
-                    <div class="flex items-center justify-between text-xs text-gray-500">
-                        <span class="flex items-center gap-1.5 font-medium"><x-icon name="chart" class="h-3.5 w-3.5" /> Penggunaan Bajet</span>
-                        <span class="font-semibold text-navy-700">{{ $summary->utilisationPercent() }}%</span>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <x-stat-card label="Peruntukan Tahunan" icon="banknotes" tone="navy">
+                        <x-money :value="$summary->allocation" />
+                    </x-stat-card>
+                    <x-stat-card label="Diluluskan" icon="scale" tone="amber">
+                        <x-money :value="$summary->committed" />
+                    </x-stat-card>
+                    <x-stat-card label="Baki Tersedia" icon="wallet" :tone="$summary->available()->isNegative() ? 'red' : 'green'">
+                        <x-money :value="$summary->available()" />
+                    </x-stat-card>
+                </div>
+                @if($summary->allocation->isPositive())
+                    <div class="mt-4 card p-4">
+                        <div class="flex items-center justify-between text-xs text-gray-500">
+                            <span class="flex items-center gap-1.5 font-medium"><x-icon name="chart" class="h-3.5 w-3.5" /> Penggunaan Bajet</span>
+                            <span class="font-semibold text-navy-700">{{ $summary->utilisationPercent() }}%</span>
+                        </div>
+                        <div class="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+                            <div class="h-full rounded-full bg-gradient-to-r from-royal-500 to-royal-400 transition-all" style="width: {{ min(100, $summary->utilisationPercent()) }}%"></div>
+                        </div>
                     </div>
-                    <div class="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
-                        <div class="h-full rounded-full bg-gradient-to-r from-royal-500 to-royal-400 transition-all" style="width: {{ min(100, $summary->utilisationPercent()) }}%"></div>
-                    </div>
+                @endif
+                <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <x-stat-card label="Peruntukan Permohonan Dalam Proses (Belum diluluskan)" icon="clock" tone="orange">
+                        <x-money :value="$pending" />
+                    </x-stat-card>
+                    <x-stat-card label="Baki Peruntukan Semasa" icon="sparkles" :tone="$projected->isNegative() ? 'red' : 'green'" hint="Peruntukan Diluluskan + Permohonan Dalam Proses">
+                        <x-money :value="$projected" />
+                    </x-stat-card>
                 </div>
             @endif
-            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <x-stat-card label="Pending Request" icon="clock" tone="orange" hint="Belum diluluskan — bukan Committed">
-                    <x-money :value="$pending" />
-                </x-stat-card>
-                <x-stat-card label="Baki Peruntukan Semasa" icon="sparkles" :tone="$projected->isNegative() ? 'red' : 'green'" hint="Baki Peruntukan Diluluskan − Pending Request">
-                    <x-money :value="$projected" />
-                </x-stat-card>
-            </div>
         </div>
     @endif
 
@@ -319,7 +336,9 @@
                 @endcan
                 <a href="{{ route('notifications.index') }}" class="btn-white text-sm"><x-icon name="bell" class="h-4 w-4" /> Notifikasi</a>
                 @can('payments.view')
-                    <a href="{{ route('payments.index') }}" class="btn-white text-sm"><x-icon name="receipt" class="h-4 w-4" /> Pembayaran / Baucar</a>
+                    @unless ($isPepuDashboard)
+                        <a href="{{ route('payments.index') }}" class="btn-white text-sm"><x-icon name="receipt" class="h-4 w-4" /> Pembayaran / Baucar</a>
+                    @endunless
                 @endcan
                 @can('applications.review.secretariat')
                     <a href="{{ route('reviews.secretariat') }}" class="btn-white text-sm"><x-icon name="clipboard" class="h-4 w-4" /> Semakan JP</a>

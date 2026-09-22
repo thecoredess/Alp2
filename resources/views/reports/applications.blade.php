@@ -31,7 +31,7 @@
         <div>
             <label class="block text-xs text-gray-500">Status</label>
             <select name="status" class="inp" onchange="this.form.requestSubmit()">
-                <option value="">Semua</option>
+                <option value="">Semua Status</option>
                 @foreach ($statusFilterOptions as $value => $label)
                     <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                 @endforeach
@@ -44,26 +44,11 @@
         <div class="ml-auto flex items-center gap-2">@include('reports.partials.export-buttons')</div>
     </form>
 
-    {{-- Corong permohonan --}}
-    <div class="mb-5 card p-5">
-        <h3 class="mb-3 text-sm font-semibold text-gray-900">Corong Permohonan</h3>
-        <div class="flex flex-wrap items-center gap-2 text-sm">
-            @foreach ([['Draf', 'draft', 'reports.applications', ['status'=>'draft']], ['Semakan', 'review', null, null], ['Menunggu Lulus', 'pending_approval', 'approvals.queue', []], ['Diluluskan', 'approved', null, null]] as $i => [$label, $key, $route, $params])
-                @if ($i > 0)<span class="text-gray-300">→</span>@endif
-                <div class="rounded-lg border border-gray-200 px-4 py-2 text-center">
-                    <p class="text-lg font-semibold text-navy-700">{{ $pipeline[$key] }}</p>
-                    <p class="text-xs text-gray-500">{{ $label }}</p>
-                </div>
-            @endforeach
-        </div>
-        <p class="mt-2 text-xs text-gray-400">Corong operasi (kiraan) — bukan komitmen kewangan.</p>
-    </div>
-
     {{-- Kad status & amaun --}}
     <div class="mb-5 grid grid-cols-2 gap-4 md:grid-cols-4">
         <div class="card p-4"><p class="text-xs text-gray-500">Jumlah Permohonan</p><p class="mt-1 text-lg font-semibold text-navy-700">{{ $counts['total'] }}</p></div>
         <div class="card p-4"><p class="text-xs text-gray-500">Jumlah Dipohon</p><p class="mt-1 text-lg font-semibold text-gray-700"><x-money :value="$amounts['total_requested']" /></p></div>
-        <div class="card p-4"><p class="text-xs text-gray-500">Pending Request</p><p class="mt-1 text-lg font-semibold text-amber-600"><x-money :value="$amounts['pending_request']" /></p></div>
+        <div class="card p-4"><p class="text-xs text-gray-500">Peruntukan Permohonan Dalam Proses (Belum diluluskan)</p><p class="mt-1 text-lg font-semibold text-amber-600"><x-money :value="$amounts['pending_request']" /></p></div>
         <div class="card p-4"><p class="text-xs text-gray-500">Amaun Diluluskan</p><p class="mt-1 text-lg font-semibold text-green-700"><x-money :value="$amounts['approved_amount']" /></p></div>
     </div>
 

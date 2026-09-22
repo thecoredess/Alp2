@@ -263,6 +263,14 @@ class Application extends Model
         return $fallback !== '—' ? $fallback : ($purpose ?? '—');
     }
 
+    /** Tujuan sumbangan (medan g) — bukan label aliran kerja atau kategori program. */
+    public function purposeLabelForReport(?int $limit = null): string
+    {
+        $label = $this->resolvePurposeLabelForReport();
+
+        return $limit !== null ? \Illuminate\Support\Str::limit($label, $limit) : $label;
+    }
+
     /** Nama program / tujuan sumbangan untuk laporan (bukan label aliran kerja). */
     public function programLabelForReport(?int $limit = null): string
     {
@@ -311,7 +319,7 @@ class Application extends Model
         return str_starts_with($purpose, 'Draf —');
     }
 
-    protected function resolveProgramLabelForReport(): string
+    protected function resolvePurposeLabelForReport(): string
     {
         $rawPurpose = $this->getAttributes()['purpose'] ?? null;
         $purpose = self::stripSimulationPrefix($rawPurpose);
@@ -329,8 +337,15 @@ class Application extends Model
                 : null)
             ->first(fn (?string $value) => filled($value) && ! self::isWorkflowPurposePlaceholder($value));
 
-        if (filled($snapshotPurpose)) {
-            return $snapshotPurpose;
+        return filled($snapshotPurpose) ? $snapshotPurpose : '—';
+    }
+
+    protected function resolveProgramLabelForReport(): string
+    {
+        $purposeLabel = $this->resolvePurposeLabelForReport();
+
+        if ($purposeLabel !== '—') {
+            return $purposeLabel;
         }
 
         return $this->program_category?->label() ?? '—';

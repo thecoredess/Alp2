@@ -7,7 +7,7 @@
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <form method="GET" class="flex flex-wrap items-center gap-2">
             <label class="text-sm text-gray-500">Tahun Kewangan</label>
-            <select name="tahun" onchange="this.form.submit()" class="inp w-auto">
+            <select name="tahun" onchange="this.form.submit()" class="inp-select inp-select--year">
                 @foreach ($years as $y)
                     <option value="{{ $y->id }}" @selected($year && $year->id === $y->id)>
                         {{ $y->year }} @if($y->is_active) (Aktif) @endif
@@ -27,11 +27,11 @@
 
     <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div class="card p-4">
-            <p class="text-xs text-gray-500">Pending Request (permohonan belum diluluskan — <strong>bukan</strong> Committed)</p>
+            <p class="text-xs text-gray-500">Peruntukan Permohonan Dalam Proses (Belum diluluskan)</p>
             <p class="mt-1 text-lg font-semibold text-orange-600"><x-money :value="$totalPending" /></p>
         </div>
         <div class="card p-4">
-            <p class="text-xs text-gray-500">Baki Peruntukan Semasa (Baki Peruntukan Diluluskan − Pending Request)</p>
+            <p class="text-xs text-gray-500">Baki Peruntukan Semasa (Peruntukan Diluluskan + Permohonan Dalam Proses)</p>
             <p class="mt-1 text-lg font-semibold {{ $projectedTotal->isNegative() ? 'text-danger' : 'text-green-600' }}"><x-money :value="$projectedTotal" /></p>
         </div>
     </div>
@@ -42,11 +42,10 @@
                 <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     <th class="px-4 py-3">ALP</th>
                     <th class="px-4 py-3 text-right">Peruntukan</th>
-                    <th class="px-4 py-3 text-right">Committed</th>
-                    <th class="px-4 py-3 text-right">Spent</th>
-                    <th class="px-4 py-3 text-right">Pending</th>
+                    <th class="px-4 py-3 text-right">Diluluskan</th>
+                    <th class="px-4 py-3 text-right">Dlm Proses</th>
                     <th class="px-4 py-3 text-right">Baki</th>
-                    <th class="px-4 py-3 text-right">Guna</th>
+                    <th class="px-4 py-3 text-right">Peratus</th>
                     <th class="px-4 py-3 text-right">Tindakan</th>
                 </tr>
             </thead>
@@ -64,7 +63,6 @@
                         </td>
                         <td class="px-4 py-3 text-right text-gray-900"><x-money :value="$s->allocation" /></td>
                         <td class="px-4 py-3 text-right text-amber-600"><x-money :value="$s->committed" /></td>
-                        <td class="px-4 py-3 text-right text-purple-600"><x-money :value="$s->spent" /></td>
                         <td class="px-4 py-3 text-right text-orange-600"><x-money :value="$alpPending" /></td>
                         <td class="px-4 py-3 text-right font-medium {{ $s->available()->isNegative() ? 'text-danger' : 'text-green-600' }}">
                             <x-money :value="$s->available()" />
@@ -92,7 +90,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="px-4 py-10 text-center text-gray-400">Tiada ALP.</td></tr>
+                    <tr><td colspan="7" class="px-4 py-10 text-center text-gray-400">Tiada ALP.</td></tr>
                 @endforelse
             </tbody>
         </table>

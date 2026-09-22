@@ -83,4 +83,5 @@ class SettingsHubTest extends TestCase
             ->get(route('settings.hub'))
             ->assertForbidden();
     }
+
 }
