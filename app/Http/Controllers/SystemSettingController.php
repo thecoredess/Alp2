@@ -77,6 +77,10 @@ class SystemSettingController extends Controller
 
     private function canAccessSystemSettings($user): bool
     {
+        if ($user->hasRole(\App\Enums\RoleName::PENGURUSAN->value)) {
+            return false;
+        }
+
         return $user->can('users.view')
             || $user->can('financial_years.view')
             || $user->can('settings.manage')

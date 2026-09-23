@@ -271,19 +271,15 @@ final class Permissions
                 'dashboard.view',
                 'dashboard.executive',
                 'alps.view',
-                'financial_years.view',
                 'allocations.view',
                 'budget.view_all',
                 'applications.view_all',
                 'applications.approve',
                 'applications.reject',
-                'approval_matrix.view',
                 'projects.view_all',
                 'expenses.documents.view', 'refunds.view', 'projects.closure-documents.view',
-                // Dashboard eksekutif + semua laporan (pengurusan).
+                // Dashboard eksekutif — tanpa modul Laporan (PEPU fokus kelulusan).
                 'dashboard.finance',
-                'reports.view', 'reports.financial', 'reports.applications', 'reports.projects',
-                'reports.csr', 'reports.audit', 'reports.export',
                 'payments.view',
             ],
         ];

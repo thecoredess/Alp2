@@ -4,15 +4,16 @@
         : 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-navy-100 hover:bg-white/5 hover:text-white transition';
 
     $user = auth()->user();
+    $isPepu = $user->hasRole(\App\Enums\RoleName::PENGURUSAN->value);
     $hasAlp = (bool) $user->alp_id;
     $canAllApplications = $user->can('applications.view_all');
     $canReviewJp = $user->can('applications.review.secretariat');
     $canApprove = $user->can('applications.approve');
     $canPayments = $user->can('payments.view');
-    $canReportCards = $canAllApplications || $canReviewJp;
+    $canReportCards = ! $isPepu && ($canAllApplications || $canReviewJp);
     $showProcess = $hasAlp || $canAllApplications || $canReviewJp || $canApprove || $canPayments || $canReportCards;
 
-    $canReports = $user->can('reports.view');
+    $canReports = ! $isPepu && $user->can('reports.view');
     $canAllocations = $user->can('allocations.view') || $user->can('budget.view_all');
     $showMonitoring = $hasAlp || $canReports || $canAllocations;
 
@@ -21,11 +22,13 @@
     $hideReferenceMenu = $user->hasRole(\App\Enums\RoleName::PEGAWAI_KEWANGAN->value);
     $showReference = ! $hideReferenceMenu && ($canRecipients || $canAlps);
 
-    $canSystem = $user->can('users.view')
+    $canSystem = ! $isPepu && (
+        $user->can('users.view')
         || $user->can('financial_years.view')
         || $user->can('settings.manage')
         || $user->can('approval_matrix.view')
-        || $user->hasRole(\App\Enums\RoleName::SUPER_ADMIN->value);
+        || $user->hasRole(\App\Enums\RoleName::SUPER_ADMIN->value)
+    );
     $systemRoutesActive = request()->routeIs('settings.*')
         || request()->routeIs('users.*')
         || request()->routeIs('financial-years.*')

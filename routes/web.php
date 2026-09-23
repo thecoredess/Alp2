@@ -68,11 +68,13 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
 
     Route::get('tetapan', function () {
         $user = auth()->user();
-        $canSystem = $user->can('users.view')
+        $canSystem = ! $user->hasRole(RoleName::PENGURUSAN->value) && (
+            $user->can('users.view')
             || $user->can('financial_years.view')
             || $user->can('settings.manage')
             || $user->can('approval_matrix.view')
-            || $user->hasRole(RoleName::SUPER_ADMIN->value);
+            || $user->hasRole(RoleName::SUPER_ADMIN->value)
+        );
 
         return redirect()->route($canSystem ? 'settings.hub' : 'profile.edit');
     })->name('settings.index');
@@ -89,7 +91,6 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
         Route::get('laporan/kewangan/peruntukan', [ReportController::class, 'allocation'])->name('reports.allocation');
         Route::get('laporan/kewangan/ledger', [ReportController::class, 'ledger'])->name('reports.ledger');
         Route::get('laporan/permohonan', [ReportController::class, 'applications'])->name('reports.applications');
-        Route::get('laporan/program', [ReportController::class, 'programs'])->name('reports.programs');
         Route::get('laporan/audit', [ReportController::class, 'auditTrail'])->name('reports.audit');
     });
 

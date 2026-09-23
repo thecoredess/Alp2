@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Laporan')
 @section('heading', 'Laporan')
-@section('subheading', 'Peruntukan · Permohonan · Program · Audit')
+@section('subheading', 'Peruntukan · Permohonan · Audit')
 
 @php $u = auth()->user(); @endphp
 
@@ -14,9 +14,6 @@
             ]],
             ['perm' => 'reports.applications', 'title' => 'Permohonan', 'icon' => 'clipboard', 'items' => [
                 ['reports.applications', 'Laporan Permohonan'],
-            ]],
-            ['perm' => 'reports.view', 'title' => 'Program', 'icon' => 'calendar', 'items' => [
-                ['reports.programs', 'Laporan Program & Laporan Aktiviti'],
             ]],
             ['perm' => 'reports.audit', 'title' => 'Audit', 'icon' => 'document', 'items' => [
                 ['reports.audit', 'Jejak Audit'],
