@@ -35,10 +35,11 @@ class AuditReportService
     /** Senarai tindakan berbeza (untuk penapis dropdown), ikut tapisan semasa. */
     public function distinctActions(array $filters = []): array
     {
+        // reorder() perlu — susunan created_at daripada baseQuery tidak sah dengan DISTINCT.
         return $this->baseQuery($filters)
+            ->reorder('action')
             ->select('action')
             ->distinct()
-            ->orderBy('action')
             ->pluck('action')
             ->all();
     }
