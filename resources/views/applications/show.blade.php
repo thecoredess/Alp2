@@ -383,7 +383,7 @@
                 </div>
             @endif
 
-            @unless ($isAlpView)
+            @can('viewCrosscheckReference', $application)
                 <div class="mt-6">
                     @include('reviews.partials.crosscheck-card', [
                         'application' => $application,
@@ -391,7 +391,7 @@
                         'uploadAction' => route('applications.crosscheck.store', $application),
                     ])
                 </div>
-            @endunless
+            @endcan
         </div>
 
         {{-- Laporan Aktiviti --}}

@@ -6,7 +6,7 @@
 @section('content')
     <form method="GET" class="mb-5 flex flex-wrap gap-2">
         <input type="text" name="cari" value="{{ request('cari') }}" placeholder="No. / tujuan / penerima…" class="inp sm:w-48">
-        <select name="tahun" class="inp sm:w-auto">
+        <select name="tahun" class="inp-select inp-select--year shrink-0">
             <option value="">Semua Tahun</option>
             @foreach ($years as $y)
                 <option value="{{ $y->id }}" @selected(request('tahun') == $y->id)>{{ $y->year }}</option>

@@ -4,11 +4,13 @@
     'layout' => 'grid',
     'empty' => 'Tiada lampiran.',
     'highlightIncomplete' => false,
+    'viewOnly' => null,
 ])
 
 @php
     use App\Support\DocumentPreview;
 
+    $viewOnly = $viewOnly ?? auth()->user()?->attachmentsViewOnly() ?? false;
     $previewDocs = DocumentPreview::itemsFor($application, $documents);
     $docCollection = collect($documents);
 @endphp
@@ -17,6 +19,7 @@
     x-data="{
         open: false,
         doc: null,
+        viewOnly: @json($viewOnly),
         pushed: false,
         items: {{ Js::from($previewDocs) }},
         show(id) {
@@ -105,9 +108,11 @@
                     <x-icon name="eye" class="h-4 w-4" />
                     Lihat
                 </button>
-                <a href="{{ route('applications.documents.download', [$application, $doc]) }}" class="btn-white text-xs">
-                    Muat Turun
-                </a>
+                @unless ($viewOnly)
+                    <a href="{{ route('applications.documents.download', [$application, $doc]) }}" class="btn-white text-xs">
+                        Muat Turun
+                    </a>
+                @endunless
             </div>
         @endforeach
     @elseif ($layout === 'button')

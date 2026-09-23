@@ -120,8 +120,9 @@ class SimulationSeeder extends Seeder
             'program_category' => ProgramCategory::KEMASYARAKATAN,
         ]);
         $this->attachApplicationDocuments($submitted);
+        $this->attachCrosscheckDocument($submitted);
         $submit->submit($submitted->fresh(), $alpUser);
-        $this->record($submitted->fresh(), 'Dihantar → semakan JP', 'urussetia@dbkl.test');
+        $this->record($submitted->fresh(), 'Dihantar → semakan JP (+ semakan silang)', 'urussetia@dbkl.test');
 
         // 5) Menunggu Peraku (JP disyorkan)
         $pendingPeraku = $this->createApplication($numbers, $alp, $year, [
@@ -301,6 +302,31 @@ class SimulationSeeder extends Seeder
         ], $overrides);
 
         return Application::create($payload);
+    }
+
+    private function attachCrosscheckDocument(Application $application): void
+    {
+        $storedPath = "simulation/{$application->id}/sim-semakan-silang-jkew.pdf";
+        $content = PlaceholderPdf::make('Ulasan Semakan Silang JKEW', [
+            'Dokumen simulasi UAT — semakan silang persatuan (JPKKB).',
+            'Permohonan: '.$application->application_number,
+            'ALP tidak sepatutnya melihat dokumen ini.',
+        ]);
+
+        Storage::disk('local')->put($storedPath, $content);
+
+        $jkew = User::where('email', 'jkew@dbkl.test')->first();
+
+        ApplicationDocument::create([
+            'application_id' => $application->id,
+            'document_type' => DocumentType::SEMAKAN_SILANG_JKEW,
+            'original_filename' => 'sim-ulasan-jkew.pdf',
+            'stored_path' => $storedPath,
+            'mime_type' => 'application/pdf',
+            'file_size' => strlen($content),
+            'sha256' => hash('sha256', $content),
+            'uploaded_by' => $jkew?->id,
+        ]);
     }
 
     private function attachApplicationDocuments(Application $application): void

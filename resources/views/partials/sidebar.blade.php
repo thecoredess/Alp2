@@ -56,43 +56,43 @@
                 <div class="space-y-1">
                     @if($hasAlp)
                         <a href="{{ route('applications.index') }}" class="{{ $link(request()->routeIs('applications.index') || request()->routeIs('applications.wizard.*') || request()->routeIs('applications.create')) }}">
-                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('applications.index') || request()->routeIs('applications.wizard.*') || request()->routeIs('applications.create') ? 'text-white' : 'text-navy-300' }}">1</span>
+                            <x-icon name="clipboard" class="h-5 w-5 shrink-0" />
                             Permohonan Saya
                         </a>
                     @endif
                     @if($canAllApplications)
                         <a href="{{ route('applications.all') }}" class="{{ $link(request()->routeIs('applications.all')) }}">
-                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('applications.all') ? 'text-white' : 'text-navy-300' }}">1</span>
+                            <x-icon name="clipboard" class="h-5 w-5 shrink-0" />
                             Semua Permohonan
                         </a>
                     @endif
                     @if($canReviewJp)
                         <a href="{{ route('reviews.secretariat') }}" class="{{ $link(request()->routeIs('reviews.secretariat')) }}">
-                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('reviews.secretariat') ? 'text-white' : 'text-navy-300' }}">2</span>
+                            <x-icon name="search" class="h-5 w-5 shrink-0" />
                             {{ $user->canMakeFullJpReviewDecision() ? 'Semakan Admin JP' : 'Semakan Urusetia JP' }}
                         </a>
                     @endif
                     @if($canApprove)
                         <a href="{{ route('approvals.queue') }}" class="{{ $link(request()->routeIs('approvals.*')) }}">
-                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('approvals.*') ? 'text-white' : 'text-navy-300' }}">3</span>
-                            Kelulusan
+                            <x-icon name="shield-check" class="h-5 w-5 shrink-0" />
+                            {{ $user->hasRole(\App\Enums\RoleName::PELULUS->value) ? 'Pengesyoran' : 'Kelulusan' }}
                         </a>
                     @endif
                     @if($canPayments)
                         <a href="{{ route('payments.index') }}" class="{{ $link(request()->routeIs('payments.*')) }}">
-                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('payments.*') ? 'text-white' : 'text-navy-300' }}">4</span>
+                            <x-icon name="receipt" class="h-5 w-5 shrink-0" />
                             Pembayaran / Baucar
                         </a>
                     @endif
                     @if($canReviewJp)
                         <a href="{{ route('report-cards.review.index') }}" class="{{ $link(request()->routeIs('report-cards.review.*')) }}">
-                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('report-cards.review.*') ? 'text-white' : 'text-navy-300' }}">5b</span>
-                            Semak Laporan
+                            <x-icon name="eye" class="h-5 w-5 shrink-0" />
+                            Semak Laporan Aktiviti
                         </a>
                     @endif
                     @if($canReportCards)
-                        <a href="{{ route('report-cards.index') }}" class="{{ $link(request()->routeIs('report-cards.*')) }}">
-                            <span class="w-5 shrink-0 text-center text-[10px] font-semibold {{ request()->routeIs('report-cards.*') ? 'text-white' : 'text-navy-300' }}">5</span>
+                        <a href="{{ route('report-cards.index') }}" class="{{ $link(request()->routeIs('report-cards.index') || request()->routeIs('report-cards.show')) }}">
+                            <x-icon name="chart" class="h-5 w-5 shrink-0" />
                             Laporan Aktiviti
                         </a>
                     @endif

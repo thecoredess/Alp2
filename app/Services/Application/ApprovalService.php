@@ -59,6 +59,25 @@ class ApprovalService
         ];
     }
 
+    /** Giliran kelulusan — hanya permohonan yang menunggu peranan pengguna semasa. */
+    public function isAwaitingApprover(Application $application, User $user): bool
+    {
+        if ($application->status !== ApplicationStatus::PENDING_APPROVAL) {
+            return false;
+        }
+
+        $nextLevel = $this->progress($application)['nextLevel'];
+        if (! $nextLevel) {
+            return false;
+        }
+
+        if ($user->hasRole(RoleName::SUPER_ADMIN->value)) {
+            return true;
+        }
+
+        return $user->can('applications.approve') && $user->hasRole($nextLevel->required_role);
+    }
+
     /** Luluskan aras semasa; cipta komitmen jika ini aras terakhir. Atomik. */
     public function approve(Application $application, User $approver, ?string $comments): Application
     {

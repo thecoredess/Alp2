@@ -135,10 +135,17 @@ class DashboardController extends Controller
         $user = $request->user();
         $activeYear = FinancialYear::active();
         $isPepuDashboard = $user->hasRole(RoleName::PENGURUSAN->value);
+        $jpDashboardRoles = [
+            RoleName::PEGAWAI_URUSSETIA->value,
+            RoleName::PELULUS->value,
+        ];
+        $isJpDashboard = $user->canMakeFullJpReviewDecision()
+            || $user->hasAnyRole($jpDashboardRoles);
 
         $isManager = $user->hasAnyRole([
             RoleName::SUPER_ADMIN->value, RoleName::SYSTEM_ADMIN->value,
             RoleName::PENGURUSAN->value, RoleName::PEGAWAI_KEWANGAN->value,
+            ...$jpDashboardRoles,
         ]);
 
         $summary = null;
@@ -227,7 +234,11 @@ class DashboardController extends Controller
         $projectStats = null;
 
         $stats = null;
-        if ($user->hasAnyRole([RoleName::SUPER_ADMIN->value, RoleName::SYSTEM_ADMIN->value, RoleName::PENGURUSAN->value])) {
+        if ($user->hasAnyRole([
+            RoleName::SUPER_ADMIN->value, RoleName::SYSTEM_ADMIN->value,
+            RoleName::PENGURUSAN->value,
+            ...$jpDashboardRoles,
+        ])) {
             $stats = $isPepuDashboard
                 ? ['alp_count' => Alp::where('status', 'active')->count()]
                 : [
@@ -314,6 +325,7 @@ class DashboardController extends Controller
             'contributionKpi' => $contributionKpi,
             'suppressLegacyDashboardCards' => $suppressLegacyDashboardCards,
             'isPepuDashboard' => $isPepuDashboard,
+            'isJpDashboard' => $isJpDashboard,
         ]);
     }
 

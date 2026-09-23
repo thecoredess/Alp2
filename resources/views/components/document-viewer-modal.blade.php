@@ -95,7 +95,8 @@
 
                     <template x-if="doc && doc.kind === 'other'">
                         <div class="flex h-full w-full items-center justify-center px-6 text-center text-sm text-gray-600">
-                            Fail ini tidak boleh dipratonton. Sila muat turun.
+                            <span x-show="viewOnly">Fail ini tidak boleh dipratonton dalam pelayar.</span>
+                            <span x-show="! viewOnly">Fail ini tidak boleh dipratonton. Sila muat turun.</span>
                         </div>
                     </template>
                 </div>
@@ -105,11 +106,12 @@
                         <x-icon name="x-circle" class="h-4 w-4" />
                         Tutup
                     </button>
-                <a
-                    :href="doc ? (doc.downloadUrl || doc.url) : '#'"
-                    download
-                    class="btn-primary inline-flex items-center gap-2"
-                >
+                    <a
+                        x-show="! viewOnly"
+                        :href="doc ? (doc.downloadUrl || doc.url) : '#'"
+                        download
+                        class="btn-primary inline-flex items-center gap-2"
+                    >
                         <x-icon name="download" class="h-4 w-4" />
                         Muat Turun
                     </a>

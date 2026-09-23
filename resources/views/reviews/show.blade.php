@@ -87,12 +87,14 @@
                     <x-document-preview-list :application="$application" :documents="$attachmentDocuments ?? $application->documents" />
                 </x-page-card>
 
-                @include('reviews.partials.crosscheck-card', [
-                    'application' => $application,
-                    'crosscheckDocument' => $crosscheckDocument ?? null,
-                    'uploadAction' => route('applications.crosscheck.store', $application),
-                    'uploadRequiredForRecommend' => true,
-                ])
+                @can('viewCrosscheckReference', $application)
+                    @include('reviews.partials.crosscheck-card', [
+                        'application' => $application,
+                        'crosscheckDocument' => $crosscheckDocument ?? null,
+                        'uploadAction' => route('applications.crosscheck.store', $application),
+                        'uploadRequiredForRecommend' => true,
+                    ])
+                @endcan
 
                 @if ($application->reviews->isNotEmpty())
                     <x-page-card title="Sejarah Semakan" icon="clock">
@@ -209,13 +211,11 @@
                             @endif
                         </form>
                     </div>
-                    <p class="mt-3 text-xs text-gray-400">
-                        @if ($fullJpDecision)
+                    @if ($fullJpDecision)
+                        <p class="mt-3 text-xs text-gray-400">
                             Selepas hantar, permohonan masuk giliran Pegawai JP untuk pengesyoran kepada Pengarah JP. Keputusan Admin JP bersifat nasihat — tidak mencipta komitmen bajet.
-                        @else
-                            Pegawai JP menghantar perakuan dan ulasan kepada Pengarah JP (Peraku). Tiada penandaan lengkap / tidak lengkap pada peringkat ini.
-                        @endif
-                    </p>
+                        </p>
+                    @endif
                 </x-page-card>
             </div>
         </div>

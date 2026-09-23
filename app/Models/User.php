@@ -122,4 +122,14 @@ class User extends Authenticatable
     {
         return $this->canCreateApplicationOnBehalf();
     }
+
+    /** Pegawai JP, TP/Pengarah & PEPU — pratonton lampiran sahaja (tanpa muat turun). */
+    public function attachmentsViewOnly(): bool
+    {
+        return $this->hasAnyRole([
+            RoleName::PEGAWAI_URUSSETIA->value,
+            RoleName::PELULUS->value,
+            RoleName::PENGURUSAN->value,
+        ]);
+    }
 }

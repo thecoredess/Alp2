@@ -195,6 +195,8 @@ final class Permissions
                 'allocations.view',
                 'applications.view_all',
                 'applications.review.secretariat',
+                // Paparan senarai pembayaran/baucar (baca sahaja — sama TP/Pengarah).
+                'payments.view',
                 'projects.view_all', 'projects.update', 'projects.progress', 'projects.milestones',
                 'projects.complete', 'project-reports.create', 'expenses.view',
                 'expenses.documents.view', 'refunds.view',

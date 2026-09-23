@@ -15,7 +15,7 @@
     <x-page-card
         title="Semakan Silang Permohonan Persatuan"
         icon="document"
-        description="Memo ulasan JKEW ke JP — semakan silang persatuan (JPKKB)"
+        :description="$canDownloadMemo || $canUpload ? 'Memo ulasan JKEW ke JP — semakan silang persatuan (JPKKB)' : null"
     >
         <div class="space-y-4">
             @if ($canDownloadMemo)

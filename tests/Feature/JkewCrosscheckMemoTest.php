@@ -46,11 +46,30 @@ class JkewCrosscheckMemoTest extends TestCase
         $this->assertStringStartsWith('PK', $doc->getContent());
     }
 
+    public function test_pegawai_jp_cannot_download_or_upload_crosscheck_memo(): void
+    {
+        Storage::fake('local');
+
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $app = $this->submittedDirect($alp, $year, '85000.00');
+        $pegawaiJp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
+        $file = UploadedFile::fake()->create('ulasan-jkew.pdf', 120, 'application/pdf');
+
+        $this->actingAs($pegawaiJp)
+            ->get(route('applications.crosscheck.memo.doc', $app))
+            ->assertForbidden();
+
+        $this->actingAs($pegawaiJp)
+            ->post(route('applications.crosscheck.store', $app), ['file' => $file])
+            ->assertForbidden();
+    }
+
     public function test_alp_cannot_download_crosscheck_memo(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
-        $app = $this->submitted($alp, $year, '85000.00');
+        $app = $this->submittedDirect($alp, $year, '85000.00');
         $alpUser = User::factory()->create(['alp_id' => $alp->id])
             ->assignRole(RoleName::ALP->value);
 
@@ -65,7 +84,7 @@ class JkewCrosscheckMemoTest extends TestCase
 
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
-        $app = $this->submitted($alp, $year, '85000.00');
+        $app = $this->submittedDirect($alp, $year, '85000.00');
         $jkew = $this->userWithRole(RoleName::PEGAWAI_JKEW->value);
         $alpUser = User::factory()->create(['alp_id' => $alp->id])
             ->assignRole(RoleName::ALP->value);
@@ -90,6 +109,10 @@ class JkewCrosscheckMemoTest extends TestCase
 
         $this->actingAs($alpUser)
             ->get(route('applications.documents.download', [$app, $doc]))
+            ->assertForbidden();
+
+        $this->actingAs($alpUser)
+            ->get(route('applications.documents.view', [$app, $doc]))
             ->assertForbidden();
     }
 }

@@ -1,6 +1,4 @@
 @extends('layouts.app')
-@section('title', 'Kelulusan — '.$application->application_number)
-@section('heading', 'Kelulusan Permohonan')
 @section('subheading', $application->application_number.' · '.($application->recipient_name ?? $application->purpose))
 
 @php
@@ -8,8 +6,35 @@
     $approvedCount = $progress['approvedCount'];
     $nextLevel = $progress['nextLevel'];
     $isFinalNext = $nextLevel && ($approvedCount + 1) === $required->count();
+    $isEndorseStep = $nextLevel && ! $isFinalNext;
+    $isPerakuStep = auth()->user()->hasRole(\App\Enums\RoleName::PELULUS->value)
+        && $isEndorseStep
+        && $nextLevel?->required_role === \App\Enums\RoleName::PELULUS->value;
     $currentReviews = $application->reviews->where('revision_number', $application->revision_number);
+    $currentApprovals = $application->approvals->where('revision_number', $application->revision_number);
+    $processHistory = $currentReviews
+        ->map(fn ($r) => [
+            'label' => $r->review_type->label(),
+            'at' => $r->reviewed_at ?? $r->created_at,
+            'actor' => $r->reviewer?->name,
+            'comments' => $r->comments,
+            'badge' => $r->decision->label(),
+            'badgeClasses' => $r->decision->badgeClasses(),
+        ])
+        ->merge($currentApprovals->map(fn ($a) => [
+            'label' => $a->approvalLevel?->name ?? '—',
+            'at' => $a->decided_at ?? $a->created_at,
+            'actor' => $a->approver?->name,
+            'comments' => $a->comments,
+            'badge' => $a->displayDecisionLabel($application),
+            'badgeClasses' => $a->displayDecisionBadgeClasses($application),
+        ]))
+        ->sortBy('at')
+        ->values();
 @endphp
+
+@section('title', ($isPerakuStep ? 'Pengesyoran' : 'Kelulusan').' — '.$application->application_number)
+@section('heading', $isPerakuStep ? 'Pengesyoran Permohonan' : 'Kelulusan Permohonan')
 
 @section('content')
     <x-page-shell>
@@ -76,41 +101,20 @@
                     <x-document-preview-list :application="$application" :documents="$application->documents" />
                 </x-page-card>
 
-                @if ($currentReviews->isNotEmpty())
-                    <x-page-card title="Semakan JP" icon="search">
+                @if ($processHistory->isNotEmpty())
+                    <x-page-card title="Sejarah Semakan & Kelulusan" icon="clock">
                         <div class="space-y-3">
-                            @foreach ($currentReviews as $r)
+                            @foreach ($processHistory as $entry)
                                 <div class="rounded-xl border border-gray-100 bg-gray-50/50 p-4 text-sm">
                                     <div class="flex flex-wrap items-center justify-between gap-2">
-                                        <span class="font-medium text-gray-900">{{ $r->review_type->label() }}</span>
-                                        <x-status-badge :label="$r->decision->label()" :classes="$r->decision->badgeClasses()" />
+                                        <span class="font-medium text-gray-900">{{ $entry['label'] }}</span>
+                                        <x-status-badge :label="$entry['badge']" :classes="$entry['badgeClasses']" />
                                     </div>
                                     <p class="mt-1 text-xs text-gray-500">
-                                        {{ $r->reviewed_at?->format('d/m/Y H:i') }} · {{ $r->reviewer?->name }}
+                                        {{ $entry['at']?->format('d/m/Y H:i') }} · {{ $entry['actor'] }}
                                     </p>
-                                    @if ($r->comments)
-                                        <p class="mt-2 text-gray-600">{{ $r->comments }}</p>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                    </x-page-card>
-                @endif
-
-                @if ($application->approvals->isNotEmpty())
-                    <x-page-card title="Sejarah Kelulusan" icon="clock">
-                        <div class="space-y-3">
-                            @foreach ($application->approvals as $a)
-                                <div class="rounded-xl border border-gray-100 bg-gray-50/50 p-4 text-sm">
-                                    <div class="flex flex-wrap items-center justify-between gap-2">
-                                        <span class="font-medium text-gray-900">{{ $a->approvalLevel?->name ?? '—' }}</span>
-                                        <x-status-badge :label="$a->displayDecisionLabel($application)" :classes="$a->displayDecisionBadgeClasses($application)" />
-                                    </div>
-                                    <p class="mt-1 text-xs text-gray-500">
-                                        {{ $a->decided_at?->format('d/m/Y H:i') ?? $a->created_at?->format('d/m/Y H:i') }} · {{ $a->approver?->name }}
-                                    </p>
-                                    @if ($a->comments)
-                                        <p class="mt-2 text-gray-600">{{ $a->comments }}</p>
+                                    @if ($entry['comments'])
+                                        <p class="mt-2 text-gray-600">{{ $entry['comments'] }}</p>
                                     @endif
                                 </div>
                             @endforeach
@@ -122,32 +126,6 @@
             <div class="space-y-4" x-data="{ act: 'approve' }">
                 <x-page-card title="Kedudukan Kewangan" icon="wallet" description="{{ $application->alp->ref_code }} · {{ $application->financialYear?->year ?? '—' }}">
                     @include('reviews.partials.alp-budget-detail')
-                </x-page-card>
-
-                <x-page-card title="Aras Kelulusan" icon="scale" description="Aras {{ $approvedCount }} / {{ $required->count() }} selesai">
-                    <ol class="space-y-2 text-sm">
-                        @foreach ($required as $i => $lvl)
-                            @php $done = $i < $approvedCount; $isNext = $i === $approvedCount; @endphp
-                            <li @class([
-                                'flex items-center gap-3 rounded-xl border px-3 py-2.5',
-                                'border-green-200 bg-green-50/60' => $done,
-                                'border-royal-200 bg-royal-50/60' => $isNext,
-                                'border-gray-100 bg-gray-50/40' => ! $done && ! $isNext,
-                            ])>
-                                <span @class([
-                                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold',
-                                    'bg-green-100 text-green-700' => $done,
-                                    'bg-royal-100 text-royal-700' => $isNext,
-                                    'bg-gray-100 text-gray-400' => ! $done && ! $isNext,
-                                ])>{{ $done ? '✓' : ($isNext ? '→' : $i + 1) }}</span>
-                                <div class="min-w-0 flex-1">
-                                    <p @class(['font-medium', 'text-gray-900' => $done || $isNext, 'text-gray-500' => ! $done && ! $isNext])>{{ $lvl->name }}</p>
-                                    <p class="text-xs text-gray-400">{{ \App\Enums\RoleName::from($lvl->required_role)->label() }}</p>
-                                </div>
-                            </li>
-                        @endforeach
-                    </ol>
-                    <p class="mt-3 text-xs text-gray-400">Peruntukan diluluskan dicatat pada aras kelulusan terakhir sahaja.</p>
                 </x-page-card>
 
                 @if ($isFinalNext)
@@ -178,10 +156,6 @@
                         </dl>
                     </x-page-card>
                 @endif
-
-                @php
-                    $isEndorseStep = $nextLevel && ! $isFinalNext;
-                @endphp
 
                 <x-page-card
                     title="{{ $isEndorseStep ? 'Pengesyoran' : 'Keputusan Kelulusan' }}"

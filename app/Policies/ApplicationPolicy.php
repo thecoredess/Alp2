@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\ApplicationStatus;
+use App\Enums\RoleName;
 use App\Models\Application;
 use App\Models\User;
 use App\Services\Application\ApplicationReportCardService;
@@ -81,31 +82,42 @@ class ApplicationPolicy
         return $application->status === ApplicationStatus::SUBMITTED;
     }
 
-    /** Muat turun / lihat dokumen: sama seperti lihat permohonan. */
+    /** Muat turun dokumen lampiran — staf semakan silang (JP/PEPU) pratonton sahaja. */
     public function downloadDocument(User $user, Application $application): bool
     {
+        if ($user->attachmentsViewOnly()) {
+            return false;
+        }
+
         return $this->view($user, $application);
     }
 
-    /** Muat turun borang memo semakan silang (siap isi). */
+    /** Muat turun borang memo semakan silang (siap isi) — Admin JP sahaja. */
     public function downloadCrosscheckMemo(User $user, Application $application): bool
     {
-        return $user->can('applications.review.secretariat');
+        return $user->canMakeFullJpReviewDecision();
     }
 
-    /** Muat naik borang ulasan JKEW selepas semakan silang. */
+    /** Muat naik borang ulasan JKEW — Admin JP, JKEW & Kerani Kewangan. */
     public function uploadCrosscheckMemo(User $user, Application $application): bool
     {
         if ($user->can('payments.jkew_scope') || $user->can('payments.manage')) {
             return true;
         }
 
-        return $user->can('applications.review.secretariat');
+        return $user->canMakeFullJpReviewDecision();
     }
 
     /** Rujukan semakan silang — staf DBKL sahaja (bukan ALP). */
     public function viewCrosscheckReference(User $user, Application $application): bool
     {
+        if (
+            ! $user->can('applications.view_all')
+            && $user->hasAnyRole([RoleName::ALP->value, RoleName::URUSSETIA_ALP->value])
+        ) {
+            return false;
+        }
+
         if ($user->alp_id !== null && $user->alp_id === $application->alp_id && ! $user->can('applications.view_all')) {
             return false;
         }

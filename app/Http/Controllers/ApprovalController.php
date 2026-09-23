@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ApplicationStatus;
+use App\Enums\ApprovalDecision;
+use App\Enums\RoleName;
 use App\Enums\ProgramCategory;
 use App\Models\Alp;
 use App\Models\Application;
@@ -29,6 +31,8 @@ class ApprovalController extends Controller
     {
         abort_unless($request->user()->can('applications.approve'), 403);
 
+        $user = $request->user();
+
         $applications = Application::query()
             ->where('status', ApplicationStatus::PENDING_APPROVAL->value)
             ->when($request->filled('tahun'), fn ($q) => $q->where('financial_year_id', $request->integer('tahun')))
@@ -38,6 +42,20 @@ class ApprovalController extends Controller
                 ->where('application_number', 'like', '%'.$request->string('cari').'%')
                 ->orWhere('purpose', 'like', '%'.$request->string('cari').'%')
                 ->orWhere('recipient_name', 'like', '%'.$request->string('cari').'%')))
+            ->when(
+                ! $user->hasRole(RoleName::SUPER_ADMIN->value),
+                fn ($q) => $q->withCount(['approvals as current_approved_count' => fn ($sub) => $sub
+                    ->where('decision', ApprovalDecision::APPROVED->value)
+                    ->whereColumn('application_approvals.revision_number', 'applications.revision_number')])
+                    ->when(
+                        $user->hasRole(RoleName::PELULUS->value) && ! $user->hasRole(RoleName::PENGURUSAN->value),
+                        fn ($q) => $q->having('current_approved_count', 0),
+                    )
+                    ->when(
+                        $user->hasRole(RoleName::PENGURUSAN->value) && ! $user->hasRole(RoleName::PELULUS->value),
+                        fn ($q) => $q->having('current_approved_count', '>=', 1),
+                    ),
+            )
             ->with(['alp', 'financialYear', 'revisions:id,application_id,snapshot'])
             ->latest('submitted_at')
             ->paginate(15)

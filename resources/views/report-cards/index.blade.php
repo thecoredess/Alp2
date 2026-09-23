@@ -4,16 +4,8 @@
 @section('subheading', 'Pemantauan penerimaan laporan — 1 bulan selepas tarikh program')
 
 @section('content')
-    @if ($canReview ?? false)
-        <div class="mb-4">
-            <a href="{{ route('report-cards.review.index') }}" class="btn-primary text-sm">
-                Semak Laporan Aktiviti (Giliran JP)
-            </a>
-        </div>
-    @endif
-
     <form method="GET" class="mb-5 flex flex-wrap gap-2">
-        <select name="tahun" class="inp sm:w-auto">
+        <select name="tahun" class="inp-select inp-select--year shrink-0">
             <option value="">Semua Tahun</option>
             @foreach ($years as $y)
                 <option value="{{ $y->id }}" @selected(request('tahun') == $y->id)>{{ $y->year }}</option>

@@ -1,12 +1,18 @@
 @extends('layouts.app')
-@section('title', 'Peraku / PEPU')
-@section('heading', 'Menunggu Kelulusan PEPU')
-@section('subheading', 'Peraku (TP/Pengarah JP) kemudian PEPU / Pengurusan Tertinggi')
+@php
+    $isPerakuQueue = auth()->user()->hasRole(\App\Enums\RoleName::PELULUS->value)
+        && ! auth()->user()->hasRole(\App\Enums\RoleName::PENGURUSAN->value);
+@endphp
+@section('title', $isPerakuQueue ? 'Pengesyoran' : 'Kelulusan')
+@section('heading', $isPerakuQueue ? 'Menunggu Pengesyoran' : 'Menunggu Kelulusan PEPU')
+@section('subheading', $isPerakuQueue
+    ? 'Admin JP → Pegawai JP → TP/Pengarah (peringkat ini)'
+    : 'Selepas pengesyoran TP/Pengarah — kelulusan akhir PEPU')
 
 @section('content')
     <form method="GET" class="mb-5 flex flex-wrap items-center gap-2">
         <input type="text" name="cari" value="{{ request('cari') }}" placeholder="No. / tujuan / penerima…" class="inp w-full min-w-[12rem] shrink-0 sm:w-48">
-        <select name="tahun" class="inp-select shrink-0">
+        <select name="tahun" class="inp-select inp-select--year shrink-0">
             <option value="">Semua Tahun</option>
             @foreach ($years as $y)<option value="{{ $y->id }}" @selected(request('tahun') == $y->id)>{{ $y->year }}</option>@endforeach
         </select>
@@ -56,7 +62,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="px-4 py-10 text-center text-gray-400">Tiada permohonan menunggu kelulusan.</td></tr>
+                    <tr><td colspan="6" class="px-4 py-10 text-center text-gray-400">{{ $isPerakuQueue ? 'Tiada permohonan menunggu pengesyoran.' : 'Tiada permohonan menunggu kelulusan.' }}</td></tr>
                 @endforelse
             </tbody>
         </table>

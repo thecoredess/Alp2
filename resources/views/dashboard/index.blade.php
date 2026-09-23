@@ -4,22 +4,41 @@
 @section('subheading', $activeYear ? 'Tahun Kewangan '.$activeYear->year.' (Aktif)' : 'Tiada tahun kewangan aktif')
 
 @section('content')
-    <div class="mb-8 rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex min-w-0 flex-1 items-start gap-4">
-                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-navy-600 to-royal-500 text-white shadow-sm">
-                    <x-icon name="dashboard" class="h-6 w-6" />
-                </span>
-                <div class="min-w-0">
-                    <h2 class="text-lg font-semibold text-gray-900">Selamat datang, {{ auth()->user()->name }}</h2>
-                    <p class="mt-1 text-sm text-gray-500">
-                        Peranan: {{ auth()->user()->roles->first()?->name ? \App\Enums\RoleName::from(auth()->user()->roles->first()->name)->label() : '—' }}
-                    </p>
+    @if ($isPepuDashboard)
+        <div class="mb-4 rounded-xl border border-gray-200/80 bg-white px-5 py-4 shadow-sm">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-navy-700 text-white">
+                        <x-icon name="dashboard" class="h-5 w-5" />
+                    </span>
+                    <div class="min-w-0">
+                        <h2 class="text-base font-semibold text-gray-900">Selamat datang, {{ auth()->user()->name }}</h2>
+                        <p class="text-[13px] text-gray-500">
+                            {{ auth()->user()->roles->first()?->name ? \App\Enums\RoleName::from(auth()->user()->roles->first()->name)->label() : '—' }}
+                        </p>
+                    </div>
                 </div>
+                <x-welcome-datetime class="w-full sm:w-auto" />
             </div>
-            <x-welcome-datetime class="w-full sm:w-auto" />
         </div>
-    </div>
+    @else
+        <div class="mb-8 rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex min-w-0 flex-1 items-start gap-4">
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-navy-600 to-royal-500 text-white shadow-sm">
+                        <x-icon name="dashboard" class="h-6 w-6" />
+                    </span>
+                    <div class="min-w-0">
+                        <h2 class="text-lg font-semibold text-gray-900">Selamat datang, {{ auth()->user()->name }}</h2>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Peranan: {{ auth()->user()->roles->first()?->name ? \App\Enums\RoleName::from(auth()->user()->roles->first()->name)->label() : '—' }}
+                        </p>
+                    </div>
+                </div>
+                <x-welcome-datetime class="w-full sm:w-auto" />
+            </div>
+        </div>
+    @endif
 
     @if (! $activeYear)
         <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -30,42 +49,20 @@
         </div>
     @endif
 
-    {{-- PEPU: Tindakan Diperlukan --}}
-    @if ($isPepuDashboard && $officerQueues)
-        @include('dashboard.partials.pepu-overview-card')
-    @else
-        {{-- Kad statistik pentadbir --}}
-        @if ($stats)
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <x-stat-card label="Ahli Lembaga Aktif" icon="users-group" tone="navy">{{ $stats['alp_count'] }}</x-stat-card>
-                <x-stat-card label="Pengguna Aktif" icon="user-cog" tone="royal">{{ $stats['user_count'] }}</x-stat-card>
-                <x-stat-card label="Tahun Kewangan Aktif" icon="calendar" tone="teal">{{ $stats['financial_year'] ?? '—' }}</x-stat-card>
-            </div>
-        @endif
+    {{-- Kad statistik pentadbir --}}
+    @if (! $isPepuDashboard && $stats)
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <x-stat-card label="Ahli Lembaga Aktif" icon="users-group" tone="navy">{{ $stats['alp_count'] }}</x-stat-card>
+            <x-stat-card label="Pengguna Aktif" icon="user-cog" tone="royal">{{ $stats['user_count'] }}</x-stat-card>
+            <x-stat-card label="Tahun Kewangan Aktif" icon="calendar" tone="teal">{{ $stats['financial_year'] ?? '—' }}</x-stat-card>
+        </div>
+    @endif
 
-        {{-- Giliran pegawai — blok tindakan --}}
-        @if ($officerQueues)
-            <div class="mt-8">
-                <h3 class="dashboard-section-title">Tindakan Diperlukan</h3>
-                <div @class([
-                    'grid gap-4',
-                    'grid-cols-1' => count($officerQueues) === 1,
-                    'grid-cols-1 sm:grid-cols-2' => count($officerQueues) === 2,
-                    'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' => count($officerQueues) >= 3,
-                ])>
-                    @foreach ($officerQueues as $q)
-                        <x-action-block
-                            :label="$q['label']"
-                            :description="$q['description'] ?? null"
-                            :icon="$q['icon'] ?? 'inbox'"
-                            :tone="$q['tone'] ?? 'royal'"
-                            :count="$q['count']"
-                            :href="route($q['route'])"
-                        />
-                    @endforeach
-                </div>
-            </div>
-        @endif
+    {{-- Giliran pegawai — baris rata (PEPU, Admin JP, Pegawai JP, TP/Pengarah) --}}
+    @if ($officerQueues)
+        <div @class(['mt-8' => ! $isPepuDashboard])>
+            @include('dashboard.partials.pepu-overview-card')
+        </div>
     @endif
 
     @if ($contributionKpi && ! auth()->user()->alp_id)
@@ -253,6 +250,8 @@
         <div class="mt-8">
             @if ($isPepuDashboard)
                 @include('dashboard.partials.pepu-budget-card')
+            @elseif ($isJpDashboard)
+                @include('dashboard.partials.admin-jp-budget-card')
             @else
             <div class="mb-4 flex items-center justify-between">
                 <h3 class="dashboard-section-title mb-0">Bajet Keseluruhan ALP @if($activeYear)<span class="font-normal text-gray-400">· {{ $activeYear->year }}</span>@endif</h3>
