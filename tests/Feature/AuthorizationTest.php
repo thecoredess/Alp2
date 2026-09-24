@@ -61,6 +61,18 @@ class AuthorizationTest extends TestCase
         $this->actingAs($mgmt)->get(route('alps.create'))->assertForbidden();
     }
 
+    public function test_pepu_cannot_access_reports_module(): void
+    {
+        $pepu = $this->userWithRole(RoleName::PENGURUSAN);
+
+        $this->actingAs($pepu)->get(route('reports.index'))->assertForbidden();
+        $this->actingAs($pepu)->get(route('settings.hub'))->assertForbidden();
+        $this->actingAs($pepu)->get(route('dashboard'))->assertOk()
+            ->assertDontSee('href="'.route('reports.index').'"', false)
+            ->assertDontSee('href="'.route('report-cards.index').'"', false)
+            ->assertDontSee('href="'.route('settings.hub').'"', false);
+    }
+
     public function test_all_roles_can_view_dashboard(): void
     {
         foreach (RoleName::cases() as $role) {

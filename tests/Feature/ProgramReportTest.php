@@ -24,7 +24,7 @@ class ProgramReportTest extends TestCase
         $this->seedWorkflow();
     }
 
-    public function test_hub_shows_program_report_card(): void
+    public function test_reports_hub_no_longer_links_program_report_page(): void
     {
         FinancialYear::factory()->active()->create();
         $user = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
@@ -32,26 +32,20 @@ class ProgramReportTest extends TestCase
         $this->actingAs($user)
             ->get(route('reports.index'))
             ->assertOk()
-            ->assertSee('Laporan Program & Laporan Aktiviti')
-            ->assertSee(route('reports.programs', ['fy' => FinancialYear::active()->id], false));
+            ->assertDontSee('Laporan Program & Laporan Aktiviti');
     }
 
-    public function test_program_report_lists_approved_programs_and_status(): void
+    public function test_program_report_route_removed(): void
     {
-        $alp = Alp::factory()->create();
-        $year = $this->makeYear();
-        $this->allocate($alp, $year, '500000.00');
-        $app = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '2500.00')));
+        $this->get(route('reports.index'))
+            ->assertRedirect(route('login'));
 
-        $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
-
-        $this->actingAs($jp)
-            ->get(route('reports.programs', ['fy' => $year->id]))
-            ->assertOk()
-            ->assertSee($app->application_number)
-            ->assertSee('Menunggu baucar')
-            ->assertDontSee('Program diluluskan')
-            ->assertDontSee('Pematuhan');
+        $this->assertSame(
+            404,
+            $this->actingAs($this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value))
+                ->get('/laporan/program')
+                ->getStatusCode(),
+        );
     }
 
     public function test_staff_program_dashboard_summary_counts_approved_programs(): void
@@ -71,7 +65,7 @@ class ProgramReportTest extends TestCase
         $this->assertSame(0, $summary['received']);
     }
 
-    public function test_program_report_status_badge_matches_status_filter(): void
+    public function test_program_report_service_status_filtering(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
@@ -84,27 +78,12 @@ class ProgramReportTest extends TestCase
             'report_card_status' => ReportCardStatus::APPROVED,
         ])->save();
 
-        $user = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
+        $service = app(ProgramReportService::class);
+        $rows = $service->listing(['financial_year_id' => $year->id], staffStatusFilters: true);
+        $byId = $rows->keyBy(fn (array $row) => $row['application']->id);
 
-        $this->actingAs($user)
-            ->get(route('reports.programs', [
-                'fy' => $year->id,
-                'laporan' => ApplicationReportService::FILTER_AWAITING_VOUCHER,
-            ]))
-            ->assertOk()
-            ->assertSee('Menunggu baucar')
-            ->assertSee($awaitingVoucher->application_number)
-            ->assertDontSee($received->application_number);
-
-        $this->actingAs($user)
-            ->get(route('reports.programs', [
-                'fy' => $year->id,
-                'laporan' => ApplicationReportService::FILTER_RECEIVED,
-            ]))
-            ->assertOk()
-            ->assertSee('Laporan aktiviti diterima')
-            ->assertSee($received->application_number)
-            ->assertDontSee($awaitingVoucher->application_number);
+        $this->assertSame(ApplicationReportService::FILTER_AWAITING_VOUCHER, $byId[$awaitingVoucher->id]['status']);
+        $this->assertSame(ApplicationReportService::FILTER_RECEIVED, $byId[$received->id]['status']);
     }
 
     public function test_program_report_marks_received_and_overdue(): void
@@ -132,12 +111,6 @@ class ProgramReportTest extends TestCase
 
         $this->assertSame(ApplicationReportService::FILTER_RECEIVED, $byId[$received->id]['status']);
         $this->assertSame(ApplicationReportService::FILTER_PENDING, $byId[$overdue->id]['status']);
-
-        $this->actingAs($this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value))
-            ->get(route('reports.programs', ['fy' => $year->id, 'laporan' => ApplicationReportService::FILTER_PENDING]))
-            ->assertOk()
-            ->assertSee($overdue->application_number)
-            ->assertDontSee($received->application_number);
 
         $alpRows = $service->listing(['financial_year_id' => $year->id], staffStatusFilters: false);
         $alpById = $alpRows->keyBy(fn (array $row) => $row['application']->id);
@@ -169,7 +142,7 @@ class ProgramReportTest extends TestCase
         $this->assertArrayHasKey(ApplicationReportService::FILTER_REJECTED, $options);
     }
 
-    public function test_alp_user_only_sees_own_programs(): void
+    public function test_alp_user_only_sees_own_programs_in_service_listing(): void
     {
         $alpA = Alp::factory()->create();
         $alpB = Alp::factory()->create();
@@ -180,16 +153,18 @@ class ProgramReportTest extends TestCase
         $own = $this->fullyApprove($this->toPendingApproval($this->submitted($alpA, $year, '1000.00')));
         $other = $this->fullyApprove($this->toPendingApproval($this->submitted($alpB, $year, '1200.00')));
 
-        $owner = $this->userWithRole(RoleName::ALP->value, $alpA);
+        $rows = app(ProgramReportService::class)->listing([
+            'financial_year_id' => $year->id,
+            'alp_id' => $alpA->id,
+        ], staffStatusFilters: false);
 
-        $this->actingAs($owner)
-            ->get(route('reports.programs', ['fy' => $year->id]))
-            ->assertOk()
-            ->assertSee($own->application_number)
-            ->assertDontSee($other->application_number);
+        $numbers = $rows->pluck('application.application_number');
+
+        $this->assertTrue($numbers->contains($own->application_number));
+        $this->assertFalse($numbers->contains($other->application_number));
     }
 
-    public function test_category_filter_narrows_listing(): void
+    public function test_category_filter_narrows_service_listing(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
@@ -199,28 +174,14 @@ class ProgramReportTest extends TestCase
         $sukan = $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '1100.00')));
         $sukan->forceFill(['program_category' => ProgramCategory::SUKAN])->save();
 
-        $this->actingAs($this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value))
-            ->get(route('reports.programs', ['fy' => $year->id, 'kategori' => ProgramCategory::SUKAN->value]))
-            ->assertOk()
-            ->assertSee($sukan->application_number)
-            ->assertDontSee($komuniti->application_number);
-    }
+        $rows = app(ProgramReportService::class)->listing([
+            'financial_year_id' => $year->id,
+            'category' => ProgramCategory::SUKAN->value,
+        ], staffStatusFilters: true);
 
-    public function test_authorized_export_returns_spreadsheet(): void
-    {
-        $alp = Alp::factory()->create();
-        $year = $this->makeYear();
-        $this->allocate($alp, $year, '500000.00');
-        $this->fullyApprove($this->toPendingApproval($this->submitted($alp, $year, '1000.00')));
+        $numbers = $rows->pluck('application.application_number');
 
-        $this->actingAs($this->userWithRole(RoleName::PENGURUSAN->value))
-            ->get(route('reports.programs', ['fy' => $year->id, 'format' => 'xlsx']))
-            ->assertOk()
-            ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    }
-
-    public function test_guest_cannot_open_program_report(): void
-    {
-        $this->get(route('reports.programs'))->assertRedirect(route('login'));
+        $this->assertTrue($numbers->contains($sukan->application_number));
+        $this->assertFalse($numbers->contains($komuniti->application_number));
     }
 }
