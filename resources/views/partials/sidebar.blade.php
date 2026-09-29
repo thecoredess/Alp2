@@ -13,7 +13,7 @@
     $canReportCards = ! $isPepu && ($canAllApplications || $canReviewJp);
     $showProcess = $hasAlp || $canAllApplications || $canReviewJp || $canApprove || $canPayments || $canReportCards;
 
-    $canReports = ! $isPepu && $user->can('reports.view');
+    $canReports = $user->canAccessReportsHub();
     $canAllocations = $user->can('allocations.view') || $user->can('budget.view_all');
     $showMonitoring = $hasAlp || $canReports || $canAllocations;
 

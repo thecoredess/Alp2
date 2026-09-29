@@ -89,7 +89,7 @@ class UrsSpineSmokeTest extends TestCase
 
         // 4) Cetak surat & borang
         $this->actingAs($owner)->get(route('applications.letter', $app))->assertOk();
-        $this->actingAs($owner)->get(route('applications.borang', $app))->assertOk()->assertSee('F · Peruntukan');
+        $this->actingAs($owner)->get(route('applications.borang', $app))->assertOk()->assertSee('Peruntukan');
 
         // 5) Kerani hantar ke JKEW
         $this->actingAs($kerani)

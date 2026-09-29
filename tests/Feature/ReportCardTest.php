@@ -10,8 +10,10 @@ use App\Enums\RoleName;
 use App\Models\Alp;
 use App\Models\User;
 use App\Notifications\ApplicationWorkflowNotification;
+use App\Models\ApplicationDocument;
 use App\Services\Application\ApplicationReportCardService;
 use App\Services\Application\ReportCardReviewService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
@@ -322,8 +324,33 @@ class ReportCardTest extends TestCase
             ->assertOk()
             ->assertSee('Borang Penyaluran')
             ->assertSee($app->application_number)
-            ->assertSee('F · Peruntukan')
-            ->assertSee('K · Semakan Urusetia JP');
+            ->assertSee('Peruntukan')
+            ->assertSee('Semakan Urusetia JP')
+            ->assertSee('Muat turun PDF');
+    }
+
+    public function test_borang_penyaluran_pdf_includes_form_and_attachments(): void
+    {
+        [$app, $alp] = $this->approvedApp();
+        $owner = $this->userWithRole(RoleName::ALP->value, $alp);
+
+        $attachmentBytes = Pdf::loadHTML('<p>Lampiran ujian</p>')->output();
+        $path = "applications/{$app->id}/lampiran-uji.pdf";
+        Storage::disk('local')->put($path, $attachmentBytes);
+
+        ApplicationDocument::factory()->type(DocumentType::PENDAFTARAN_PERTUBUHAN)->create([
+            'application_id' => $app->id,
+            'original_filename' => 'ros.pdf',
+            'stored_path' => $path,
+            'mime_type' => 'application/pdf',
+        ]);
+
+        $response = $this->actingAs($owner)
+            ->get(route('applications.borang.pdf', $app));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF', $response->getContent());
     }
 
     public function test_manual_page_is_reachable(): void

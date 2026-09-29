@@ -17,8 +17,10 @@ use App\Services\Audit\AuditService;
 use App\Services\Budget\BudgetService;
 use App\Services\Documents\ApprovalLetterService;
 use App\Services\Documents\AssociationDocumentGuideService;
+use App\Services\Documents\BorangPenyaluranPdfService;
 use App\Services\Reports\ApplicationReportService;
 use App\Support\ApplicationAmountValidator;
+use App\Support\Tbl10BudgetSnapshot;
 use App\Support\UrsContributionPolicy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +40,7 @@ class ApplicationController extends Controller
         private readonly ApprovalLetterService $approvalLetters,
         private readonly AssociationDocumentGuideService $documentGuide,
         private readonly ApplicationReportService $applicationReports,
+        private readonly BorangPenyaluranPdfService $borangPdf,
     ) {}
 
     /** Permohonan Saya (permohonan ALP pengguna). */
@@ -55,8 +58,8 @@ class ApplicationController extends Controller
         )
             ->where('alp_id', $request->user()->alp_id)
             ->with(['financialYear', 'alp', 'approvals', 'reportCardReviews'])
-            ->orderByDesc('id')
-            ->paginate(15)
+            ->orderByRaw('COALESCE(submitted_at, created_at) ASC')
+            ->paginate(10)
             ->withQueryString();
 
         return view('applications.index', [
@@ -75,7 +78,7 @@ class ApplicationController extends Controller
             ->when($request->filled('alp'), fn ($q) => $q->where('alp_id', $request->integer('alp')))
             ->with(['financialYear', 'alp', 'approvals', 'reportCardReviews'])
             ->orderByDesc('id')
-            ->paginate(15)
+            ->paginate(10)
             ->withQueryString();
 
         return view('applications.index', [
@@ -273,6 +276,29 @@ class ApplicationController extends Controller
     {
         $this->authorize('view', $application);
 
+        return view('applications.borang', $this->borangViewData($application));
+    }
+
+    /** Borang Penyaluran + lampiran dimuat naik (satu PDF). */
+    public function borangPdf(Application $application): Response
+    {
+        $this->authorize('view', $application);
+
+        $data = $this->borangViewData($application);
+        $pdf = $this->borangPdf->generate($data['application'], $data['tbl10']);
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$this->borangPdf->filename($application).'"',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+    }
+
+    /** @return array{application: Application, tbl10: Tbl10BudgetSnapshot, templates: array<string, string>, logoSrc: string} */
+    private function borangViewData(Application $application): array
+    {
         $application->load([
             'financialYear', 'alp', 'documents',
             'reviews.reviewer', 'approvals.approver', 'approvals.approvalLevel',
@@ -280,13 +306,9 @@ class ApplicationController extends Controller
 
         $summary = $this->budget->summaryFor($application->alp_id, $application->financial_year_id);
         $pending = $this->appBudget->pendingRequest($application->alp_id, $application->financial_year_id);
-        $tbl10 = \App\Support\Tbl10BudgetSnapshot::from($application, $summary, $pending);
+        $tbl10 = Tbl10BudgetSnapshot::from($application, $summary, $pending);
 
-        return view('applications.borang', [
-            'application' => $application,
-            'tbl10' => $tbl10,
-            'templates' => \App\Support\UrsDocumentTemplates::all(),
-        ]);
+        return $this->borangPdf->viewData($application, $tbl10);
     }
 
     // ── Bantuan ─────────────────────────────────────────────────

@@ -14,7 +14,9 @@
         <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
             <div><dt class="text-gray-500">Nama</dt><dd class="text-gray-900">{{ $recipient->name }}</dd></div>
             <div><dt class="text-gray-500">No. ROS</dt><dd class="font-mono text-gray-900">{{ $recipient->ros_number }}</dd></div>
-            <div><dt class="text-gray-500">Akaun bank</dt><dd class="font-mono text-gray-900">{{ $recipient->bank_account ?? '—' }}</dd></div>
+            @if ($showRecipientBankAccount ?? true)
+                <div><dt class="text-gray-500">Akaun bank</dt><dd class="font-mono text-gray-900">{{ $recipient->bank_account ?? '—' }}</dd></div>
+            @endif
             <div class="sm:col-span-2"><dt class="text-gray-500">Alamat</dt><dd class="text-gray-900">{{ $recipient->address ?? '—' }}</dd></div>
         </dl>
     </div>

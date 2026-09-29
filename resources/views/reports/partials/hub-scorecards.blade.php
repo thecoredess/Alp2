@@ -1,0 +1,10 @@
+@if ($alpReportCards ?? null)
+    @php($activeYear = $selectedYear)
+    @include('reports.partials.alp-report-scorecards')
+@elseif ($pepuReportCards ?? null)
+    @php($activeYear = $selectedYear)
+    @include('reports.partials.pepu-report-scorecards')
+@elseif ($pepuScorecards ?? null)
+    @php($activeYear = $selectedYear)
+    @include('dashboard.partials.scorecards.pepu')
+@endif

@@ -330,10 +330,8 @@
                 @if (auth()->user()->can('applications.create') || auth()->user()->canCreateApplicationOnBehalf())
                     <a href="{{ route('association-guide.download') }}?v=3" class="btn-white text-sm"><x-icon name="download" class="h-4 w-4" /> Panduan Dokumen Persatuan (PDF)</a>
                 @endif
-                @if (! $isPepuDashboard)
-                    @can('reports.view')
-                        <a href="{{ route('reports.index') }}" class="btn-white text-sm"><x-icon name="chart" class="h-4 w-4" /> Laporan</a>
-                    @endcan
+                @if (auth()->user()->canAccessReportsHub())
+                    <a href="{{ route('reports.index') }}" class="btn-white text-sm"><x-icon name="chart" class="h-4 w-4" /> Laporan</a>
                 @endif
                 <a href="{{ route('notifications.index') }}" class="btn-white text-sm"><x-icon name="bell" class="h-4 w-4" /> Notifikasi</a>
                 @can('payments.view')

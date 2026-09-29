@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pratonton — ALP &amp; Semakan Silang</title>
+    <link rel="stylesheet" href="build/assets/app-Bqz102ko.css">
+    <style>
+        body { background: #f3f4f6; }
+        .preview-banner {
+            background: linear-gradient(135deg, #1e2a5a 0%, #2d3f8f 100%);
+            color: #fff;
+        }
+        .preview-panel { min-height: 28rem; }
+        .mock-tab-active {
+            border-bottom: 2px solid #2563eb;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+        .hidden-block {
+            border: 2px dashed #fca5a5;
+            background: #fef2f2;
+            border-radius: 0.75rem;
+        }
+        .visible-block {
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            border-radius: 0.75rem;
+        }
+        .badge-no { background: #fee2e2; color: #b91c1c; }
+        .badge-yes { background: #dcfce7; color: #15803d; }
+        .badge-view { background: #dbeafe; color: #1d4ed8; }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+    <header class="preview-banner px-4 py-8 sm:px-8">
+        <div class="mx-auto max-w-6xl">
+            <p class="text-sm font-medium uppercase tracking-wide text-royal-200">Pratonton UI — belum diluluskan</p>
+            <h1 class="mt-2 text-2xl font-bold sm:text-3xl">ALP tidak boleh lihat Semakan Silang</h1>
+            <p class="mt-3 max-w-3xl text-sm text-white/85 sm:text-base">
+                Perbandingan tab <strong>Lampiran</strong> permohonan: ALP hanya nampak dokumen sokongan sendiri.
+                Staf JP/PEPU boleh pratonton semakan silang tanpa muat turun; Admin JP &amp; JKEW akses penuh.
+            </p>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-8">
+        {{-- Matriks akses --}}
+        <section class="card overflow-hidden">
+            <div class="border-b border-gray-100 bg-gray-50/80 px-6 py-4">
+                <h2 class="text-base font-semibold text-gray-900">Matriks Akses</h2>
+            </div>
+            <div class="overflow-x-auto p-4 sm:p-6">
+                <table class="w-full min-w-[640px] text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
+                            <th class="pb-3 pr-4 font-semibold">Peranan</th>
+                            <th class="pb-3 pr-4 font-semibold">Kad Semakan Silang</th>
+                            <th class="pb-3 pr-4 font-semibold">Pratonton Borang JKEW</th>
+                            <th class="pb-3 font-semibold">Muat Turun</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr>
+                            <td class="py-3 pr-4 font-medium">ALP / Urus Setia ALP</td>
+                            <td class="py-3 pr-4"><span class="badge-no rounded-full px-2.5 py-0.5 text-xs font-semibold">Tiada</span></td>
+                            <td class="py-3 pr-4"><span class="badge-no rounded-full px-2.5 py-0.5 text-xs font-semibold">Disekat</span></td>
+                            <td class="py-3"><span class="badge-no rounded-full px-2.5 py-0.5 text-xs font-semibold">Disekat</span></td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 pr-4 font-medium">Pegawai JP / TP / PEPU</td>
+                            <td class="py-3 pr-4"><span class="badge-yes rounded-full px-2.5 py-0.5 text-xs font-semibold">Ya</span></td>
+                            <td class="py-3 pr-4"><span class="badge-view rounded-full px-2.5 py-0.5 text-xs font-semibold">Pratonton sahaja</span></td>
+                            <td class="py-3"><span class="badge-no rounded-full px-2.5 py-0.5 text-xs font-semibold">Tiada butang</span></td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 pr-4 font-medium">Admin JP / JKEW / Kerani Kewangan</td>
+                            <td class="py-3 pr-4"><span class="badge-yes rounded-full px-2.5 py-0.5 text-xs font-semibold">Ya</span></td>
+                            <td class="py-3 pr-4"><span class="badge-yes rounded-full px-2.5 py-0.5 text-xs font-semibold">Ya</span></td>
+                            <td class="py-3"><span class="badge-yes rounded-full px-2.5 py-0.5 text-xs font-semibold">Ya</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        {{-- Perbandingan mockup --}}
+        <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            {{-- ALP --}}
+            <div class="preview-panel card flex flex-col overflow-hidden">
+                <div class="border-b border-gray-100 bg-red-50 px-5 py-3">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-red-700">Paparan ALP</p>
+                    <p class="text-sm text-red-900">alp01@dbkl.test · Tab Lampiran</p>
+                </div>
+                <div class="flex flex-wrap gap-4 border-b border-gray-100 px-5 py-3 text-sm">
+                    <span class="text-gray-500">Ringkasan</span>
+                    <span class="mock-tab-active pb-1">Lampiran</span>
+                    <span class="text-gray-500">Status</span>
+                </div>
+                <div class="flex-1 space-y-4 p-5">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div class="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50/80 px-4 py-3 text-sm">
+                            <div>
+                                <p class="font-medium text-gray-900">Surat Permohonan</p>
+                                <p class="text-xs text-gray-500">sim-surat-permohonan.pdf</p>
+                            </div>
+                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-royal-50 text-royal-600">👁</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50/80 px-4 py-3 text-sm">
+                            <div>
+                                <p class="font-medium text-gray-900">Penyata Bank</p>
+                                <p class="text-xs text-gray-500">sim-penyata-bank.pdf</p>
+                            </div>
+                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-royal-50 text-royal-600">👁</span>
+                        </div>
+                    </div>
+
+                    <div class="hidden-block p-5 text-center">
+                        <p class="text-sm font-semibold text-red-800">Semakan Silang — TIDAK DIPAPARKAN</p>
+                        <p class="mt-1 text-xs text-red-700">Kad &quot;Semakan Silang Permohonan Persatuan&quot; disembunyikan sepenuhnya untuk ALP.</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Pegawai JP --}}
+            <div class="preview-panel card flex flex-col overflow-hidden">
+                <div class="border-b border-gray-100 bg-blue-50 px-5 py-3">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">Paparan Pegawai JP</p>
+                    <p class="text-sm text-blue-900">urussetia@dbkl.test · Tab Lampiran</p>
+                </div>
+                <div class="flex flex-wrap gap-4 border-b border-gray-100 px-5 py-3 text-sm">
+                    <span class="text-gray-500">Ringkasan</span>
+                    <span class="mock-tab-active pb-1">Lampiran</span>
+                    <span class="text-gray-500">Laporan Aktiviti</span>
+                    <span class="text-gray-500">Status</span>
+                </div>
+                <div class="flex-1 space-y-4 p-5">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div class="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50/80 px-4 py-3 text-sm">
+                            <div>
+                                <p class="font-medium text-gray-900">Surat Permohonan</p>
+                                <p class="text-xs text-gray-500">sim-surat-permohonan.pdf</p>
+                            </div>
+                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-royal-50 text-royal-600">👁</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50/80 px-4 py-3 text-sm">
+                            <div>
+                                <p class="font-medium text-gray-900">Penyata Bank</p>
+                                <p class="text-xs text-gray-500">sim-penyata-bank.pdf</p>
+                            </div>
+                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-royal-50 text-royal-600">👁</span>
+                        </div>
+                    </div>
+
+                    <div class="visible-block p-4">
+                        <p class="text-sm font-semibold text-gray-900">Semakan Silang Permohonan Persatuan</p>
+                        <p class="mt-1 text-xs text-gray-500">Memo ulasan JKEW ke JP — semakan silang persatuan (JPKKB)</p>
+                        <div class="mt-3 rounded-xl border border-gray-100 bg-gray-50/80 p-3 text-sm">
+                            <p class="font-medium text-gray-900">Borang Ulasan JKEW</p>
+                            <p class="mt-1 text-xs text-gray-500">sim-ulasan-jkew.pdf · Dimuat naik JKEW</p>
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <span class="btn-white inline-flex items-center gap-2 text-xs">👁 Lihat</span>
+                                <span class="rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-400 line-through">Muat Turun</span>
+                            </div>
+                            <p class="mt-2 text-xs text-blue-700">Pratonton sahaja — tiada butang Muat Turun</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {{-- Ujian langsung --}}
+        <section class="card overflow-hidden">
+            <div class="border-b border-gray-100 bg-gray-50/80 px-6 py-4">
+                <h2 class="text-base font-semibold text-gray-900">Ujian Langsung dalam Sistem</h2>
+                <p class="mt-1 text-sm text-gray-500">Jalankan seeder simulasi, kemudian log masuk dan buka permohonan di bawah. Kata laluan semua akaun: <code class="rounded bg-gray-100 px-1.5 py-0.5 text-xs">password</code></p>
+            </div>
+            <div class="space-y-4 p-6">
+                <div class="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-900">
+                    <p class="font-semibold">Data ujian sedia</p>
+                    <p class="mt-1">Permohonan simulasi <strong>ALP/SUM/2026/0035</strong> sudah ada dokumen semakan silang JKEW. Log masuk dan buka tab Lampiran.</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    <div class="rounded-xl border border-gray-200 p-4">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-red-700">1. ALP (mesti tiada semakan silang)</p>
+                        <p class="mt-2 text-sm"><strong>Log masuk:</strong> alp01@dbkl.test</p>
+                        <p class="mt-1 text-sm text-gray-600">Permohonan: <strong>ALP/SUM/2026/0035</strong> · [SIM] Menunggu semakan JP</p>
+                        <a href="http://localhost:8080/Alp2/public/permohonan/45?tab=dokumen" class="btn-white mt-3 inline-flex text-sm">Buka permohonan →</a>
+                        <ul class="mt-3 list-inside list-disc text-xs text-gray-600">
+                            <li>Tab <strong>Lampiran</strong> — tiada kad Semakan Silang</li>
+                            <li>URL pratonton dokumen JKEW → 403 Forbidden</li>
+                        </ul>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 p-4">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">2. Pegawai JP (pratonton sahaja)</p>
+                        <p class="mt-2 text-sm"><strong>Log masuk:</strong> urussetia@dbkl.test</p>
+                        <p class="mt-1 text-sm text-gray-600">Permohonan yang sama</p>
+                        <a href="http://localhost:8080/Alp2/public/permohonan/45?tab=dokumen" class="btn-white mt-3 inline-flex text-sm">Buka permohonan →</a>
+                        <ul class="mt-3 list-inside list-disc text-xs text-gray-600">
+                            <li>Tab <strong>Lampiran</strong> — kad Semakan Silang kelihatan</li>
+                            <li>Butang <strong>Lihat</strong> ada, <strong>Muat Turun</strong> tiada</li>
+                        </ul>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 p-4">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-green-700">3. Admin JP (akses penuh)</p>
+                        <p class="mt-2 text-sm"><strong>Log masuk:</strong> adminjp@dbkl.test</p>
+                        <p class="mt-1 text-sm text-gray-600">Permohonan yang sama</p>
+                        <a href="http://localhost:8080/Alp2/public/permohonan/45?tab=dokumen" class="btn-white mt-3 inline-flex text-sm">Buka permohonan →</a>
+                        <ul class="mt-3 list-inside list-disc text-xs text-gray-600">
+                            <li>Kad Semakan Silang + muat turun memo Word</li>
+                            <li>Muat turun borang JKEW dibenarkan</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <p class="text-xs text-gray-500">
+                    Nota: Pautan permohonan akan dikemas kini selepas seeder dijalankan. Semak output terminal untuk URL tepat (<code>/permohonan/{id}?tab=dokumen</code>).
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="border-t border-gray-200 bg-white px-4 py-6 text-center text-xs text-gray-500 sm:px-8">
+        Fail pratonton — padam selepas diluluskan (<code>public/pratonton-alp-semakan-silang.html</code>)
+    </footer>
+</body>
+</html>

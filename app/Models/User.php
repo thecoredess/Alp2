@@ -132,4 +132,51 @@ class User extends Authenticatable
             RoleName::PENGURUSAN->value,
         ]);
     }
+
+    /** Senarai penerima — sembunyikan no. akaun bank (Admin JP, Pegawai JP, Peraku, PEPU). */
+    public function canViewRecipientBankAccount(): bool
+    {
+        if ($this->hasAnyRole([
+            RoleName::SUPER_ADMIN->value,
+            RoleName::SYSTEM_ADMIN->value,
+            RoleName::PEGAWAI_URUSSETIA->value,
+            RoleName::PELULUS->value,
+            RoleName::PENGURUSAN->value,
+        ])) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /** Butiran penerima — papar akaun bank untuk semua staf; sembunyikan untuk ALP sahaja. */
+    public function canViewRecipientBankAccountOnDetail(): bool
+    {
+        return ! $this->hasRole(RoleName::ALP->value);
+    }
+
+    /** Hub Laporan (menu sidebar + `/laporan`). */
+    public function canAccessReportsHub(): bool
+    {
+        if ($this->can('reports.view')) {
+            return true;
+        }
+
+        return $this->hasRole(RoleName::PENGURUSAN->value)
+            && $this->can('dashboard.executive');
+    }
+
+    /** Kebenaran laporan — termasuk fallback PEPU jika peranan DB belum disync. */
+    public function canAccessReport(string $permission): bool
+    {
+        if ($this->can($permission)) {
+            return true;
+        }
+
+        if (! $this->hasRole(RoleName::PENGURUSAN->value) || ! $this->can('dashboard.executive')) {
+            return false;
+        }
+
+        return in_array($permission, ['reports.view', 'reports.applications', 'reports.financial'], true);
+    }
 }

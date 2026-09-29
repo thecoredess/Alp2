@@ -78,6 +78,23 @@ class ReportingFinancialTest extends TestCase
         $this->assertSame('80000.00', $b->projectedAvailable()->value()); // available − pending
     }
 
+    public function test_alp_utilisation_can_scope_to_one_alp(): void
+    {
+        $alp1 = Alp::factory()->create(['ref_code' => 'ALP-01']);
+        $alp2 = Alp::factory()->create(['ref_code' => 'ALP-02']);
+        $year = FinancialYear::factory()->active()->create();
+        $this->allocate($alp1, $year, '100000.00');
+        $this->allocate($alp2, $year, '50000.00');
+
+        $all = $this->service()->alpUtilisation($year->id);
+        $this->assertCount(2, $all);
+
+        $one = $this->service()->alpUtilisation($year->id, $alp1->id);
+        $this->assertCount(1, $one);
+        $this->assertSame('ALP-01', $one->first()['alp']->ref_code);
+        $this->assertSame('100000.00', $one->first()['breakdown']->allocation->value());
+    }
+
     public function test_financial_year_isolation(): void
     {
         $alp = Alp::factory()->create();

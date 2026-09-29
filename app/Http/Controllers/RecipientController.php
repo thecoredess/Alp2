@@ -27,7 +27,10 @@ class RecipientController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('recipients.index', compact('recipients'));
+        return view('recipients.index', [
+            'recipients' => $recipients,
+            'showRecipientBankAccount' => $request->user()->canViewRecipientBankAccount(),
+        ]);
     }
 
     public function show(Request $request, Recipient $recipient): View
@@ -36,6 +39,9 @@ class RecipientController extends Controller
 
         $recipient->load(['applications' => fn ($q) => $q->with(['alp:id,ref_code,name', 'financialYear:id,year'])->latest('id')]);
 
-        return view('recipients.show', compact('recipient'));
+        return view('recipients.show', [
+            'recipient' => $recipient,
+            'showRecipientBankAccount' => $request->user()->canViewRecipientBankAccountOnDetail(),
+        ]);
     }
 }

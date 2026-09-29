@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Teleprompter — Video 3 ALP</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .toolbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 10;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid #334155;
+        }
+        .toolbar label { font-size: 0.8rem; color: #94a3b8; }
+        .toolbar input[type=range] { width: 120px; }
+        button {
+            background: #1e40af;
+            color: #fff;
+            border: none;
+            padding: 0.45rem 0.9rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        button:hover { background: #1d4ed8; }
+        button.secondary { background: #334155; }
+        .viewport {
+            padding-top: 4.5rem;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+        .scroll {
+            max-width: 900px;
+            width: 100%;
+            padding: 2rem 1.5rem 50vh;
+            font-size: var(--font-size, 28px);
+            line-height: 1.55;
+            animation: none;
+        }
+        .scroll.playing {
+            animation: scroll-up var(--duration, 540s) linear forwards;
+        }
+        @keyframes scroll-up {
+            from { transform: translateY(0); }
+            to { transform: translateY(calc(-100% + 40vh)); }
+        }
+        h1 { font-size: 1.1em; color: #93c5fd; margin: 0 0 1rem; }
+        .cue {
+            display: block;
+            margin: 1.25rem 0;
+            padding: 0.75rem 1rem;
+            border-left: 4px solid #3b82f6;
+            background: rgba(30, 58, 138, 0.25);
+            font-size: 0.75em;
+            color: #94a3b8;
+        }
+        .say { color: #f1f5f9; }
+        strong { color: #fde047; }
+        .meta { font-size: 0.65em; color: #64748b; margin-bottom: 2rem; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <button type="button" id="play">▶ Mula scroll</button>
+        <button type="button" id="pause" class="secondary">⏸ Jeda</button>
+        <button type="button" id="reset" class="secondary">↺ Reset</button>
+        <label>Saiz teks <input type="range" id="size" min="18" max="42" value="28"></label>
+        <label>Tempoh (min) <input type="range" id="duration" min="6" max="12" value="9"></label>
+        <span style="font-size:0.75rem;color:#64748b">URL: apps.dbkl.gov.my/sumbangan_alp</span>
+    </div>
+    <div class="viewport">
+        <div class="scroll" id="script">
+            <p class="meta">Video 3 · Borang Penyaluran · Langkah 1 · ALP sahaja</p>
+            <h1>Manual ALP — Cipta Permohonan Baharu</h1>
+
+            <span class="cue">[00:00] Buka https://apps.dbkl.gov.my/sumbangan_alp/login</span>
+            <p class="say">Assalamualaikum. Video ini Manual Pengguna ALP, Video 3 — cara mengisi Borang Penyaluran Sumbangan, Langkah 1 daripada 3.</p>
+
+            <span class="cue">[00:45] Sidebar → Permohonan Saya → Permohonan Baharu</span>
+            <p class="say">Selepas log masuk, pilih <strong>Permohonan Saya</strong> di sidebar. Kemudian klik <strong>Permohonan Baharu</strong>.</p>
+
+            <span class="cue">[01:30] Highlight wizard 3 langkah</span>
+            <p class="say">Setiap permohonan ada tiga langkah: <strong>Borang Penyaluran</strong>, <strong>Muat Naik Dokumen</strong>, dan <strong>Hantar kepada JP</strong>. Video ini fokus Langkah 1 — borang sahaja.</p>
+            <p class="say">Nota biru mengingatkan ALP sediakan lampiran senarai semak sebelum serah kepada Jabatan Pentadbiran.</p>
+
+            <span class="cue">[02:15] Medan a & b</span>
+            <p class="say">Medan <strong>a) Nama Ahli Lembaga Penasihat</strong> diisi automatik. Medan <strong>b) Nama Persatuan</strong> wajib — masukkan nama persatuan penerima sumbangan.</p>
+
+            <span class="cue">[03:00] Medan c — No. ROS</span>
+            <p class="say"><strong>c) No. ROS</strong> format PPM, contoh PPM-060-01-12345678. Pastikan sepadan dengan dokumen lampiran.</p>
+
+            <span class="cue">[03:45] Medan d & e</span>
+            <p class="say"><strong>d) Tarikh Program</strong> — sekurang-kurangnya 2 bulan dari hari hantar. <strong>e) Kategori Program</strong> — pilih kategori sesuai.</p>
+
+            <span class="cue">[04:45] Medan f — Jumlah</span>
+            <p class="say"><strong>f) Jumlah Sumbangan Dimohon</strong> — sistem semak had dan baki bajet ALP anda.</p>
+
+            <span class="cue">[05:45] Medan g — Tujuan</span>
+            <p class="say"><strong>g) Tujuan Sumbangan</strong> — terangkan objektif program dan penggunaan sumbangan.</p>
+
+            <span class="cue">[06:30] Medan h & i</span>
+            <p class="say"><strong>h) No. Akaun Penerima</strong> — akaun bank persatuan. <strong>i) Alamat Persatuan</strong> — mesti dalam <strong>Kuala Lumpur</strong> sahaja.</p>
+
+            <span class="cue">[07:30] Simpan / Seterusnya</span>
+            <p class="say"><strong>Simpan & Keluar</strong> — simpan draf. <strong>Seterusnya → Lampiran</strong> — ke Langkah 2. Video 4 akan tunjuk muat naik dokumen wajib.</p>
+
+            <span class="cue">[08:30] Penutup</span>
+            <p class="say">Ringkasan: Log masuk → Permohonan Baharu → isi borang a–i → draf atau lampiran. Jumpa di Video 4.</p>
+        </div>
+    </div>
+    <script>
+        const scroll = document.getElementById('script');
+        const size = document.getElementById('size');
+        const duration = document.getElementById('duration');
+        function applySize() {
+            scroll.style.setProperty('--font-size', size.value + 'px');
+        }
+        function applyDuration() {
+            scroll.style.setProperty('--duration', (duration.value * 60) + 's');
+        }
+        size.addEventListener('input', applySize);
+        duration.addEventListener('input', applyDuration);
+        applySize(); applyDuration();
+        document.getElementById('play').onclick = () => {
+            scroll.classList.remove('playing');
+            void scroll.offsetWidth;
+            scroll.classList.add('playing');
+        };
+        document.getElementById('pause').onclick = () => scroll.classList.remove('playing');
+        document.getElementById('reset').onclick = () => {
+            scroll.classList.remove('playing');
+            scroll.style.transform = '';
+            scroll.style.animation = 'none';
+            void scroll.offsetWidth;
+            scroll.style.animation = '';
+        };
+    </script>
+</body>
+</html>

@@ -15,6 +15,7 @@ use App\Services\Budget\BudgetService;
 use App\Services\Reports\ApplicationReportService;
 use App\Services\Reports\DataQualityService;
 use App\Services\Reports\FinancialReportService;
+use App\Services\Dashboard\ScorecardService;
 use App\Services\Reports\ProjectReportService;
 use App\Support\Money;
 use App\Support\UrsContributionPolicy;
@@ -32,6 +33,7 @@ class DashboardController extends Controller
         private readonly ApplicationReportService $applicationReports,
         private readonly DataQualityService $dataQuality,
         private readonly ApplicationTimelineService $timeline,
+        private readonly ScorecardService $scorecards,
     ) {}
 
     /**
@@ -43,6 +45,43 @@ class DashboardController extends Controller
         abort_unless($request->user()->can('dashboard.view'), 403);
 
         return view('dashboard.templates');
+    }
+
+    /** Pratonton score card dashboard ALP (contoh atau ?live=1 untuk ALP). */
+    public function previewAlp(Request $request): View
+    {
+        abort_unless($request->user()->can('dashboard.view'), 403);
+
+        $activeYear = FinancialYear::active();
+        $useLive = $request->boolean('live') && $request->user()->alp_id !== null;
+        $alpScorecards = $useLive && $activeYear
+            ? $this->scorecards->buildAlp($request->user(), $activeYear)
+            : $this->scorecards->sampleAlp($activeYear);
+
+        return view('dashboard.preview-alp', [
+            'activeYear' => $activeYear,
+            'alpScorecards' => $alpScorecards,
+            'useLive' => $useLive,
+        ]);
+    }
+
+    /** Pratonton score card dashboard PEPU (contoh atau ?live=1). */
+    public function previewPepu(Request $request): View
+    {
+        abort_unless($request->user()->can('dashboard.view'), 403);
+
+        $activeYear = FinancialYear::active();
+        $useLive = $request->boolean('live')
+            && $request->user()->hasRole(RoleName::PENGURUSAN->value);
+        $pepuScorecards = $useLive && $activeYear
+            ? $this->scorecards->buildPepu($activeYear)
+            : $this->scorecards->samplePepu($activeYear);
+
+        return view('dashboard.preview-pepu', [
+            'activeYear' => $activeYear,
+            'pepuScorecards' => $pepuScorecards,
+            'useLive' => $useLive,
+        ]);
     }
 
     /** Dashboard Eksekutif (pengurusan) — KPI kewangan menyeluruh. */
@@ -435,8 +474,11 @@ class DashboardController extends Controller
                 $latestPayment = $items
                     ->filter(fn (Application $app) => $app->payment_supplier_no
                         || $app->payment_voucher_no
+                        || $app->payment_voucher_date
                         || $app->paid_at)
-                    ->sortByDesc(fn (Application $app) => $app->paid_at ?? $app->payment_updated_at)
+                    ->sortByDesc(fn (Application $app) => $app->paid_at
+                        ?? $app->payment_voucher_date
+                        ?? $app->payment_updated_at)
                     ->first();
 
                 $sum = fn (array $statuses): float => (float) $items
@@ -469,7 +511,27 @@ class DashboardController extends Controller
                         ?: $latestPayment?->payment_voucher_date,
                 ];
             })
-            ->sortBy(fn (array $row) => $row['alp']?->ref_code)
+            ->sort(function (array $a, array $b): int {
+                $dateA = $a['payment_date'];
+                $dateB = $b['payment_date'];
+
+                if ($dateA === null && $dateB === null) {
+                    return strcmp($a['alp']?->ref_code ?? '', $b['alp']?->ref_code ?? '');
+                }
+                if ($dateA === null) {
+                    return 1;
+                }
+                if ($dateB === null) {
+                    return -1;
+                }
+
+                $byDate = $dateB <=> $dateA;
+                if ($byDate !== 0) {
+                    return $byDate;
+                }
+
+                return strcmp($a['alp']?->ref_code ?? '', $b['alp']?->ref_code ?? '');
+            })
             ->values();
 
         return [

@@ -84,10 +84,13 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
 
     // Pratonton reka bentuk dashboard analisa sumbangan (data contoh — untuk semakan sahaja).
     Route::get('dashboard/templat', [DashboardController::class, 'templates'])->name('dashboard.templates');
+    Route::get('dashboard/pratonton/alp', [DashboardController::class, 'previewAlp'])->name('dashboard.preview-alp');
+    Route::get('dashboard/pratonton/pepu', [DashboardController::class, 'previewPepu'])->name('dashboard.preview-pepu');
 
     // Laporan URS (M08) — tanpa laporan projek / maker-checker / CSR projek
     Route::middleware('throttle:60,1')->group(function () {
         Route::get('laporan', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('laporan/alp/{alp}/aktiviti-selesai', [ReportController::class, 'alpCompletedActivities'])->name('reports.alp-completed-activities');
         Route::get('laporan/kewangan/peruntukan', [ReportController::class, 'allocation'])->name('reports.allocation');
         Route::get('laporan/kewangan/ledger', [ReportController::class, 'ledger'])->name('reports.ledger');
         Route::get('laporan/permohonan', [ReportController::class, 'applications'])->name('reports.applications');
@@ -146,6 +149,7 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     Route::get('permohonan/{application}/surat-kelulusan', [ApplicationController::class, 'letter'])->name('applications.letter');
     Route::get('permohonan/{application}/surat-kelulusan/pdf', [ApplicationController::class, 'letterPdf'])->name('applications.letter.pdf');
     Route::get('permohonan/{application}/borang-penyaluran', [ApplicationController::class, 'borang'])->name('applications.borang');
+    Route::get('permohonan/{application}/borang-penyaluran/pdf', [ApplicationController::class, 'borangPdf'])->name('applications.borang.pdf');
     Route::get('permohonan/{application}/format-laporan-program/pdf', [ApplicationController::class, 'reportTemplatePdf'])->name('applications.report-template.pdf');
     Route::get('permohonan/{application}/report-card', [ReportCardController::class, 'show'])->name('applications.report-card');
     Route::post('permohonan/{application}/report-card', [ReportCardController::class, 'store'])->name('applications.report-card.store');

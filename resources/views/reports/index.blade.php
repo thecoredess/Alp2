@@ -6,7 +6,16 @@
 @php $u = auth()->user(); @endphp
 
 @section('content')
+    <form method="GET" class="mb-6 flex flex-wrap items-end gap-3">
+        @include('reports.partials.year-filter')
+    </form>
+
+    @include('reports.partials.hub-scorecards')
+
     @php
+        $hubCategoriesHidden = ($pepuReportCards ?? null)
+            ? ['reports.financial', 'reports.applications']
+            : [];
         $categories = [
             ['perm' => 'reports.financial', 'title' => 'Kewangan / Peruntukan', 'icon' => 'wallet', 'items' => [
                 ['reports.allocation', 'Peruntukan Mengikut ALP'],
@@ -21,9 +30,9 @@
         ];
     @endphp
 
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         @foreach ($categories as $cat)
-            @if ($u->can($cat['perm']))
+            @if ($u->canAccessReport($cat['perm']) && ! in_array($cat['perm'], $hubCategoriesHidden, true))
                 <div class="card p-5">
                     <div class="mb-3 flex items-center gap-2">
                         <span class="rounded-lg bg-navy-50 p-2 text-navy-700"><x-icon name="{{ $cat['icon'] }}" class="h-5 w-5" /></span>

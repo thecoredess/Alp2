@@ -62,6 +62,10 @@
         <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             <strong>Pratonton reka bentuk.</strong> Semua angka di halaman ini adalah data contoh.
             Pilih templat yang sesuai, kemudian ia akan disambung kepada data sebenar.
+            <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-medium">
+                <a href="{{ route('dashboard.preview-alp') }}" class="text-amber-900 underline">Score card ALP →</a>
+                <a href="{{ route('dashboard.preview-pepu') }}" class="text-amber-900 underline">Score card PEPU →</a>
+            </div>
         </div>
 
         {{-- ══════════════ TEMPLAT A ══════════════ --}}

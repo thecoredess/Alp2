@@ -61,14 +61,27 @@ class AuthorizationTest extends TestCase
         $this->actingAs($mgmt)->get(route('alps.create'))->assertForbidden();
     }
 
-    public function test_pepu_cannot_access_reports_module(): void
+    public function test_pepu_can_access_reports_hub_but_not_system_settings(): void
     {
         $pepu = $this->userWithRole(RoleName::PENGURUSAN);
 
-        $this->actingAs($pepu)->get(route('reports.index'))->assertForbidden();
+        $this->actingAs($pepu)->get(route('reports.index'))->assertOk()
+            ->assertSee('Ringkasan Permohonan')
+            ->assertSee('Jumlah (semua ALP)')
+            ->assertSee('Tindakan');
+
+        $alp = \App\Models\Alp::query()->orderBy('ref_code')->first();
+        if ($alp) {
+            $fy = \App\Models\FinancialYear::active()?->id ?? \App\Models\FinancialYear::query()->orderByDesc('year')->value('id');
+            $this->actingAs($pepu)
+                ->get(route('reports.alp-completed-activities', ['alp' => $alp, 'fy' => $fy]))
+                ->assertOk()
+                ->assertSee($alp->ref_code)
+                ->assertSee('Aktiviti Selesai Mengikut ALP');
+        }
         $this->actingAs($pepu)->get(route('settings.hub'))->assertForbidden();
         $this->actingAs($pepu)->get(route('dashboard'))->assertOk()
-            ->assertDontSee('href="'.route('reports.index').'"', false)
+            ->assertSee('href="'.route('reports.index').'"', false)
             ->assertDontSee('href="'.route('report-cards.index').'"', false)
             ->assertDontSee('href="'.route('settings.hub').'"', false);
     }

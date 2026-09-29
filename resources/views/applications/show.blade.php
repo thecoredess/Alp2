@@ -49,7 +49,8 @@
             @elseif ($application->status === \App\Enums\ApplicationStatus::REVISION_REQUIRED && $user->can('update', $application))
                 <a href="{{ route('applications.wizard.maklumat', $application) }}" class="btn-primary">Buat Pembetulan</a>
             @elseif ($application->status === \App\Enums\ApplicationStatus::APPROVED)
-                <a href="{{ route('applications.borang', $application) }}" target="_blank" class="btn-white">Cetak Borang</a>
+                <a href="{{ route('applications.borang.pdf', $application) }}" class="btn-white">Muat Turun Borang PDF</a>
+                <a href="{{ route('applications.borang', $application) }}" target="_blank" class="btn-white">Pratonton / Cetak</a>
                 <a href="{{ route('applications.letter.pdf', $application) }}" target="_blank" class="btn-navy">Surat Pemakluman (Lulus)</a>
             @elseif ($application->status === \App\Enums\ApplicationStatus::REJECTED)
                 <a href="{{ route('applications.letter.pdf', $application) }}" target="_blank" class="btn-navy">Surat Pemakluman (Tidak Lulus)</a>

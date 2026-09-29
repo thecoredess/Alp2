@@ -221,7 +221,7 @@ class ApplicationReportService
             ->with(['alp:id,ref_code,name', 'financialYear:id,year', 'approvals', 'reportCardReviews'])
             ->when($filters['amount_min'] ?? null, fn ($q, $v) => $q->where('requested_amount', '>=', $v))
             ->when($filters['amount_max'] ?? null, fn ($q, $v) => $q->where('requested_amount', '<=', $v))
-            ->orderByDesc('created_at')
+            ->orderByRaw('COALESCE(submitted_at, created_at) ASC')
             ->get();
 
         if ($status === null) {

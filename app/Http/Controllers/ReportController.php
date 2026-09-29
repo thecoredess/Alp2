@@ -6,6 +6,7 @@ use App\Enums\ApplicationType;
 use App\Enums\BudgetTransactionType;
 use App\Models\Alp;
 use App\Models\FinancialYear;
+use App\Services\Dashboard\ScorecardService;
 use App\Services\Reports\ApplicationReportService;
 use App\Services\Reports\AuditReportService;
 use App\Services\Reports\CsrReportService;
@@ -33,13 +34,37 @@ class ReportController extends Controller
         private readonly AuditReportService $audit,
         private readonly MakerCheckerReportService $makerChecker,
         private readonly DataQualityService $dataQuality,
+        private readonly ScorecardService $scorecards,
     ) {}
 
     public function index(Request $request)
     {
-        abort_unless($request->user()->can('reports.view'), 403);
+        abort_unless($request->user()->canAccessReportsHub(), 403);
 
-        return view('reports.index', $this->shell($request));
+        $shell = $this->shell($request);
+
+        return view('reports.index', $shell + $this->scorecards->forReportsHub(
+            $request->user(),
+            $shell['selectedYear'],
+        ));
+    }
+
+    /** Senarai aktiviti selesai & sumbangan digunakan — satu ALP (drill-down dari hub Laporan). */
+    public function alpCompletedActivities(Request $request, Alp $alp)
+    {
+        abort_unless($request->user()->canAccessReportsHub(), 403);
+        $this->assertAlpReportScope($request, $alp);
+
+        $year = $this->year($request);
+        $detail = $this->scorecards->completedActivitiesDetail($alp, $year);
+
+        return view('reports.alp-completed-activities', $this->shell($request) + [
+            'year' => $year,
+            'alp' => $alp,
+            'activities' => $detail['activities'],
+            'totalAmount' => $detail['total_amount'],
+            'budget' => $detail['budget'],
+        ]);
     }
 
     // ── Kewangan ────────────────────────────────────────────────
@@ -48,7 +73,11 @@ class ReportController extends Controller
     {
         abort_unless($request->user()->can('reports.financial'), 403);
         $year = $this->year($request);
-        $rows = $this->financial->alpUtilisation($year->id);
+        $alpId = $this->scopeAlp($request);
+        $rows = $this->financial->alpUtilisation($year->id, $alpId);
+        $totals = $alpId
+            ? $this->financial->alpBreakdown($alpId, $year->id)
+            : $this->financial->totals($year->id);
 
         $data = new ReportData(
             'Laporan Peruntukan Mengikut ALP',
@@ -70,7 +99,12 @@ class ReportController extends Controller
         );
 
         return $this->respond($request, $data, 'reports.financial-allocation',
-            $this->shell($request) + ['year' => $year, 'rows' => $rows, 'totals' => $this->financial->totals($year->id)],
+            $this->shell($request) + [
+                'year' => $year,
+                'rows' => $rows,
+                'totals' => $totals,
+                'selectedAlpId' => $alpId,
+            ],
             'peruntukan-alp', true);
     }
 
@@ -182,7 +216,7 @@ class ReportController extends Controller
 
     public function applications(Request $request)
     {
-        abort_unless($request->user()->can('reports.applications'), 403);
+        abort_unless($request->user()->canAccessReport('reports.applications'), 403);
         $year = $this->year($request);
         $filters = $this->applicationFilters($request, $year);
         $listing = $this->applications->listing($filters);
@@ -202,7 +236,7 @@ class ReportController extends Controller
         );
 
         return $this->respond($request, $data, 'reports.applications',
-            $this->shell($request) + [
+            $this->shell($request) + $this->scorecards->forReportsHub($request->user(), $year) + [
                 'year' => $year, 'listing' => $listing, 'filters' => $filters,
                 'counts' => $this->applications->statusCounts($filters), 'amounts' => $this->applications->amounts($filters),
                 'byType' => $this->applications->byType($filters),
@@ -332,6 +366,14 @@ class ReportController extends Controller
         }
 
         return FinancialYear::active() ?? FinancialYear::orderByDesc('year')->firstOrFail();
+    }
+
+    private function assertAlpReportScope(Request $request, Alp $alp): void
+    {
+        $user = $request->user();
+        if ($user->alp_id !== null && (int) $user->alp_id !== (int) $alp->id) {
+            abort(403);
+        }
     }
 
     /** Paksa skop ALP sendiri untuk pengguna tanpa capaian menyeluruh. */

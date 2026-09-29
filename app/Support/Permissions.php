@@ -278,9 +278,10 @@ final class Permissions
                 'applications.reject',
                 'projects.view_all',
                 'expenses.documents.view', 'refunds.view', 'projects.closure-documents.view',
-                // Dashboard eksekutif — tanpa modul Laporan (PEPU fokus kelulusan).
                 'dashboard.finance',
                 'payments.view',
+                // Hub Laporan (ringkasan + pecahan kategori mengikut ALP).
+                'reports.view', 'reports.applications', 'reports.financial',
             ],
         ];
     }

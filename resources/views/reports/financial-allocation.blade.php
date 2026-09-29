@@ -1,7 +1,14 @@
 @extends('layouts.app')
 @section('title', 'Peruntukan Mengikut ALP')
 @section('heading', 'Peruntukan Mengikut ALP')
-@section('subheading', 'Tahun Kewangan '.$year->year)
+@section('subheading')
+    Tahun Kewangan {{ $year->year }}
+    @if ($selectedAlpId ?? null)
+        · {{ $alps->firstWhere('id', $selectedAlpId)?->ref_code ?? 'ALP' }}
+    @else
+        · Semua ALP
+    @endif
+@endsection
 
 @section('content')
     <form method="GET" class="mb-4 flex flex-wrap items-end gap-3">
@@ -21,7 +28,7 @@
     {{-- Carta penggunaan bajet mengikut ALP (SVG ringan) --}}
     @if ($rows->isNotEmpty())
         <div class="card mb-5 p-5">
-            <h3 class="mb-4 text-sm font-semibold text-gray-900">Penggunaan Bajet Mengikut ALP (Belanja Bersih vs Peruntukan)</h3>
+            <h3 class="mb-4 text-sm font-semibold text-gray-900">Penggunaan Bajet Mengikut ALP (Diluluskan + Belanja Bersih vs Peruntukan)</h3>
             @include('reports.partials.bar-chart', ['rows' => $rows])
         </div>
     @endif

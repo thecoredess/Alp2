@@ -5,6 +5,7 @@ namespace App\Services\Reports;
 use App\Enums\ApplicationStatus;
 use App\Enums\BudgetTransactionType;
 use App\Enums\ProjectStatus;
+use App\Models\Allocation;
 use App\Models\Alp;
 use App\Models\Application;
 use App\Models\BudgetTransaction;
@@ -77,15 +78,35 @@ class FinancialReportService
     }
 
     /** Pecahan + model ALP untuk jadual penggunaan (management). */
-    public function alpUtilisation(int $financialYearId): Collection
+    public function alpUtilisation(int $financialYearId, ?int $alpId = null): Collection
     {
         $breakdowns = $this->alpBreakdowns($financialYearId);
-        $alps = Alp::whereIn('id', $breakdowns->keys())->orderBy('ref_code')->get();
 
-        return $alps->map(fn (Alp $alp) => [
-            'alp' => $alp,
-            'breakdown' => $breakdowns[$alp->id] ?? new FinancialBreakdown(),
-        ])->values();
+        $alpIds = Allocation::query()
+            ->where('financial_year_id', $financialYearId)
+            ->pluck('alp_id')
+            ->merge($breakdowns->keys())
+            ->unique()
+            ->values();
+
+        $query = Alp::query()->orderBy('ref_code');
+
+        if ($alpId !== null) {
+            $query->where('id', $alpId);
+        } elseif ($alpIds->isNotEmpty()) {
+            $query->whereIn('id', $alpIds);
+        }
+
+        return $query->get()->map(function (Alp $alp) use ($breakdowns, $financialYearId) {
+            $breakdown = $breakdowns->get($alp->id)
+                ?? $breakdowns->get((string) $alp->id)
+                ?? $this->alpBreakdown($alp->id, $financialYearId);
+
+            return [
+                'alp' => $alp,
+                'breakdown' => $breakdown,
+            ];
+        })->values();
     }
 
     /**
