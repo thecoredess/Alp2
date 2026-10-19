@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <title>Pratonton — Muat Naik Dokumen (ALP)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family:Segoe UI, system-ui, sans-serif; background:#f3f4f6; color:#111827; }
+    .wrap { max-width: 920px; margin: 24px auto; padding: 0 16px; }
+    .top h1 { font-size: 1.25rem; margin: 0; color:#1e2a5a; }
+    .top p { margin: 4px 0 16px; font-size: 0.875rem; color:#6b7280; }
+    .wizard { display: grid; grid-template-columns: 1fr 1fr 1fr; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 16px; }
+    .wiz-step { padding: 16px 20px; display: flex; gap: 12px; align-items: center; }
+    .wiz-step.active { background: #1e2a5a; color: #fff; }
+    .wiz-step.done { background: #fff; }
+    .wiz-step.pending { background: #f9fafb; color: #9ca3af; }
+    .wiz-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+    .active .wiz-num { background: #fff; color: #1e2a5a; }
+    .done .wiz-num { background: #dcfce7; color: #15803d; }
+    .pending .wiz-num { background: #e5e7eb; color: #6b7280; }
+    .wiz-label small { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; opacity: .85; }
+    .wiz-label strong { display: block; font-size: 14px; margin-top: 2px; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 16px; }
+    .progress-num { font-size: 28px; font-weight: 700; color: #1e2a5a; }
+    .bar { height: 8px; background: #f3f4f6; border-radius: 999px; margin-top: 12px; overflow: hidden; }
+    .bar-fill { height: 100%; width: 80%; background: #22c55e; border-radius: 999px; }
+    .note { background: #eef1f8; border: 1px solid #d5dcef; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #263d7a; margin-bottom: 16px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .doc { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; }
+    .doc.done { border-color: #bbf7d0; background: #f0fdf4; }
+    .doc h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+    .doc p { margin: 0; font-size: 11px; color: #6b7280; line-height: 1.4; }
+    .tag { display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
+    .tag-ok { background: #dcfce7; color: #166534; }
+    .tag-wait { background: #fef3c7; color: #92400e; }
+    .badge-demo { position: fixed; top: 12px; right: 12px; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <span class="badge-demo">Pratonton skrin sistem</span>
+  <div class="wrap">
+    <div class="top">
+      <h1>Permohonan — ALP-2026-0042</h1>
+      <p>Langkah 2 · Muat naik dokumen sokongan</p>
+    </div>
+    <div class="wizard">
+      <div class="wiz-step done">
+        <span class="wiz-num">✓</span>
+        <span class="wiz-label"><small>Langkah 1</small><strong>Borang Penyaluran</strong></span>
+      </div>
+      <div class="wiz-step active">
+        <span class="wiz-num">2</span>
+        <span class="wiz-label"><small>Langkah 2</small><strong>Muat Naik Dokumen</strong></span>
+      </div>
+      <div class="wiz-step pending">
+        <span class="wiz-num">3</span>
+        <span class="wiz-label"><small>Langkah 3</small><strong>Hantar kepada JP</strong></span>
+      </div>
+    </div>
+    <div class="card">
+      <p style="margin:0;font-size:13px;color:#6b7280">Kemajuan Muat Naik</p>
+      <p class="progress-num">4/5</p>
+      <p style="margin:4px 0 0;font-size:13px;color:#6b7280">dokumen selesai</p>
+      <div class="bar"><div class="bar-fill"></div></div>
+    </div>
+    <div class="note">
+      Format: PDF atau gambar (maksimum 10 MB). Borang Penyaluran sudah diisi — tidak perlu muat naik semula.
+    </div>
+    <div class="grid">
+      <div class="doc done"><h3>Sijil ROS</h3><p>Sijil pendaftaran pertubuhan (ROS) yang masih sah.</p><span class="tag tag-ok">Selesai</span></div>
+      <div class="doc done"><h3>Pendaftaran Pertubuhan</h3><p>Salinan pendaftaran organisasi penerima.</p><span class="tag tag-ok">Selesai</span></div>
+      <div class="doc done"><h3>Borang Maklumat Bank</h3><p>Borang maklumat akaun bank (EFT) yang lengkap.</p><span class="tag tag-ok">Selesai</span></div>
+      <div class="doc done"><h3>Penyata Bank</h3><p>Salinan muka depan penyata bank.</p><span class="tag tag-ok">Selesai</span></div>
+      <div class="doc"><h3>Kertas Kerja</h3><p>Ringkasan program / aktiviti yang dicadangkan.</p><span class="tag tag-wait">Perlu muat naik</span></div>
+    </div>
+  </div>
+</body>
+</html>

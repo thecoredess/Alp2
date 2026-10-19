@@ -1,0 +1,16 @@
+{
+  "name": "ringkasan-eksekutif-alp-build",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build-docx.mjs",
+    "build:doc": "node build-docx.mjs",
+    "build:pptx": "node build-pptx.mjs",
+    "build:all": "node build-docx.mjs && node build-pptx.mjs"
+  },
+  "dependencies": {
+    "docx": "^9.5.0",
+    "playwright": "^1.52.0",
+    "pptxgenjs": "^4.0.1"
+  }
+}

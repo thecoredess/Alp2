@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <title>Diagram — Flow ALP Mohon Sumbangan</title>
+  <style>
+    body { margin:0; font-family:Segoe UI, system-ui, sans-serif; background:#fff; padding:32px; }
+    h1 { text-align:center; font-size:18px; color:#1e2a5a; margin:0 0 8px; }
+    p.sub { text-align:center; font-size:12px; color:#6b7280; margin:0 0 28px; }
+    svg { display:block; margin:0 auto; max-width:100%; }
+  </style>
+</head>
+<body>
+  <h1>Aliran Permohonan Sumbangan — Perspektif ALP</h1>
+  <p class="sub">Sistem Sumbangan ALP DBKL · fokus tindakan pemohon ALP sahaja</p>
+  <svg width="880" height="520" viewBox="0 0 880 520" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#556fbd"/>
+      </marker>
+    </defs>
+    <!-- ALP zone -->
+    <rect x="20" y="40" width="840" height="200" rx="12" fill="#eef1f8" stroke="#aab9df" stroke-width="1"/>
+    <text x="40" y="68" fill="#1e2a5a" font-size="13" font-weight="700">FASA ALP — Sedia &amp; hantar permohonan</text>
+    <rect x="48" y="88" width="150" height="56" rx="8" fill="#1e2a5a"/>
+    <text x="123" y="112" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Log masuk</text>
+    <text x="123" y="128" text-anchor="middle" fill="#d5e0ff" font-size="10">Akaun ALP</text>
+    <line x1="198" y1="116" x2="228" y2="116" stroke="#556fbd" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="230" y="88" width="170" height="56" rx="8" fill="#2e5bff"/>
+    <text x="315" y="112" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Langkah 1</text>
+    <text x="315" y="128" text-anchor="middle" fill="#eaf0ff" font-size="10">Borang Penyaluran (a–i)</text>
+    <line x1="400" y1="116" x2="430" y2="116" stroke="#556fbd" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="432" y="88" width="170" height="56" rx="8" fill="#2e5bff"/>
+    <text x="517" y="112" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Langkah 2</text>
+    <text x="517" y="128" text-anchor="middle" fill="#eaf0ff" font-size="10">Muat naik dokumen</text>
+    <line x1="602" y1="116" x2="632" y2="116" stroke="#556fbd" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="634" y="88" width="190" height="56" rx="8" fill="#2e5bff"/>
+    <text x="729" y="112" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Langkah 3</text>
+    <text x="729" y="128" text-anchor="middle" fill="#eaf0ff" font-size="10">Hantar kepada JP</text>
+    <text x="440" y="175" text-anchor="middle" fill="#263d7a" font-size="11">Serahan fizikal lampiran senarai semak kepada Jabatan Pentadbiran (jika dikehendaki proses dalaman)</text>
+    <!-- Backend zone -->
+    <rect x="20" y="260" width="840" height="120" rx="12" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+    <text x="40" y="288" fill="#374151" font-size="13" font-weight="700">FASA DBKL — ALP menunggu &amp; pantau (tanpa tindakan semakan)</text>
+    <rect x="80" y="308" width="140" height="48" rx="8" fill="#fff" stroke="#d1d5db"/>
+    <text x="150" y="328" text-anchor="middle" fill="#374151" font-size="11" font-weight="600">Semakan JP</text>
+    <text x="150" y="342" text-anchor="middle" fill="#6b7280" font-size="9">Pegawai / Urus Setia</text>
+    <text x="235" y="332" fill="#9ca3af" font-size="18">→</text>
+    <rect x="250" y="308" width="140" height="48" rx="8" fill="#fff" stroke="#d1d5db"/>
+    <text x="320" y="328" text-anchor="middle" fill="#374151" font-size="11" font-weight="600">Pengesyoran</text>
+    <text x="320" y="342" text-anchor="middle" fill="#6b7280" font-size="9">TP / Pengarah JP</text>
+    <text x="405" y="332" fill="#9ca3af" font-size="18">→</text>
+    <rect x="420" y="308" width="120" height="48" rx="8" fill="#fff" stroke="#d1d5db"/>
+    <text x="480" y="328" text-anchor="middle" fill="#374151" font-size="11" font-weight="600">Kelulusan</text>
+    <text x="480" y="342" text-anchor="middle" fill="#6b7280" font-size="9">PEPU</text>
+    <text x="555" y="332" fill="#9ca3af" font-size="18">→</text>
+    <rect x="570" y="308" width="130" height="48" rx="8" fill="#fff" stroke="#d1d5db"/>
+    <text x="635" y="328" text-anchor="middle" fill="#374151" font-size="11" font-weight="600">Baucar / bayaran</text>
+    <text x="635" y="342" text-anchor="middle" fill="#6b7280" font-size="9">JKEW · dbayar</text>
+    <!-- ALP post -->
+    <rect x="20" y="400" width="840" height="100" rx="12" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+    <text x="40" y="428" fill="#166534" font-size="13" font-weight="700">FASA ALP — Selepas program</text>
+    <rect x="120" y="448" width="200" height="40" rx="8" fill="#22c55e"/>
+    <text x="220" y="473" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Hantar laporan aktiviti / report card</text>
+    <rect x="480" y="448" width="280" height="40" rx="8" fill="#fff" stroke="#bbf7d0"/>
+    <text x="620" y="465" text-anchor="middle" fill="#166534" font-size="11">Pantau status di Permohonan Saya · tab Status</text>
+    <line x1="729" y1="144" x2="729" y2="220" stroke="#556fbd" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="729" y1="220" x2="150" y2="220" stroke="#556fbd" stroke-width="2"/>
+    <line x1="150" y1="220" x2="150" y2="308" stroke="#556fbd" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="635" y1="356" x2="635" y2="378" stroke="#556fbd" stroke-width="2"/>
+    <line x1="635" y1="378" x2="220" y2="378" stroke="#556fbd" stroke-width="2"/>
+    <line x1="220" y1="378" x2="220" y2="448" stroke="#556fbd" stroke-width="2" marker-end="url(#arrow)"/>
+    <!-- Revision branch -->
+    <rect x="48" y="188" width="200" height="36" rx="6" fill="#fff7ed" stroke="#fdba74"/>
+    <text x="148" y="210" text-anchor="middle" fill="#c2410c" font-size="10">Perlu pembetulan → ALP edit &amp; hantar semula</text>
+  </svg>
+</body>
+</html>

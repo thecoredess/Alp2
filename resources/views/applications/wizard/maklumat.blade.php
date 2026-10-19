@@ -56,14 +56,7 @@
                     </div>
 
                     <div class="{{ $jpFieldWrap('recipient') }}">
-                        <x-field label="e) Jenis/Kategori Program" name="program_category" :required="true">
-                            <select id="program_category" name="program_category" required class="inp">
-                                <option value="">— Pilih kategori —</option>
-                                @foreach (\App\Enums\ProgramCategory::options() as $value => $label)
-                                    <option value="{{ $value }}" @selected(old('program_category', $application->program_category?->value) === $value)>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </x-field>
+                        <x-program-category-field :selected="old('program_category', $application->program_category?->value)" />
                     </div>
 
                     <div class="{{ $jpFieldWrap('bajet', 'program_syarat') }}">
