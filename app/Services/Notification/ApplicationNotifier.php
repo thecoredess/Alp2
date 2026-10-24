@@ -42,6 +42,26 @@ class ApplicationNotifier
         $this->submissionAcknowledged($application);
     }
 
+    /** Selepas persatuan/NGO hantar borang melalui pautan awam — giliran ALP semak & hantar ke JP. */
+    public function associationFormFilled(Application $application): void
+    {
+        $application->loadMissing('alp.users');
+        $owners = $application->alp?->users ?? collect();
+
+        if ($owners->isEmpty()) {
+            return;
+        }
+
+        Notification::send(
+            $owners,
+            new ApplicationWorkflowNotification(
+                $application,
+                'association_form_filled',
+                'Persatuan telah menghantar borang penyaluran melalui pautan awam. Sila semak borang dan lampiran (persatuan boleh muat naik lampiran melalui pautan), kemudian hantar permohonan kepada Admin JP.',
+            ),
+        );
+    }
+
     /** Pengesahan e-mel kepada ALP selepas hantar / hantar semula permohonan. */
     public function submissionAcknowledged(Application $application): void
     {

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\ProgramCategory;
+use App\Http\Requests\Concerns\ValidatesKertasKerja;
 use App\Http\Requests\Concerns\ValidatesProgramDate;
 use App\Http\Requests\Concerns\ValidatesRequestedAmount;
 use App\Models\Alp;
@@ -15,6 +16,7 @@ use Illuminate\Validation\Rule;
 /** Borang Penyaluran Sumbangan ALP — medan a–i (nama ALP dari akaun atau pilihan Admin JP). */
 class ApplicationCreateRequest extends FormRequest
 {
+    use ValidatesKertasKerja;
     use ValidatesProgramDate;
     use ValidatesRequestedAmount;
 
@@ -34,7 +36,7 @@ class ApplicationCreateRequest extends FormRequest
             'program_date' => ['required', 'date'],
             'program_category' => ['required', Rule::enum(ProgramCategory::class)],
             'requested_amount' => ['required', 'numeric', 'min:0.01', 'max:999999999.99'],
-            'purpose' => ['required', 'string', 'max:1000'],
+            ...$this->kertasKerjaRules(),
             'recipient_bank_account' => ['required', 'string', 'max:64'],
             'recipient_address' => ['required', 'string', 'max:500', new KualaLumpurAddress],
         ];
@@ -94,7 +96,7 @@ class ApplicationCreateRequest extends FormRequest
             'program_date' => 'tarikh program',
             'program_category' => 'jenis/kategori program',
             'requested_amount' => 'jumlah sumbangan',
-            'purpose' => 'tujuan sumbangan',
+            ...$this->kertasKerjaAttributes(),
             'recipient_bank_account' => 'no. akaun penerima sumbangan',
             'recipient_address' => 'alamat persatuan',
         ];

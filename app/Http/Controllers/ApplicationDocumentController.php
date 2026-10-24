@@ -7,6 +7,7 @@ use App\Http\Requests\ApplicationDocumentRequest;
 use App\Models\Application;
 use App\Models\ApplicationDocument;
 use App\Services\Audit\AuditService;
+use App\Services\Documents\ApplicationDocumentStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -16,7 +17,10 @@ class ApplicationDocumentController extends Controller
     /** Cakera storan peribadi (storage/app/private). */
     private const DISK = 'local';
 
-    public function __construct(private readonly AuditService $audit) {}
+    public function __construct(
+        private readonly AuditService $audit,
+        private readonly ApplicationDocumentStorage $storage,
+    ) {}
 
     public function store(ApplicationDocumentRequest $request, Application $application): RedirectResponse
     {
@@ -25,21 +29,8 @@ class ApplicationDocumentController extends Controller
         $file = $request->file('file');
         $type = DocumentType::from($request->validated('document_type'));
 
-        // Simpan pada storan peribadi; nama fail dijana (bukan nama asal) untuk keselamatan.
-        $storedPath = $file->store("applications/{$application->id}", self::DISK);
-        $sha256 = hash_file('sha256', $file->getRealPath());
+        $this->storage->store($application, $file, $type, $request->user()->id);
 
-        $application->documents()->create([
-            'document_type' => $type,
-            'original_filename' => $file->getClientOriginalName(),
-            'stored_path' => $storedPath,
-            'mime_type' => $file->getClientMimeType(),
-            'file_size' => $file->getSize(),
-            'sha256' => $sha256,
-            'uploaded_by' => $request->user()->id,
-        ]);
-
-        // Jangan log kandungan dokumen — hanya metadata.
         $this->audit->log('APPLICATION_DOCUMENT_UPLOADED', $application, null, [
             'document_type' => $type->value,
             'original_filename' => $file->getClientOriginalName(),
@@ -87,10 +78,9 @@ class ApplicationDocumentController extends Controller
         $this->authorize('update', $application);
         abort_unless($document->application_id === $application->id, 404);
 
-        Storage::disk(self::DISK)->delete($document->stored_path);
         $type = $document->document_type->value;
         $filename = $document->original_filename;
-        $document->delete();
+        $this->storage->delete($document);
 
         $this->audit->log('APPLICATION_DOCUMENT_REMOVED', $application, null, [
             'document_type' => $type,

@@ -31,6 +31,12 @@ class Application extends Model
         'recipient_id',
         'application_type',
         'purpose',
+        'program_background',
+        'program_objectives',
+        'program_beneficiaries',
+        'program_schedule',
+        'program_budget_breakdown',
+        'program_impact',
         'recipient_name',
         'recipient_ros_number',
         'program_date',
@@ -61,6 +67,12 @@ class Application extends Model
         'report_card_remarks',
         'created_by',
         'updated_by',
+        'association_invite_token',
+        'association_invite_expires_at',
+        'association_invite_filled_at',
+        'association_pdpa_consented_at',
+        'association_invite_issued_by',
+        'association_invite_plain_encrypted',
     ];
 
     protected function casts(): array
@@ -84,6 +96,9 @@ class Application extends Model
             'report_card_reminder_sent_at' => 'datetime',
             'report_card_upcoming_reminder_sent_at' => 'datetime',
             'report_card_overdue_reminder_sent_at' => 'datetime',
+            'association_invite_expires_at' => 'datetime',
+            'association_invite_filled_at' => 'datetime',
+            'association_pdpa_consented_at' => 'datetime',
         ];
     }
 
@@ -186,6 +201,12 @@ class Application extends Model
     public function isDraft(): bool
     {
         return $this->status === ApplicationStatus::DRAFT;
+    }
+
+    /** Persatuan/NGO telah hantar borang melalui pautan; ALP perlu semak sebelum hantar ke JP. */
+    public function associationFilledAwaitingAlpReview(): bool
+    {
+        return $this->isDraft() && $this->association_invite_filled_at !== null;
     }
 
     public function isSubmitted(): bool

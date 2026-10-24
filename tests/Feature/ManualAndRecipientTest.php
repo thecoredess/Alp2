@@ -6,6 +6,7 @@ use App\Enums\RoleName;
 use App\Models\Alp;
 use App\Models\Recipient;
 use App\Models\User;
+use App\Support\KertasKerjaGuide;
 use App\Support\OfficialManual;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -31,8 +32,13 @@ class ManualAndRecipientTest extends TestCase
         $user = $this->userWithRole(RoleName::ALP->value, $alp);
         $app = $this->draftWithBudgetAndDocs($alp, $year, '2000.00');
 
+        $kertas = [];
+        foreach (KertasKerjaGuide::fieldKeys() as $key) {
+            $kertas[$key] = $app->{$key};
+        }
+
         $this->actingAs($user)->put(route('applications.wizard.maklumat.update', $app), [
-            'purpose' => $app->purpose,
+            ...$kertas,
             'recipient_name' => 'Persatuan Baru Ujian',
             'recipient_ros_number' => $app->recipient_ros_number,
             'program_date' => $app->program_date?->format('Y-m-d'),

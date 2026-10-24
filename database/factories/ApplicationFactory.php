@@ -8,6 +8,7 @@ use App\Enums\ProgramCategory;
 use App\Models\Alp;
 use App\Models\Application;
 use App\Models\FinancialYear;
+use App\Support\KertasKerjaGuide;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,12 +20,15 @@ class ApplicationFactory extends Factory
 
     public function definition(): array
     {
+        $kertas = KertasKerjaGuide::samplePayload();
+
         return [
             'application_number' => 'ALP/SUM/2026/'.fake()->unique()->numerify('####'),
             'financial_year_id' => FinancialYear::factory()->active(),
             'alp_id' => Alp::factory(),
             'application_type' => ApplicationType::SUMBANGAN,
-            'purpose' => fake()->sentence(6),
+            ...$kertas,
+            'purpose' => KertasKerjaGuide::summarizePurpose($kertas),
             'recipient_name' => fake()->company(),
             'recipient_ros_number' => 'ROS-'.fake()->unique()->numerify('########'),
             'program_date' => now()->addMonths(3)->toDateString(),

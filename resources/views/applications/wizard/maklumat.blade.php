@@ -16,6 +16,8 @@
     <x-page-shell>
         @include('applications.partials.program-date-warning')
         @include('applications.partials.jp-incomplete-banner')
+        @include('applications.partials.association-alp-review-banner')
+        @include('applications.partials.association-invite-card')
 
         <x-page-card title="Borang Penyaluran Sumbangan" description="Kemaskini medan a–i" icon="clipboard">
             <form method="POST" action="{{ route('applications.wizard.maklumat.update', $application) }}" class="space-y-8">
@@ -26,17 +28,18 @@
                         <input type="text" value="{{ $alp?->name ?? $application->alp?->name }}" class="inp bg-gray-50" readonly>
                     </x-field>
 
-                    <div class="{{ $jpFieldWrap('recipient') }}">
-                        <x-field label="b) Nama Persatuan" name="recipient_name" :required="true">
-                            <input id="recipient_name" name="recipient_name" type="text" value="{{ old('recipient_name', $application->recipient_name) }}" required class="inp">
-                        </x-field>
-                    </div>
+                    <x-recipient-name-suggest
+                        :application="$application"
+                        :alp-id="$application->alp_id"
+                        :field-wrap-class="$jpFieldWrap('recipient')"
+                    />
 
                     <div class="{{ $jpFieldWrap('recipient') }}">
                         <x-field label="c) No. ROS (PPM-0XX-XX-XXXXXXXX)" name="recipient_ros_number" :required="true" hint="Contoh: PPM-060-01-12345678">
                             <input id="recipient_ros_number" name="recipient_ros_number" type="text"
                                    value="{{ old('recipient_ros_number', $application->recipient_ros_number) }}"
                                    placeholder="PPM-060-01-12345678" required class="inp font-mono uppercase">
+                            <x-recipient-ros-mismatch-alert :alp-id="$application->alp_id" />
                         </x-field>
                     </div>
 
@@ -64,9 +67,7 @@
                     </div>
 
                     <div class="{{ $jpFieldWrap('program_syarat') }}">
-                        <x-field label="g) Tujuan Sumbangan" name="purpose" :required="true">
-                            <textarea id="purpose" name="purpose" rows="4" required class="inp">{{ old('purpose', $application->purpose) }}</textarea>
-                        </x-field>
+                        <x-kertas-kerja-fields :application="$application" />
                     </div>
 
                     <div class="{{ $jpFieldWrap('recipient') }}">

@@ -14,6 +14,8 @@
     <x-page-shell>
         @include('applications.partials.program-date-warning')
         @include('applications.partials.jp-incomplete-banner')
+        @include('applications.partials.association-alp-review-banner')
+        @include('applications.partials.association-invite-card')
 
         @if ($missingDocuments->isNotEmpty())
             <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -55,9 +57,8 @@
                         <dt class="text-xs font-medium uppercase tracking-wide text-royal-600">f) Jumlah Sumbangan</dt>
                         <dd class="mt-1 text-2xl font-bold text-navy-700"><x-money :value="$application->requested_amount" /></dd>
                     </div>
-                    <div class="{{ $jpCard('program_syarat') }}">
-                        <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">g) Tujuan</dt>
-                        <dd class="mt-1.5 whitespace-pre-line text-gray-900">{{ $application->purpose }}</dd>
+                    <div class="{{ $jpCard('program_syarat') }} col-span-full">
+                        @include('applications.partials.kertas-kerja-display', ['application' => $application])
                     </div>
                     <div class="{{ $jpCard('recipient') }}">
                         <dt class="text-xs font-medium uppercase tracking-wide text-gray-400">h) No. Akaun</dt>
@@ -94,7 +95,7 @@
                 </x-page-card>
             </div>
 
-            <x-page-card title="Hantar Permohonan" description="Permohonan akan disemak oleh Jabatan Pentadbiran (JP) selepas dihantar">
+            <x-page-card title="Hantar Permohonan" description="Hanya ALP boleh hantar ke JP — selepas semak borang (termasuk yang diisi persatuan) dan lampiran lengkap">
                 <form method="POST" action="{{ route('applications.submit', $application) }}"
                       data-swal-confirm="Adakah anda pasti mahu menghantar permohonan ini kepada Jabatan Pentadbiran (JP)? Selepas dihantar, permohonan tidak boleh dikemaskini."
                       data-swal-title="Hantar Permohonan"
@@ -102,6 +103,9 @@
                     @csrf
                     <div class="rounded-xl border border-navy-100 bg-navy-50/40 p-5">
                         <p class="text-sm text-gray-600">
+                            @if ($application->associationFilledAwaitingAlpReview())
+                                Persatuan/NGO telah mengisi borang melalui pautan; pastikan anda semak dan betulkan maklumat sebelum hantar.
+                            @endif
                             Sila pastikan borang dan lampiran lengkap serta tepat. Permohonan yang telah dihantar tidak boleh dikemaskini.
                         </p>
                         <div class="mt-5 flex flex-wrap gap-3 border-t border-navy-100/80 pt-5">

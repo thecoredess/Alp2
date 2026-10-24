@@ -15,6 +15,7 @@ use App\Models\FinancialYear;
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\Budget\BudgetService;
+use App\Support\KertasKerjaGuide;
 use App\Support\UrsContributionPolicy;
 use Carbon\Carbon;
 use Database\Seeders\DocumentRequirementSeeder;
@@ -54,7 +55,7 @@ class ApplicationSubmissionTest extends TestCase
             'application_type' => ApplicationType::SUMBANGAN,
             'status' => ApplicationStatus::DRAFT,
             'requested_amount' => $amount,
-            'purpose' => 'Tujuan ujian',
+            ...KertasKerjaGuide::samplePayload(),
             'recipient_name' => 'Persatuan Ujian',
             'recipient_bank_account' => '1234567890',
         ]);
@@ -208,10 +209,12 @@ class ApplicationSubmissionTest extends TestCase
             'program_date' => '2026-04-01',
             'program_category' => $app->program_category->value,
             'requested_amount' => $app->requested_amount,
-            'purpose' => $app->purpose,
             'recipient_bank_account' => $app->recipient_bank_account,
             'recipient_address' => $app->recipient_address,
         ];
+        foreach (KertasKerjaGuide::fieldKeys() as $key) {
+            $payload[$key] = $app->{$key};
+        }
 
         $this->actingAs($this->user)
             ->put(route('applications.wizard.maklumat.update', $app), $payload)

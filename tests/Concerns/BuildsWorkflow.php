@@ -19,6 +19,7 @@ use App\Services\Application\ApplicationReviewService;
 use App\Services\Application\ApplicationSubmissionService;
 use App\Services\Application\ApprovalService;
 use App\Services\Budget\BudgetService;
+use App\Support\KertasKerjaGuide;
 use App\Support\UrsContributionPolicy;
 use Database\Seeders\ApprovalLevelSeeder;
 use Database\Seeders\DocumentRequirementSeeder;
@@ -72,7 +73,7 @@ trait BuildsWorkflow
             'application_type' => $type,
             'status' => ApplicationStatus::DRAFT,
             'requested_amount' => $amount,
-            'purpose' => 'Tujuan ujian sumbangan',
+            ...KertasKerjaGuide::samplePayload(),
             ...$this->ursRecipientAttrs(),
         ]);
 
@@ -99,7 +100,7 @@ trait BuildsWorkflow
             'financial_year_id' => $year->id,
             'application_type' => $type,
             'requested_amount' => $amount,
-            'purpose' => 'Tujuan ujian sumbangan',
+            ...KertasKerjaGuide::samplePayload(),
             ...$this->ursRecipientAttrs(),
         ]);
 

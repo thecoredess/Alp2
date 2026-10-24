@@ -60,7 +60,7 @@
             <h3 class="text-sm font-semibold text-gray-900">Tatacara ALP / Persatuan</h3>
             <p class="text-sm text-gray-600">
                 Kongsi <a href="{{ route('association-guide.download') }}?v=3" class="font-medium text-royal-600 underline hover:text-royal-700">Panduan Dokumen Persatuan (PDF)</a>
-                kepada persatuan penerima — termasuk senarai semak 5 dokumen wajib, <strong>Format Laporan Program ALP</strong> (report card) dan <strong>Borang EFT rasmi DBKL 2026</strong>.
+                kepada persatuan penerima — termasuk senarai semak 4 dokumen wajib (Kertas Kerja diisi dalam borang Langkah 1), <strong>Format Laporan Program ALP</strong> (report card) dan <strong>Borang EFT rasmi DBKL 2026</strong>.
             </p>
             <ol class="list-decimal space-y-2 pl-5 text-sm text-gray-700">
                 <li>Log masuk → semak <strong>Bajet Saya</strong> &amp; kuota penggal.</li>

@@ -60,7 +60,6 @@ class UrsPolicyAndNotificationTest extends TestCase
             'application_type' => ApplicationType::SUMBANGAN,
             'status' => ApplicationStatus::DRAFT,
             'requested_amount' => $amount,
-            'purpose' => 'Tujuan ujian',
             'recipient_name' => 'Persatuan Ujian',
             'recipient_bank_account' => '1234567890',
         ]);

@@ -22,10 +22,22 @@
     <tr><th>Tarikh Program</th><td>{{ $application->program_date?->format('d/m/Y') ?? '—' }}</td></tr>
     <tr><th>Jenis/Kategori Program</th><td>{{ $application->program_category?->label() ?? '—' }}</td></tr>
     <tr><th>Jumlah Sumbangan</th><td><strong>RM {{ number_format((float) $application->requested_amount, 2) }}</strong></td></tr>
-    <tr><th>Tujuan Sumbangan</th><td>{{ $application->purpose }}</td></tr>
+    <tr><th>Ringkasan Tujuan</th><td>{{ $application->purpose }}</td></tr>
     <tr><th>No. Akaun Penerima</th><td>{{ $application->recipient_bank_account ?? '—' }}</td></tr>
     <tr><th>Alamat Persatuan</th><td>{{ $application->recipient_address ?? '—' }}</td></tr>
 </table>
+
+@if (\App\Support\KertasKerjaGuide::isComplete($application))
+    <p class="section">Kertas Kerja (Maklumat Program)</p>
+    <table class="form">
+        @foreach (\App\Support\KertasKerjaGuide::formFields() as $field)
+            <tr>
+                <th>{{ $field['label'] }}</th>
+                <td style="white-space: pre-wrap;">{{ $application->{$field['key']} }}</td>
+            </tr>
+        @endforeach
+    </table>
+@endif
 
 <p class="section">Ruang kegunaan JP</p>
 <table class="form">

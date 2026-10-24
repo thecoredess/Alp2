@@ -55,7 +55,7 @@ class ApplicationWizardController extends Controller
 
         $data = $request->validated();
         $application->update([
-            'purpose' => $data['purpose'],
+            ...\App\Support\KertasKerjaGuide::normalizedAttributes($data),
             'recipient_name' => $data['recipient_name'],
             'recipient_ros_number' => $data['recipient_ros_number'],
             'program_date' => $data['program_date'],

@@ -3,6 +3,7 @@
 namespace App\Services\Documents;
 
 use App\Enums\DocumentType;
+use App\Support\KertasKerjaGuide;
 use Barryvdh\DomPDF\Facade\Pdf;
 use RuntimeException;
 use setasign\Fpdi\Fpdi;
@@ -15,7 +16,7 @@ class AssociationDocumentGuideService
 
     public const REPORT_TEMPLATE_FILENAME_PREFIX = 'Format-Laporan-Program-ALP-DBKL';
 
-    public const GUIDE_VERSION = 5;
+    public const GUIDE_VERSION = 7;
 
     public function downloadUrl(): string
     {
@@ -83,13 +84,6 @@ class AssociationDocumentGuideService
             ],
             [
                 'no' => 4,
-                'type' => DocumentType::KERTAS_KERJA,
-                'label' => DocumentType::KERTAS_KERJA->label(),
-                'hint' => DocumentType::KERTAS_KERJA->simpleHint(),
-                'notes' => 'Terangkan latar belakang, objektif, sasaran penerima manfaat, jadual aktiviti, pecahan perbelanjaan dan impak program.',
-            ],
-            [
-                'no' => 5,
                 'type' => DocumentType::SIJIL_ROS,
                 'label' => DocumentType::SIJIL_ROS->label(),
                 'hint' => DocumentType::SIJIL_ROS->simpleHint(),

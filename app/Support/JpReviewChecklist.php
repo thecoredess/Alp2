@@ -130,7 +130,7 @@ final class JpReviewChecklist
             && filled($application->recipient_address)
             && \App\Support\UrsContributionPolicy::isKualaLumpurAddress($application->recipient_address);
 
-        $programOk = filled($application->purpose)
+        $programOk = \App\Support\KertasKerjaGuide::isComplete($application)
             && $application->requestedAmountMoney()->isPositive();
 
         $required = DocumentRequirement::requiredFor();

@@ -50,7 +50,6 @@ class ApplicationConcurrencyTest extends TestCase
                 'application_type' => ApplicationType::SUMBANGAN,
                 'status' => ApplicationStatus::DRAFT,
                 'requested_amount' => '70.00',
-                'purpose' => 'Tujuan ujian',
                 'recipient_name' => 'Persatuan Ujian',
                 'recipient_bank_account' => '1234567890',
             ]);

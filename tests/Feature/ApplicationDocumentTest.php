@@ -37,10 +37,10 @@ class ApplicationDocumentTest extends TestCase
 
     public function test_valid_document_can_be_uploaded_to_private_storage(): void
     {
-        $file = UploadedFile::fake()->create('kertas.pdf', 200, 'application/pdf');
+        $file = UploadedFile::fake()->create('pendaftaran.pdf', 200, 'application/pdf');
 
         $this->actingAs($this->user)->post(route('applications.documents.store', $this->application), [
-            'document_type' => DocumentType::KERTAS_KERJA->value,
+            'document_type' => DocumentType::PENDAFTARAN_PERTUBUHAN->value,
             'file' => $file,
         ])->assertRedirect();
 
@@ -69,7 +69,7 @@ class ApplicationDocumentTest extends TestCase
         $exe = UploadedFile::fake()->create('malware.exe', 50, 'application/octet-stream');
 
         $this->actingAs($this->user)->post(route('applications.documents.store', $this->application), [
-            'document_type' => DocumentType::KERTAS_KERJA->value,
+            'document_type' => DocumentType::PENDAFTARAN_PERTUBUHAN->value,
             'file' => $exe,
         ])->assertSessionHasErrors('file');
 
@@ -78,9 +78,9 @@ class ApplicationDocumentTest extends TestCase
 
     public function test_owner_can_download_their_document(): void
     {
-        $file = UploadedFile::fake()->create('kertas.pdf', 100, 'application/pdf');
+        $file = UploadedFile::fake()->create('pendaftaran.pdf', 100, 'application/pdf');
         $this->actingAs($this->user)->post(route('applications.documents.store', $this->application), [
-            'document_type' => DocumentType::KERTAS_KERJA->value, 'file' => $file,
+            'document_type' => DocumentType::PENDAFTARAN_PERTUBUHAN->value, 'file' => $file,
         ]);
         $doc = ApplicationDocument::first();
 
@@ -89,9 +89,9 @@ class ApplicationDocumentTest extends TestCase
 
     public function test_owner_can_view_document_inline(): void
     {
-        $file = UploadedFile::fake()->create('kertas.pdf', 100, 'application/pdf');
+        $file = UploadedFile::fake()->create('pendaftaran.pdf', 100, 'application/pdf');
         $this->actingAs($this->user)->post(route('applications.documents.store', $this->application), [
-            'document_type' => DocumentType::KERTAS_KERJA->value, 'file' => $file,
+            'document_type' => DocumentType::PENDAFTARAN_PERTUBUHAN->value, 'file' => $file,
         ]);
         $doc = ApplicationDocument::first();
 
@@ -113,9 +113,9 @@ class ApplicationDocumentTest extends TestCase
 
     public function test_draft_document_can_be_removed(): void
     {
-        $file = UploadedFile::fake()->create('kertas.pdf', 100, 'application/pdf');
+        $file = UploadedFile::fake()->create('pendaftaran.pdf', 100, 'application/pdf');
         $this->actingAs($this->user)->post(route('applications.documents.store', $this->application), [
-            'document_type' => DocumentType::KERTAS_KERJA->value, 'file' => $file,
+            'document_type' => DocumentType::PENDAFTARAN_PERTUBUHAN->value, 'file' => $file,
         ]);
         $doc = ApplicationDocument::first();
 

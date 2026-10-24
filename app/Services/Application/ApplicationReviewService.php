@@ -200,8 +200,14 @@ class ApplicationReviewService
     {
         $application->loadMissing(['documents']);
 
+        $kertas = [];
+        foreach (\App\Support\KertasKerjaGuide::fieldKeys() as $key) {
+            $kertas[$key] = $application->{$key};
+        }
+
         return [
             'purpose' => $application->purpose,
+            'kertas_kerja' => $kertas,
             'recipient_name' => $application->recipient_name,
             'recipient_bank_account' => $application->recipient_bank_account,
             'requested_amount' => $application->requested_amount,

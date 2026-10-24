@@ -64,7 +64,7 @@ enum DocumentType: string
             self::PENDAFTARAN_PERTUBUHAN => 'Salinan pendaftaran pertubuhan atau organisasi penerima.',
             self::BORANG_EFT => 'Borang maklumat akaun bank (EFT) yang lengkap.',
             self::PENYATA_BANK => 'Salinan atau gambar muka depan penyata bank.',
-            self::KERTAS_KERJA => 'Ringkasan program / aktiviti yang dicadangkan.',
+            self::KERTAS_KERJA => 'Kertas kerja lengkap: latar belakang, objektif, sasaran, jadual & lokasi (WP KL), pecahan perbelanjaan, impak program.',
             self::SIJIL_ROS => 'Sijil pendaftaran pertubuhan (ROS) yang masih sah.',
             default => 'Muat naik fail PDF atau gambar.',
         };
@@ -82,14 +82,13 @@ enum DocumentType: string
         return [self::SEMAKAN_SILANG_JKEW];
     }
 
-    /** Lampiran wajib Senarai Semak Penyaluran Sumbangan ALP (item 2–6). */
+    /** Lampiran wajib Senarai Semak Penyaluran Sumbangan ALP (Kertas Kerja diisi dalam borang dalam talian). */
     public static function contributionAttachments(): array
     {
         return [
             self::PENDAFTARAN_PERTUBUHAN,
             self::BORANG_EFT,
             self::PENYATA_BANK,
-            self::KERTAS_KERJA,
             self::SIJIL_ROS,
         ];
     }

@@ -10,6 +10,7 @@ use App\Models\Application;
 use App\Models\FinancialYear;
 use App\Models\User;
 use App\Services\Reports\ApplicationReportService;
+use App\Support\KertasKerjaGuide;
 use Carbon\Carbon;
 use Database\Seeders\DocumentRequirementSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -43,9 +44,9 @@ class ApplicationTest extends TestCase
             'program_date' => now()->addMonths(3)->format('Y-m-d'),
             'program_category' => 'komuniti',
             'requested_amount' => '1500.00',
-            'purpose' => 'Sumbangan program komuniti',
             'recipient_bank_account' => '1234567890',
             'recipient_address' => 'No. 12, Jalan Ampang, 50450 Kuala Lumpur',
+            ...KertasKerjaGuide::samplePayload(),
         ], $overrides);
     }
 
@@ -56,10 +57,12 @@ class ApplicationTest extends TestCase
         $this->actingAs($user)->post(route('applications.store'), $this->borangPayload())
             ->assertRedirect();
 
+        $expectedPurpose = KertasKerjaGuide::summarizePurpose(KertasKerjaGuide::samplePayload());
+
         $this->assertDatabaseHas('applications', [
             'alp_id' => $user->alp_id,
             'application_type' => ApplicationType::SUMBANGAN->value,
-            'purpose' => 'Sumbangan program komuniti',
+            'purpose' => $expectedPurpose,
             'requested_amount' => '1500.00',
             'status' => ApplicationStatus::DRAFT->value,
         ]);
@@ -70,12 +73,15 @@ class ApplicationTest extends TestCase
         $user = $this->alpUser();
         $app = Application::factory()->create(['alp_id' => $user->alp_id]);
 
+        $updatedObjectives = 'Objektif dikemas kini — '.str_repeat('y', 35);
+
         $this->actingAs($user)->put(route('applications.wizard.maklumat.update', $app), $this->borangPayload([
-            'purpose' => 'Tujuan dikemas kini',
+            'program_objectives' => $updatedObjectives,
             'requested_amount' => '2000.00',
         ]))->assertRedirect(route('applications.wizard.dokumen', $app));
 
-        $this->assertSame('Tujuan dikemas kini', $app->fresh()->purpose);
+        $this->assertSame($updatedObjectives, $app->fresh()->program_objectives);
+        $this->assertSame($updatedObjectives, $app->fresh()->purpose);
     }
 
     public function test_borang_rejects_program_date_within_two_months(): void
@@ -126,7 +132,7 @@ class ApplicationTest extends TestCase
             ->assertRedirect(route('applications.show', $app));
 
         $this->actingAs($user)->put(route('applications.wizard.maklumat.update', $app), $this->borangPayload([
-            'purpose' => 'Cuba Ubah',
+            'program_objectives' => 'Cuba ubah — '.str_repeat('x', 35),
         ]))->assertForbidden();
     }
 

@@ -38,9 +38,27 @@
 | d) Tarikh Program | ≥ 2 bulan dari hari rakaman |
 | e) Kategori Program | Komuniti / Kebajikan (pilih yang sesuai) |
 | f) Jumlah Dimohon | RM 2,500.00 (ikut baki bajet) |
-| g) Tujuan Sumbangan | Program khidmat komuniti & bantuan asnaf bulan Ramadan |
+| g) Kertas Kerja — latar belakang | Peningkatan kos sara hidup di PPR Sentul; asnaf memerlukan bantuan berkala… |
+| g) Objektif program | Mengurangkan beban asnaf melalui bantuan barang dapur & khidmat komuniti… |
+| g) Sasaran penerima | ±80 keluarga asnaf & warga emas kawasan PPR Sentul |
+| g) Jadual & lokasi (WP KL) | Contoh: 15/12/2026 — agihan — Dewan PPR Sentul |
+| g) Pecahan perbelanjaan | Bahan makanan RM 1,500; minuman RM 500; pengangkutan RM 500 (jumlah selari f) |
+| g) Impak program | Membantu asnaf & mengukuhkan jalinan komuniti setempat |
 | h) No. Akaun | 1234567890 |
 | i) Alamat | No. 12, Jalan Raja Laut, 50350 Kuala Lumpur |
+
+---
+
+## Aliran pautan persatuan/NGO (pilihan)
+
+| Peranan | Tindakan |
+|--------|----------|
+| **ALP** | Cipta draf → **Jana pautan untuk persatuan** (sah 7 hari) → salin & hantar kepada persatuan |
+| **Persatuan/NGO** | Buka pautan tanpa log masuk → isi borang → **muat naik 4 lampiran** → tanda **setuju Notis PDPA DBKL** → **Hantar** borang (bukan ke JP) |
+| **ALP** | Terima notifikasi → **semak** Langkah 1 & lampiran → tambah/betulkan jika perlu → **Hantar kepada Admin JP** Langkah 3 |
+
+**Naratif ringkas (boleh sisip dalam video):**
+> Jika persatuan isi borang melalui pautan, mereka juga boleh muat naik lampiran wajib di halaman yang sama. ALP semak borang dan lampiran, kemudian hantar ke Jabatan Pentadbiran. Persatuan tidak boleh menghantar terus ke JP.
 
 ---
 
@@ -85,23 +103,25 @@
 ### [02:15 – 03:00] Medan a & b — ALP & Persatuan
 
 **Naratif:**
-> Medan **a) Nama Ahli Lembaga Penasihat** diisi automatik mengikut profil anda. Medan **b) Nama Persatuan** wajib diisi — masukkan nama persatuan penerima sumbangan.
+> Medan **a) Nama Ahli Lembaga Penasihat** diisi automatik mengikut profil anda. Medan **b) Nama Persatuan** — apabila anda mula taip, sistem cadangkan persatuan yang pernah diisi untuk ALP ini. Pilih cadangan untuk auto-isi **No. ROS**, **no. akaun** dan **alamat**; atau taip nama baharu.
 
 **Aksi skrin:**
 1. Tunjuk medan **a)** readonly (nama ALP)
-2. Isi **b) Nama Persatuan** dengan data contoh
-3. Sebut medan bertanda wajib
+2. Taip di **b) Nama Persatuan** — tunjuk dropdown cadangan (jika ada rekod lepas)
+3. Pilih satu cadangan — tunjuk medan c, h, i terisi
+4. Sebut medan bertanda wajib
 
 ---
 
 ### [03:00 – 03:45] Medan c — No. ROS
 
 **Naratif:**
-> **c) No. ROS** mesti format PPM, contoh PPM-060-01-12345678. Pastikan nombor ROS persatuan sah dan sepadan dengan dokumen lampiran.
+> **c) No. ROS** mesti format PPM, contoh PPM-060-01-12345678. Pastikan nombor ROS persatuan sah dan sepadan dengan dokumen lampiran. Jika nama persatuan pernah diisi, sistem bandingkan ROS dengan rekod lepas — jika **berbeza**, amaran kuning dipapar (makluman, bukan halang simpan).
 
 **Aksi skrin:**
 1. Isi No. ROS
-2. Highlight hint/contoh format di bawah medan
+2. *(Optional)* Taip nama persatuan lama dengan ROS lain — tunjuk amaran **No. ROS berbeza dengan rekod terdahulu**
+3. Highlight hint/contoh format di bawah medan
 
 ---
 
@@ -128,17 +148,20 @@
 
 ---
 
-### [05:45 – 06:30] Medan g — Tujuan
+### [05:45 – 07:00] Medan g — Kertas Kerja (maklumat program dalam talian)
 
 **Naratif:**
-> **g) Tujuan Sumbangan** — terangkan ringkas objektif program dan bagaimana sumbangan digunakan. Contoh: program khidmat komuniti, bantuan asnaf, atau aktiviti sukan belia.
+> Bahagian **g) Kertas Kerja — Maklumat Program** diisi terus dalam borang — enam medan teks: latar belakang dan keperluan komuniti, objektif, sasaran penerima manfaat, jadual tarikh aktiviti dan lokasi dalam **Wilayah Persekutuan Kuala Lumpur**, pecahan perbelanjaan selari dengan jumlah di medan f, dan impak program. Setiap medan wajib diisi dengan secukupnya; sistem akan semak panjang minimum. **Tiada** perlu muat naik fail Kertas Kerja berasingan pada Langkah 2 melainkan JP meminta salinan PDF.
 
 **Aksi skrin:**
-1. Taip tujuan (2–3 ayat)
+1. Scroll ke tajuk **g) Kertas Kerja — Maklumat Program**
+2. Isi satu persatu medan (contoh data jadual di atas)
+3. Tunjuk mesej hint di bawah setiap medan
+4. Sebut pecahan perbelanjaan mesti selari dengan **f) Jumlah Dimohon**
 
 ---
 
-### [06:30 – 07:30] Medan h & i — Bank & alamat
+### [07:00 – 07:45] Medan h & i — Bank & alamat
 
 **Naratif:**
 > **h) No. Akaun Penerima Sumbangan** — akaun bank persatuan penerima. **i) Alamat Persatuan** — wajib **dalam Wilayah Persekutuan Kuala Lumpur** sahaja.
@@ -149,10 +172,10 @@
 
 ---
 
-### [07:30 – 08:30] Simpan & teruskan
+### [07:45 – 08:45] Simpan & teruskan
 
 **Naratif:**
-> Selepas semua medan lengkap, anda ada dua pilihan: **Simpan & Keluar** — simpan draf dan sambung kemudian; atau **Seterusnya → Lampiran** — ke Langkah 2 muat naik dokumen. Video seterusnya (Video 4) akan tunjuk cara muat naik senarai semak 5 dokumen wajib.
+> Selepas semua medan lengkap, anda ada dua pilihan: **Simpan & Keluar** — simpan draf dan sambung kemudian; atau **Seterusnya → Lampiran** — ke Langkah 2 muat naik dokumen. Video seterusnya (Video 4) akan tunjuk cara muat naik **empat** dokumen wajib (Kertas Kerja sudah diisi dalam borang Langkah 1).
 
 **Aksi skrin:**
 1. Tunjuk butang **Simpan & Keluar** — klik, kembali senarai, tunjuk status **Draf**

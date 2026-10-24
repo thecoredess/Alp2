@@ -13,6 +13,7 @@ use App\Services\Application\ApplicationReviewService;
 use App\Services\Application\ApplicationSubmissionService;
 use App\Services\Application\ApprovalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Support\KertasKerjaGuide;
 use Tests\Concerns\BuildsWorkflow;
 use Tests\TestCase;
 
@@ -97,11 +98,12 @@ class RejectionAndRevisionTest extends TestCase
             'program_date' => $app->program_date?->format('Y-m-d'),
             'program_category' => $app->program_category?->value ?? 'komuniti',
             'requested_amount' => '86000.00',
-            'purpose' => 'Tujuan dibetulkan',
+            ...KertasKerjaGuide::samplePayload(),
+            'program_objectives' => 'Tujuan dibetulkan — '.str_repeat('z', 35),
             'recipient_bank_account' => '1234567890',
             'recipient_address' => 'No. 12, Jalan Raja Laut, 50350 Kuala Lumpur',
         ])->assertRedirect();
-        $this->assertSame('Tujuan dibetulkan', $app->fresh()->purpose);
+        $this->assertStringStartsWith('Tujuan dibetulkan', $app->fresh()->purpose);
     }
 
     public function test_alp_sees_red_cards_for_admin_jp_incomplete_checklist(): void

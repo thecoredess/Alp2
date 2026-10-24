@@ -133,6 +133,18 @@
 
     <p class="muted">Format fail diterima: PDF, JPG, PNG, DOC/DOCX (maksimum 10 MB setiap fail).</p>
 
+    <div class="item-box">
+        <h3><span class="item-no">KK</span>Kertas Kerja (Maklumat Program) — dalam borang dalam talian</h3>
+        <p>{{ \App\Support\KertasKerjaGuide::intro() }}</p>
+        <p><strong>Aspek yang perlu diisi (medan g) Langkah 1):</strong> {{ implode(', ', \App\Support\KertasKerjaGuide::themes()) }}.</p>
+        <p><strong>Isi minimum:</strong></p>
+        <ul class="checklist">
+            @foreach (\App\Support\KertasKerjaGuide::minimumSections() as $section)
+                <li>{{ $section }}</li>
+            @endforeach
+        </ul>
+    </div>
+
     <div class="page-break"></div>
 
     <h2>2. Penjelasan Terperinci Setiap Dokumen</h2>
@@ -144,15 +156,6 @@
             @if ($item['type'] === \App\Enums\DocumentType::BORANG_EFT)
                 <p><strong>Nota:</strong> Borang EFT rasmi DBKL dilampirkan di <strong>laman terakhir</strong> dokumen PDF ini.
                 Sila cetak, lengkapkan, tandatangan dan cop persatuan sebelum dimuat naik semula ke sistem.</p>
-            @endif
-            @if ($item['type'] === \App\Enums\DocumentType::KERTAS_KERJA)
-                <p><strong>Isi minimum kertas kerja:</strong></p>
-                <ul class="checklist">
-                    <li>Latar belakang dan masalah / keperluan komuniti</li>
-                    <li>Objektif dan sasaran penerima manfaat</li>
-                    <li>Jadual tarikh aktiviti dan lokasi (Wilayah Persekutuan KL)</li>
-                    <li>Anggaran perbelanjaan selari dengan jumlah permohonan</li>
-                </ul>
             @endif
         </div>
     @endforeach

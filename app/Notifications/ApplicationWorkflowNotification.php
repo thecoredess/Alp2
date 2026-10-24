@@ -80,6 +80,7 @@ class ApplicationWorkflowNotification extends Notification
     {
         return match ($this->event) {
             'submission_acknowledged' => 'Permohonan berjaya dihantar',
+            'association_form_filled' => 'Borang persatuan menunggu semakan ALP',
             'submitted' => 'Permohonan dihantar',
             'awaiting_pegawai_jp' => 'Menunggu pengesyoran Pegawai JP',
             'revision_required' => 'Permohonan dikembalikan',

@@ -17,6 +17,7 @@ final class NotificationTemplates
     {
         return [
             'submission_acknowledged' => 'Pengesahan hantar permohonan (ALP)',
+            'association_form_filled' => 'Borang persatuan dihantar (semakan ALP)',
             'submitted' => 'Permohonan dihantar (Admin JP)',
             'awaiting_pegawai_jp' => 'Menunggu pengesyoran Pegawai JP',
             'awaiting_peraku' => 'Menunggu perakuan TP/Pengarah',
@@ -55,6 +56,7 @@ final class NotificationTemplates
         $map = [
             RoleName::ALP->value => [
                 'submission_acknowledged',
+                'association_form_filled',
                 'revision_required', 'approved', 'rejected', 'payment_voucher', 'payment_paid',
                 'report_card_reminder_upcoming', 'report_card_reminder_overdue',
                 'report_card_approved', 'report_card_returned',
@@ -138,6 +140,7 @@ final class NotificationTemplates
     public static function isActionEvent(string $event): bool
     {
         return in_array($event, [
+            'association_form_filled',
             'submitted',
             'awaiting_pegawai_jp',
             'awaiting_peraku',
@@ -238,6 +241,7 @@ final class NotificationTemplates
     {
         return match ($event) {
             'submission_acknowledged' => 'Permohonan anda {application_number} telah berjaya dihantar dan akan diproses oleh Jabatan Pentadbiran.',
+            'association_form_filled' => 'Anda mempunyai tindakan yang perlu diselesaikan: persatuan telah menghantar borang {application_number} ({project_title}). Semak borang dan lampiran (persatuan boleh muat naik lampiran melalui pautan), kemudian hantar kepada Admin JP.',
             'submitted' => 'Anda mempunyai tindakan yang perlu diselesaikan: semak permohonan baharu {application_number} ({project_title}).',
             'awaiting_pegawai_jp' => 'Anda mempunyai tindakan yang perlu diselesaikan: permohonan {application_number} telah disemak Admin JP dan menunggu pengesyoran Pegawai JP.',
             'awaiting_peraku' => 'Anda mempunyai tindakan yang perlu diselesaikan: berikan perakuan untuk permohonan {application_number}.',

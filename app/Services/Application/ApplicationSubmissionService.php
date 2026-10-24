@@ -280,8 +280,8 @@ class ApplicationSubmissionService
             || blank($application->program_category)
             || blank($application->recipient_bank_account)
             || blank($application->recipient_address)
-            || blank($application->purpose)) {
-            throw new ApplicationException('Sila lengkapkan Borang Penyaluran: nama persatuan, no. ROS, tarikh program, kategori program, tujuan, no. akaun dan alamat persatuan.');
+            || ! \App\Support\KertasKerjaGuide::isComplete($application)) {
+            throw new ApplicationException('Sila lengkapkan Borang Penyaluran: maklumat persatuan, kategori program, Kertas Kerja (medan g), jumlah, no. akaun dan alamat persatuan.');
         }
 
         $this->recipients->syncFromApplication($application);

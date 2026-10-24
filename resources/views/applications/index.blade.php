@@ -84,6 +84,9 @@
                         <td class="px-4 py-3">
                             @if ($app->isDraft())
                                 <x-status-badge :label="$app->status->label()" :classes="$app->status->badgeClasses()" />
+                                @if ($app->associationFilledAwaitingAlpReview())
+                                    <span class="mt-1 block text-xs font-medium text-emerald-700">Menunggu semakan ALP (borang persatuan)</span>
+                                @endif
                             @elseif ($usesOperationalStatus ?? false)
                                 @php $operationalStatus = ApplicationReportService::resolveOperationalStatus($app); @endphp
                                 <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $statusTone[$operationalStatus] ?? 'bg-gray-100 text-gray-700' }}">

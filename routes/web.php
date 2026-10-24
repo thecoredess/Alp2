@@ -5,7 +5,9 @@ use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\AllocationController;
+use App\Http\Controllers\ApplicationAssociationInviteController;
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\AssociationPublicFormController;
 use App\Http\Controllers\ApplicationDocumentController;
 use App\Http\Controllers\ApplicationWizardController;
 use App\Http\Controllers\ApprovalController;
@@ -32,6 +34,29 @@ use App\Enums\RoleName;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
+
+Route::prefix('borang-persatuan/{token}')
+    ->where(['token' => '[A-Za-z0-9]{32,64}'])
+    ->group(function () {
+        Route::get('/', [AssociationPublicFormController::class, 'show'])
+            ->middleware('throttle:association-public-read')
+            ->name('association-form.show');
+        Route::put('/', [AssociationPublicFormController::class, 'update'])
+            ->middleware('throttle:association-public-submit')
+            ->name('association-form.update');
+        Route::post('dokumen', [AssociationPublicFormController::class, 'storeDocument'])
+            ->middleware('throttle:association-public-upload')
+            ->name('association-form.documents.store');
+        Route::delete('dokumen/{document}', [AssociationPublicFormController::class, 'destroyDocument'])
+            ->middleware('throttle:association-public-upload')
+            ->name('association-form.documents.destroy');
+        Route::get('cadangan-persatuan', [AssociationPublicFormController::class, 'suggestRecipients'])
+            ->middleware('throttle:association-public-suggest')
+            ->name('association-form.recipients.suggest');
+        Route::get('semak-ros', [AssociationPublicFormController::class, 'checkPersatuanRos'])
+            ->middleware('throttle:association-public-suggest')
+            ->name('association-form.recipients.check_ros');
+    });
 
 /*
 |--------------------------------------------------------------------------
@@ -109,7 +134,13 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     Route::get('permohonan', [ApplicationController::class, 'index'])->name('applications.index');
     Route::get('permohonan/semua', [ApplicationController::class, 'all'])->name('applications.all');
     Route::get('permohonan/baharu', [ApplicationController::class, 'create'])->name('applications.create');
+    Route::get('permohonan/cadangan-persatuan', [ApplicationController::class, 'suggestRecipients'])->name('applications.recipients.suggest');
+    Route::get('permohonan/semak-ros-persatuan', [ApplicationController::class, 'checkPersatuanRos'])->name('applications.recipients.check_ros');
     Route::post('permohonan', [ApplicationController::class, 'store'])->name('applications.store');
+    Route::post('permohonan/draf-untuk-persatuan', [ApplicationController::class, 'storeShellDraft'])
+        ->name('applications.store.shell');
+    Route::post('permohonan/{application}/pautan-persatuan', [ApplicationAssociationInviteController::class, 'store'])
+        ->name('applications.association-invite.store');
 
     Route::get('permohonan/{application}/borang', [ApplicationWizardController::class, 'maklumat'])->name('applications.wizard.maklumat');
     Route::put('permohonan/{application}/borang', [ApplicationWizardController::class, 'updateMaklumat'])->name('applications.wizard.maklumat.update');

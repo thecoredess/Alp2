@@ -8,9 +8,7 @@
     </div>
 
     <div class="rounded-xl border border-gray-100 p-4">
-        <x-field label="b) Nama Persatuan" name="recipient_name" :required="true">
-            <input id="recipient_name" name="recipient_name" type="text" value="{{ old('recipient_name', $application->recipient_name) }}" required class="inp">
-        </x-field>
+        <x-recipient-name-suggest :application="$application" :alp-id="$application->alp_id" />
     </div>
 
     <div class="rounded-xl border border-gray-100 p-4">
@@ -18,6 +16,7 @@
             <input id="recipient_ros_number" name="recipient_ros_number" type="text"
                    value="{{ old('recipient_ros_number', $application->recipient_ros_number) }}"
                    placeholder="PPM-060-01-12345678" required class="inp font-mono uppercase">
+            <x-recipient-ros-mismatch-alert :alp-id="$application->alp_id" />
         </x-field>
     </div>
 
@@ -44,11 +43,7 @@
         <x-application-amount-field :limits="$amountLimits" :value="$application->requested_amount" />
     </div>
 
-    <div class="rounded-xl border border-gray-100 p-4">
-        <x-field label="g) Tujuan Sumbangan" name="purpose" :required="true">
-            <textarea id="purpose" name="purpose" rows="4" required class="inp">{{ old('purpose', $application->purpose) }}</textarea>
-        </x-field>
-    </div>
+    <x-kertas-kerja-fields :application="$application" class="mb-4" />
 
     <div class="rounded-xl border border-gray-100 p-4">
         <x-field label="h) No. Akaun Penerima Sumbangan" name="recipient_bank_account" :required="true">

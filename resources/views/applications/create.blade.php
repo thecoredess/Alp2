@@ -28,6 +28,13 @@
             </div>
         @endif
 
+        <div class="mb-4 rounded-xl border-2 border-indigo-200 bg-indigo-50/80 px-4 py-3 text-sm text-indigo-950">
+            <strong>Biar persatuan isi borang?</strong> Gunakan butang
+            <strong>「Cipta draf &amp; jana pautan persatuan」</strong> — tiada medan borang wajib diisi oleh ALP.
+            Pautan sah 7 hari. Selepas persatuan hantar, semak di Langkah 1.
+            Atau isi borang sendiri dan klik <strong>Simpan Draf &amp; Muat Naik Lampiran</strong> (semua medan wajib).
+        </div>
+
         <div class="card p-6">
             <h3 class="mb-5 text-sm font-semibold text-gray-900">Borang Penyaluran Sumbangan</h3>
             <form method="POST" action="{{ route('applications.store') }}" class="space-y-8">
@@ -52,13 +59,12 @@
                         </x-field>
                     @endif
 
-                    <x-field label="b) Nama Persatuan" name="recipient_name" :required="true">
-                        <input id="recipient_name" name="recipient_name" type="text" value="{{ old('recipient_name') }}" required class="inp">
-                    </x-field>
+                    <x-recipient-name-suggest :alp-id="$alp?->id" :on-behalf="$onBehalf ?? false" />
 
                     <x-field label="c) No. ROS (PPM-0XX-XX-XXXXXXXX)" name="recipient_ros_number" :required="true" hint="Contoh: PPM-060-01-12345678">
                         <input id="recipient_ros_number" name="recipient_ros_number" type="text" value="{{ old('recipient_ros_number') }}"
                                placeholder="PPM-060-01-12345678" required class="inp font-mono uppercase">
+                        <x-recipient-ros-mismatch-alert :alp-id="$alp?->id" :on-behalf="$onBehalf ?? false" />
                     </x-field>
 
                     <x-field
@@ -77,9 +83,7 @@
 
                     <x-application-amount-field :limits="$amountLimits" />
 
-                    <x-field label="g) Tujuan Sumbangan" name="purpose" :required="true">
-                        <textarea id="purpose" name="purpose" rows="4" required class="inp">{{ old('purpose') }}</textarea>
-                    </x-field>
+                    <x-kertas-kerja-fields />
 
                     <x-field label="h) No. Akaun Penerima Sumbangan" name="recipient_bank_account" :required="true">
                         <input id="recipient_bank_account" name="recipient_bank_account" type="text" value="{{ old('recipient_bank_account') }}" required class="inp">
@@ -90,9 +94,18 @@
                     </x-field>
                 </div>
 
-                <div class="flex flex-wrap justify-end gap-4 border-t border-gray-100 pt-6">
-                    <a href="{{ ($onBehalf ?? false) ? route('applications.all') : route('applications.index') }}" class="btn-white">Batal</a>
-                    <button type="submit" class="btn-primary">Simpan Draf &amp; Muat Naik Lampiran</button>
+                <div class="flex flex-col gap-4 border-t border-gray-100 pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                    <p class="text-xs text-gray-500 sm:max-w-md">
+                        Pautan persatuan: draf kosong + jana link. Simpan draf penuh: anda lengkapkan borang dahulu.
+                    </p>
+                    <div class="flex flex-wrap justify-end gap-3">
+                        <a href="{{ ($onBehalf ?? false) ? route('applications.all') : route('applications.index') }}" class="btn-white">Batal</a>
+                        <button type="submit" formaction="{{ route('applications.store.shell') }}" formmethod="post" formnovalidate
+                                class="btn-white border-indigo-300 text-indigo-900 hover:bg-indigo-50">
+                            Cipta draf &amp; jana pautan persatuan
+                        </button>
+                        <button type="submit" class="btn-primary">Simpan Draf &amp; Muat Naik Lampiran</button>
+                    </div>
                 </div>
             </form>
         </div>

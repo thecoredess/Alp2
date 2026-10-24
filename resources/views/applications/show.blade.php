@@ -73,6 +73,9 @@
 
     @include('applications.partials.jp-incomplete-banner')
 
+    @include('applications.partials.association-alp-review-banner')
+    @include('applications.partials.association-invite-card')
+
     <div x-data="{ tab: '{{ $initialTab }}' }">
         @include('applications.partials.timeline-summary', ['isAlpView' => $isAlpView])
 
@@ -165,14 +168,13 @@
                                 <dd class="mt-1 text-2xl font-bold {{ \App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'bajet', 'program_syarat') ? 'text-red-800' : 'text-navy-700' }}"><x-money :value="$application->requested_amount" /></dd>
                             </div>
 
-                            <div class="{{ $jpCard('program_syarat') }}">
-                                <dt class="text-xs font-medium uppercase tracking-wide {{ \App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'program_syarat') ? 'text-red-600' : 'text-gray-400' }}">
-                                    g) Tujuan
-                                    @if (\App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'program_syarat'))
-                                        <span class="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">Tidak lengkap</span>
-                                    @endif
-                                </dt>
-                                <dd class="mt-1.5 whitespace-pre-line text-gray-900">{{ $application->purpose ?? '—' }}</dd>
+                            <div class="{{ $jpCard('program_syarat') }} md:col-span-2">
+                                @if (\App\Support\JpReviewChecklist::hasIncomplete($jpIncomplete, 'program_syarat'))
+                                    <div class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+                                        g) Kertas Kerja — tidak lengkap
+                                    </div>
+                                @endif
+                                @include('applications.partials.kertas-kerja-display', ['application' => $application])
                             </div>
 
                             <div class="{{ $jpCard('recipient') }}">

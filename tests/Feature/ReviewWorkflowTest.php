@@ -12,6 +12,7 @@ use App\Models\FinancialYear;
 use App\Services\Application\ApplicationException;
 use App\Services\Application\ApplicationReviewService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Support\KertasKerjaGuide;
 use Tests\Concerns\BuildsWorkflow;
 use Tests\TestCase;
 
@@ -227,7 +228,7 @@ class ReviewWorkflowTest extends TestCase
                 'program_date' => $app->program_date->format('Y-m-d'),
                 'program_category' => $app->program_category->value,
                 'requested_amount' => '3000.00',
-                'purpose' => 'Tujuan dikemaskini semasa semakan',
+                ...KertasKerjaGuide::samplePayload(),
                 'recipient_bank_account' => $app->recipient_bank_account,
                 'recipient_address' => $app->recipient_address,
             ])

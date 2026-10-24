@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Enums\ApplicationStatus;
 use App\Enums\ApplicationType;
 use App\Http\Requests\ApplicationCreateRequest;
+use App\Http\Requests\ApplicationShellDraftRequest;
+use App\Services\Application\ApplicationAssociationInviteService;
 use App\Models\Alp;
 use App\Models\Application;
 use App\Models\FinancialYear;
@@ -22,6 +24,7 @@ use App\Services\Reports\ApplicationReportService;
 use App\Support\ApplicationAmountValidator;
 use App\Support\Tbl10BudgetSnapshot;
 use App\Support\UrsContributionPolicy;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -41,6 +44,7 @@ class ApplicationController extends Controller
         private readonly AssociationDocumentGuideService $documentGuide,
         private readonly ApplicationReportService $applicationReports,
         private readonly BorangPenyaluranPdfService $borangPdf,
+        private readonly ApplicationAssociationInviteService $associationInvites,
     ) {}
 
     /** Permohonan Saya (permohonan ALP pengguna). */
@@ -132,6 +136,50 @@ class ApplicationController extends Controller
         ]);
     }
 
+    /** Cadangan nama persatuan (permohonan lepas ALP yang sama) — JSON untuk borang. */
+    public function suggestRecipients(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Application::class);
+
+        $alpId = $this->resolveAlpIdForRecipientLookup($request);
+        if ($alpId === null) {
+            return response()->json(['data' => []]);
+        }
+
+        $q = $request->string('q')->trim()->toString();
+        if (mb_strlen($q) > 100) {
+            $q = mb_substr($q, 0, 100);
+        }
+
+        return response()->json([
+            'data' => $this->recipients->suggestionsForAlp($alpId, $q !== '' ? $q : null),
+        ]);
+    }
+
+    /** Semak No. ROS berbanding rekod permohonan lepas (nama persatuan sama). */
+    public function checkPersatuanRos(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Application::class);
+
+        $alpId = $this->resolveAlpIdForRecipientLookup($request);
+        if ($alpId === null) {
+            return response()->json(['mismatch' => false]);
+        }
+
+        $name = $request->string('name')->trim()->toString();
+        $ros = $request->string('ros')->trim()->toString();
+        if (mb_strlen($name) > 200) {
+            $name = mb_substr($name, 0, 200);
+        }
+        if (mb_strlen($ros) > 80) {
+            $ros = mb_substr($ros, 0, 80);
+        }
+
+        return response()->json(
+            $this->recipients->rosMismatchForPersatuan($alpId, $name, $ros),
+        );
+    }
+
     /** Cipta draf Borang Penyaluran, kemudian lampiran senarai semak. */
     public function store(ApplicationCreateRequest $request, ApplicationNumberGenerator $numbers): RedirectResponse
     {
@@ -155,7 +203,7 @@ class ApplicationController extends Controller
                 'financial_year_id' => $year->id,
                 'alp_id' => $alpId,
                 'application_type' => ApplicationType::SUMBANGAN,
-                'purpose' => $data['purpose'],
+                ...\App\Support\KertasKerjaGuide::normalizedAttributes($data),
                 'recipient_name' => $data['recipient_name'],
                 'recipient_ros_number' => $data['recipient_ros_number'],
                 'program_date' => $data['program_date'],
@@ -183,6 +231,51 @@ class ApplicationController extends Controller
 
         return redirect()->route('applications.wizard.dokumen', $application)
             ->with('status', $nextMsg);
+    }
+
+    /** Draf kosong + pautan persatuan (7 hari) — tiada medan borang wajib diisi ALP. */
+    public function storeShellDraft(ApplicationShellDraftRequest $request, ApplicationNumberGenerator $numbers): RedirectResponse
+    {
+        $this->authorize('create', Application::class);
+
+        $year = FinancialYear::active();
+        abort_if($year === null, 422, 'Tiada tahun kewangan aktif.');
+
+        $user = $request->user();
+        $data = $request->validated();
+        $alpId = $user->canCreateApplicationOnBehalf()
+            ? (int) $data['alp_id']
+            : (int) $user->alp_id;
+        abort_if($alpId <= 0, 422, 'Sila pilih ALP.');
+
+        $application = DB::transaction(function () use ($numbers, $year, $user, $alpId) {
+            $number = $numbers->next(ApplicationType::SUMBANGAN, $year->year);
+
+            return Application::create([
+                'application_number' => $number,
+                'financial_year_id' => $year->id,
+                'alp_id' => $alpId,
+                'application_type' => ApplicationType::SUMBANGAN,
+                'purpose' => '',
+                'requested_amount' => '0.00',
+                'status' => ApplicationStatus::DRAFT,
+                'created_by' => $user->id,
+                'updated_by' => $user->id,
+            ]);
+        });
+
+        $this->audit->log('APPLICATION_CREATED', $application, null, [
+            'application_number' => $application->application_number,
+            'shell_draft' => true,
+        ]);
+
+        $inviteUrl = $this->associationInvites->issue($application, $user);
+
+        return redirect()->route('applications.wizard.dokumen', $application)
+            ->with([
+                'status' => 'Draf kosong dicipta. Salin pautan di bawah untuk persatuan isi borang (7 hari). Selepas persatuan hantar, semak borang di Langkah 1.',
+                'association_invite_url' => $inviteUrl,
+            ]);
     }
 
     /** Halaman butiran permohonan (baca sahaja untuk yang telah dihantar). */
@@ -312,6 +405,29 @@ class ApplicationController extends Controller
     }
 
     // ── Bantuan ─────────────────────────────────────────────────
+
+    private function resolveAlpIdForRecipientLookup(Request $request): ?int
+    {
+        $user = $request->user();
+        $onBehalf = $user->canCreateApplicationOnBehalf();
+        $alpId = $onBehalf
+            ? $request->integer('alp_id')
+            : (int) $user->alp_id;
+
+        if ($alpId <= 0) {
+            return null;
+        }
+
+        if (! $onBehalf && $alpId !== (int) $user->alp_id) {
+            abort(403);
+        }
+
+        if ($onBehalf && ! Alp::query()->whereKey($alpId)->exists()) {
+            abort(422, 'ALP tidak sah.');
+        }
+
+        return $alpId;
+    }
 
     /** @param  array<string, string>|null  $allowedStatusOptions */
     private function filteredQuery(Request $request, bool $useOperationalStatus = false, ?array $allowedStatusOptions = null)

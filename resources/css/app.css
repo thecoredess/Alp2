@@ -183,3 +183,45 @@ body {
     }
 
 }
+
+/* Modal notis PDPA (borang persatuan) — skrol kandungan dalam <dialog> */
+.pdpa-notice-dialog {
+    position: fixed;
+    inset: 0;
+    width: min(calc(100vw - 1.5rem), 42rem);
+    height: min(88dvh, 40rem);
+    max-height: min(88dvh, 40rem);
+    margin: auto;
+    padding: 0;
+    border: none;
+    border-radius: 0.75rem;
+    background: #fff;
+    box-shadow: 0 24px 60px -16px rgb(30 42 90 / 0.45);
+    overflow: hidden;
+}
+
+.pdpa-notice-dialog::backdrop {
+    background: rgb(30 42 90 / 0.55);
+}
+
+.pdpa-notice-dialog__inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: inherit;
+}
+
+.pdpa-notice-dialog__head,
+.pdpa-notice-dialog__foot {
+    flex: 0 0 auto;
+}
+
+.pdpa-notice-dialog__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+}
