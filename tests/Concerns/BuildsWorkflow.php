@@ -124,7 +124,7 @@ trait BuildsWorkflow
     {
         $reviews = app(ApplicationReviewService::class);
 
-        // Admin JP → Pegawai JP → Pengarah.
+        // Admin JP → kelulusan Pengarah JP.
         $reviews->review(
             $app->fresh(),
             ReviewType::SECRETARIAT,
@@ -134,19 +134,18 @@ trait BuildsWorkflow
             $this->lengkapChecklist(),
         );
 
-        $reviews->review(
-            $app->fresh(),
-            ReviewType::SECRETARIAT,
-            $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value),
-            ReviewDecision::RECOMMEND,
-            'Syor kepada Pengarah JP',
-            $this->lengkapChecklist(),
-        );
+        return $app->fresh();
+    }
+
+    /** Rekod legacy: menunggu Pegawai JP (permohonan lama dalam sistem). */
+    protected function legacyAwaitingPegawaiJp(Application $app): Application
+    {
+        $app->update(['status' => ApplicationStatus::UNDER_SECRETARIAT_REVIEW]);
 
         return $app->fresh();
     }
 
-    /** Hanya semakan Admin JP (status → UNDER_SECRETARIAT_REVIEW). */
+    /** Semakan Admin JP (status → PENDING_APPROVAL / giliran Pengarah). */
     protected function afterAdminJpReview(Application $app): Application
     {
         app(ApplicationReviewService::class)->review(
@@ -161,12 +160,10 @@ trait BuildsWorkflow
         return $app->fresh();
     }
 
-    /** Luluskan kedua-dua aras: Peraku → PEPU. */
+    /** Luluskan Pengarah JP (aras akhir). */
     protected function fullyApprove(Application $app): Application
     {
-        $approvals = app(ApprovalService::class);
-        $approvals->approve($app->fresh(), $this->userWithRole(RoleName::PELULUS->value), null);
-        $approvals->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
+        app(ApprovalService::class)->approve($app->fresh(), $this->userWithRole(RoleName::PELULUS->value), null);
 
         return $app->fresh();
     }

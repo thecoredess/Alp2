@@ -31,27 +31,24 @@ class ApplicationTimelineTest extends TestCase
         $this->seedWorkflow();
     }
 
-    public function test_peraku_approval_leaves_pepu_pending_on_timeline(): void
+    public function test_pending_approval_before_pengarah_leaves_stages_open(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
         $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
 
-        $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-
         $stages = collect($this->timeline()->stages($app->fresh()));
         $pepu = $stages->firstWhere('key', 'pepu');
         $peraku = $stages->firstWhere('key', 'peraku');
 
-        $this->assertSame('Pengesyoran TP/Pengarah JP', $peraku['label']);
-        $this->assertTrue($peraku['done']);
+        $this->assertSame('Kelulusan Pengarah JP', $peraku['label']);
+        $this->assertFalse($peraku['done']);
         $this->assertFalse($pepu['done']);
-        $this->assertFalse($pepu['skipped']);
         $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
     }
 
-    public function test_multi_level_shows_pepu_pending_after_peraku(): void
+    public function test_pengarah_approval_marks_pepu_informed_stage(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
@@ -59,25 +56,6 @@ class ApplicationTimelineTest extends TestCase
         $app = $this->toPendingApproval($this->submitted($alp, $year, '5000.00'));
 
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-
-        $stages = collect($this->timeline()->stages($app->fresh()));
-        $pepu = $stages->firstWhere('key', 'pepu');
-
-        $this->assertNotNull($pepu);
-        $this->assertFalse($pepu['done']);
-        $this->assertTrue($stages->firstWhere('key', 'peraku')['done']);
-        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
-    }
-
-    public function test_multi_level_marks_pepu_done_after_second_approval(): void
-    {
-        $alp = Alp::factory()->create();
-        $year = $this->makeYear();
-        $this->allocate($alp, $year, '500000.00');
-        $app = $this->toPendingApproval($this->submitted($alp, $year, '5000.00'));
-
-        $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         $stages = collect($this->timeline()->stages($app->fresh()));
 
@@ -93,8 +71,6 @@ class ApplicationTimelineTest extends TestCase
         $this->allocate($alp, $year, '500000.00');
         $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
 
-        $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-
         $staffStages = collect($this->timeline()->stages($app->fresh()));
         $alpStages = collect($this->timeline()->stages($app->fresh(), forAlpView: true));
 
@@ -108,7 +84,7 @@ class ApplicationTimelineTest extends TestCase
         $this->assertFalse($jpStage['done']);
         $this->assertSame('Dalam proses kelulusan', $jpStage['status_label']);
 
-        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
+        $this->fullyApprove($app);
 
         $alpStages = collect($this->timeline()->stages($app->fresh(), forAlpView: true));
         $this->assertNull($alpStages->firstWhere('key', 'peraku'));

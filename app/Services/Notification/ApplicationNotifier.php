@@ -3,6 +3,7 @@
 namespace App\Services\Notification;
 
 use App\Enums\ApprovalDecision;
+use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\Application;
 use App\Models\User;
@@ -170,6 +171,27 @@ class ApplicationNotifier
                 $application,
                 'approved',
                 'Permohonan anda telah diluluskan. Anda boleh mencetak surat/ringkasan kelulusan.',
+            ),
+        );
+    }
+
+    /** Makluman PEPU selepas Pengarah JP meluluskan (tiada tindakan kelulusan dalam sistem). */
+    public function approvedInformedPepu(Application $application): void
+    {
+        $recipients = User::role(RoleName::PENGURUSAN->value)
+            ->where('status', UserStatus::ACTIVE)
+            ->get();
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        Notification::send(
+            $recipients,
+            new ApplicationWorkflowNotification(
+                $application,
+                'approved_pepu_informed',
+                'Permohonan '.$application->application_number.' telah diluluskan Pengarah JP. Sila log masuk untuk lihat status kelulusan.',
             ),
         );
     }

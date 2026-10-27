@@ -13,8 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Matriks URS v1.2 (ApprovalLevelSeeder):
- * Peraku (angkat ke PEPU) → PEPU (kelulusan akhir) untuk semua jumlah.
+ * Matriks (ApprovalLevelSeeder): satu aras — Kelulusan Pengarah JP untuk semua jumlah.
  */
 class ApprovalMatrixTest extends TestCase
 {
@@ -32,12 +31,13 @@ class ApprovalMatrixTest extends TestCase
         $this->seed(ApprovalLevelSeeder::class);
     }
 
-    public function test_all_amounts_require_two_levels_in_sequence(): void
+    public function test_all_amounts_require_single_pengarah_level(): void
     {
         foreach (['2500', '5000', '150000'] as $amount) {
             $required = $this->matrix()->requiredLevels(Money::of($amount), null);
-            $this->assertCount(2, $required, "Failed for amount {$amount}");
-            $this->assertSame([1, 2], $required->pluck('sequence')->all());
+            $this->assertCount(1, $required, "Failed for amount {$amount}");
+            $this->assertSame([1], $required->pluck('sequence')->all());
+            $this->assertSame(RoleName::PELULUS->value, $required->first()->required_role);
         }
     }
 
@@ -55,9 +55,14 @@ class ApprovalMatrixTest extends TestCase
         $this->matrix()->assertNoOverlap(null, Money::of('1000'), Money::of('4000'));
     }
 
-    public function test_non_overlapping_range_is_accepted_for_pepu_band(): void
+    public function test_non_overlapping_range_is_accepted_for_inactive_legacy_level(): void
     {
-        $this->matrix()->assertNoOverlap(null, Money::of('999999999.99'), null, ApprovalLevel::where('sequence', 2)->value('id'));
+        $legacyId = ApprovalLevel::where('sequence', 2)->value('id');
+        if ($legacyId === null) {
+            $this->markTestSkipped('Tiada aras legacy sequence 2.');
+        }
+
+        $this->matrix()->assertNoOverlap(null, Money::of('999999999.99'), null, $legacyId);
         $this->assertTrue(true);
     }
 

@@ -63,6 +63,7 @@ class AuthorizationTest extends TestCase
 
     public function test_pepu_can_access_reports_hub_but_not_system_settings(): void
     {
+        \App\Models\FinancialYear::factory()->active()->create();
         $pepu = $this->userWithRole(RoleName::PENGURUSAN);
 
         $this->actingAs($pepu)->get(route('reports.index'))->assertOk()

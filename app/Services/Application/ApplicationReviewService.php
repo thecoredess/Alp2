@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Aliran semakan JP (URS):
- * Admin JP (checklist + keputusan) → Pegawai JP (perakuan/syor) → PENDING_APPROVAL (Pengarah/PEPU).
+ * Admin JP (checklist + keputusan) → PENDING_APPROVAL (Kelulusan Pengarah JP). PEPU makluman selepas lulus.
  * Semakan Kewangan/Teknikal pra-kelulusan diasingkan ke legacy.
  * Rekod semakan bersifat append-only.
  */
@@ -68,7 +68,7 @@ class ApplicationReviewService
 
                     if ($isAdminJp && (! is_array($checklist) || ! JpReviewChecklist::allLengkap($checklist))) {
                         throw new ApplicationException(
-                            'Semua item senarai semak mesti lengkap sebelum hantar kepada Pegawai JP (UR-M04-001).'
+                            'Semua item senarai semak mesti lengkap sebelum hantar kepada Pengarah JP (UR-M04-001).'
                         );
                     }
                 }
@@ -95,7 +95,7 @@ class ApplicationReviewService
 
             $next = $this->nextStatusAfterReview($type, $isAdminJp);
             $remarks = $isAdminJp && $type === ReviewType::SECRETARIAT
-                ? 'Keputusan Admin JP — menunggu perakuan Pegawai JP'
+                ? 'Keputusan Admin JP — menunggu kelulusan Pengarah JP'
                 : $type->label().' selesai';
 
             $this->transition($application, $next, $user, $remarks);
@@ -107,9 +107,7 @@ class ApplicationReviewService
             ]);
 
             $fresh = $application->fresh();
-            if ($next === ApplicationStatus::UNDER_SECRETARIAT_REVIEW) {
-                $this->notifier->awaitingPegawaiJp($fresh);
-            } elseif ($next === ApplicationStatus::PENDING_APPROVAL) {
+            if ($next === ApplicationStatus::PENDING_APPROVAL) {
                 $this->notifier->awaitingNextApprover($fresh);
             }
 
@@ -141,9 +139,7 @@ class ApplicationReviewService
     private function nextStatusAfterReview(ReviewType $type, bool $isAdminJp): ApplicationStatus
     {
         return match ($type) {
-            ReviewType::SECRETARIAT => $isAdminJp
-                ? ApplicationStatus::UNDER_SECRETARIAT_REVIEW
-                : ApplicationStatus::PENDING_APPROVAL,
+            ReviewType::SECRETARIAT => ApplicationStatus::PENDING_APPROVAL,
             // Laluan legacy (route dinyahaktif) — kekal selamat jika dipanggil ujian lama.
             ReviewType::FINANCE, ReviewType::TECHNICAL => ApplicationStatus::PENDING_APPROVAL,
         };

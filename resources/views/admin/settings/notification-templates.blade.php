@@ -17,9 +17,8 @@
             <p class="font-semibold">Aliran e-mel tindakan (contoh)</p>
             <ol class="mt-2 list-decimal space-y-1 pl-5 text-xs text-royal-800">
                 <li><strong>ALP hantar</strong> → ALP (<em>Pengesahan hantar permohonan</em>) + Admin JP (<em>Permohonan dihantar</em>)</li>
-                <li><strong>Admin JP semak &amp; hantar</strong> → Pegawai JP (<em>Menunggu pengesyoran Pegawai JP</em>)</li>
-                <li><strong>Pegawai JP syor</strong> → Peraku (<em>Menunggu perakuan</em>)</li>
-                <li><strong>Peraku peraku</strong> → PEPU (<em>Menunggu kelulusan PEPU</em>)</li>
+                <li><strong>Admin JP semak &amp; hantar</strong> → Pengarah JP (<em>Menunggu perakuan / kelulusan Pengarah</em>)</li>
+                <li><strong>Pengarah JP lulus</strong> → PEPU (<em>Makluman kelulusan</em>, tiada tindakan kelulusan)</li>
                 <li><strong>Diluluskan</strong> → Kewangan JP (<em>Sedia proses bayaran</em>)</li>
             </ol>
             <p class="mt-2 text-xs text-royal-700">

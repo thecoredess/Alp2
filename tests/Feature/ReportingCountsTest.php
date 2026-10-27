@@ -124,7 +124,7 @@ class ReportingCountsTest extends TestCase
         $this->assertSame($received->id, $listing->first()->id);
     }
 
-    public function test_disyorkan_filter_matches_after_peraku_before_pepu(): void
+    public function test_approved_filter_after_pengarah_decision(): void
     {
         $this->seedWorkflow();
         $alp = Alp::factory()->create();
@@ -135,27 +135,19 @@ class ReportingCountsTest extends TestCase
         app(\App\Services\Application\ApprovalService::class)->approve(
             $app,
             $this->userWithRole(RoleName::PELULUS->value),
-            'Disyorkan oleh TP/Pengarah JP',
+            'Diluluskan Pengarah JP',
         );
 
         $app = $app->fresh();
-        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->status);
+        $this->assertSame(ApplicationStatus::APPROVED, $app->status);
 
         $listing = app(ApplicationReportService::class)->listing([
             'financial_year_id' => $year->id,
-            'status' => ApplicationReportService::FILTER_RECOMMENDED,
+            'status' => ApplicationReportService::FILTER_APPROVED,
         ]);
 
         $this->assertCount(1, $listing);
         $this->assertSame($app->id, $listing->first()->id);
-
-        $waitingPeraku = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
-        $listing = app(ApplicationReportService::class)->listing([
-            'financial_year_id' => $year->id,
-            'status' => ApplicationReportService::FILTER_RECOMMENDED,
-        ]);
-        $this->assertCount(1, $listing);
-        $this->assertNotSame($waitingPeraku->id, $listing->first()->id);
     }
 
     public function test_application_report_filters_rejected_applications(): void

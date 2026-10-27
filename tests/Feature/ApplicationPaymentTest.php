@@ -31,7 +31,6 @@ class ApplicationPaymentTest extends TestCase
         $app = $this->toPendingApproval($this->submitted($alp, $year, $amount));
         $approvals = app(\App\Services\Application\ApprovalService::class);
         $approvals->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-        $approvals->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         return $app->fresh();
     }

@@ -45,6 +45,7 @@ final class NotificationTarget
             'report_card_submitted', 'report_card_awaiting_pegawai_jp' => self::reportCardReview($application, $user),
             'report_card_approved', 'report_card_returned' => self::reportCard($application, 'Buka laporan aktiviti'),
             'payment_paid' => self::payment($application, $user),
+            'approved_pepu_informed' => self::application($application, 'Lihat status permohonan'),
             default => self::application($application),
         };
     }
@@ -140,8 +141,8 @@ final class NotificationTarget
         return self::application($application);
     }
 
-    private static function application(Application $application): self
+    private static function application(Application $application, string $action = 'Buka permohonan'): self
     {
-        return new self(route('applications.show', $application), 'Buka permohonan');
+        return new self(route('applications.show', $application), $action);
     }
 }

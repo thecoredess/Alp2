@@ -87,6 +87,7 @@ class ApplicationWorkflowNotification extends Notification
             'awaiting_peraku' => 'Menunggu perakuan',
             'awaiting_pepu' => 'Menunggu kelulusan PEPU',
             'approved' => 'Permohonan diluluskan',
+            'approved_pepu_informed' => 'Kelulusan Pengarah JP — makluman PEPU',
             'awaiting_payment' => 'Sedia untuk proses bayaran',
             'rejected' => 'Permohonan ditolak',
             'payment_voucher' => 'Baucar pembayaran',

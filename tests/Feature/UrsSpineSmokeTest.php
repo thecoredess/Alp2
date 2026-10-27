@@ -41,7 +41,6 @@ class UrsSpineSmokeTest extends TestCase
         $owner = $this->userWithRole(RoleName::ALP->value, $alp);
         $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
         $peraku = $this->userWithRole(RoleName::PELULUS->value);
-        $pengurusan = $this->userWithRole(RoleName::PENGURUSAN->value);
         $kerani = $this->userWithRole(RoleName::PEGAWAI_KEWANGAN->value);
         $jkew = $this->userWithRole(RoleName::PEGAWAI_JKEW->value);
 
@@ -49,7 +48,7 @@ class UrsSpineSmokeTest extends TestCase
         $app = $this->submitted($alp, $year, '2500.00');
         $this->assertSame(ApplicationStatus::SUBMITTED, $app->status);
 
-        // 2) Admin JP → Pegawai JP
+        // 2) Admin JP → giliran Pengarah JP
         $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
         $this->actingAs($admin)
             ->post(route('reviews.store', [$app, 'secretariat']), [
@@ -59,23 +58,12 @@ class UrsSpineSmokeTest extends TestCase
             ->assertRedirect(route('reviews.secretariat'));
 
         $app->refresh();
-        $this->assertSame(ApplicationStatus::UNDER_SECRETARIAT_REVIEW, $app->status);
-
-        $this->actingAs($jp)
-            ->post(route('reviews.store', [$app, 'secretariat']), [
-                'decision' => 'recommend',
-                'comments' => 'Syor kepada Pengarah JP',
-            ])
-            ->assertRedirect(route('reviews.secretariat'));
-
-        $app->refresh();
         $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->status);
         $this->assertNotNull($app->recipient_id);
         $this->assertTrue(Recipient::whereKey($app->recipient_id)->exists());
 
-        // 3) Peraku + PEPU lulus → COMMITMENT, tiada projek
+        // 3) Pengarah JP lulus → COMMITMENT, tiada projek; PEPU makluman sahaja
         app(ApprovalService::class)->approve($app, $peraku, 'Lulus UAT smoke');
-        app(ApprovalService::class)->approve($app->fresh(), $pengurusan, 'Lulus PEPU UAT smoke');
         $app->refresh();
         $this->assertSame(ApplicationStatus::APPROVED, $app->status);
         $this->assertSame(ApplicationPaymentStatus::PENDING_PAYMENT, $app->payment_status);

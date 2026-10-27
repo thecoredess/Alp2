@@ -187,6 +187,7 @@ class ApprovalService
         ]);
 
         $this->notifier->approved($application);
+        $this->notifier->approvedInformedPepu($application);
         $this->notifier->awaitingPayment($application);
     }
 

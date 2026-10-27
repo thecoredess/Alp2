@@ -24,6 +24,7 @@ final class NotificationTemplates
             'awaiting_pepu' => 'Menunggu kelulusan PEPU',
             'revision_required' => 'Permohonan dikembalikan',
             'approved' => 'Permohonan diluluskan',
+            'approved_pepu_informed' => 'Kelulusan Pengarah JP (makluman PEPU)',
             'awaiting_payment' => 'Sedia proses bayaran / baucar',
             'rejected' => 'Permohonan ditolak',
             'payment_voucher' => 'Baucar disedia',
@@ -64,7 +65,7 @@ final class NotificationTemplates
             RoleName::SYSTEM_ADMIN->value => ['submitted', 'report_card_submitted'],
             RoleName::PEGAWAI_URUSSETIA->value => ['awaiting_pegawai_jp', 'report_card_awaiting_pegawai_jp'],
             RoleName::PELULUS->value => ['awaiting_peraku'],
-            RoleName::PENGURUSAN->value => ['awaiting_pepu'],
+            RoleName::PENGURUSAN->value => ['approved_pepu_informed'],
             RoleName::PEGAWAI_KEWANGAN->value => ['awaiting_payment'],
         ];
 
@@ -248,6 +249,7 @@ final class NotificationTemplates
             'awaiting_pepu' => 'Anda mempunyai tindakan yang perlu diselesaikan: berikan kelulusan PEPU untuk permohonan {application_number}.',
             'revision_required' => 'Anda mempunyai tindakan yang perlu diselesaikan: permohonan {application_number} dikembalikan untuk pembetulan.',
             'approved' => 'Permohonan {application_number} telah diluluskan.',
+            'approved_pepu_informed' => 'Makluman: permohonan {application_number} ({project_title}) telah diluluskan Pengarah JP. Status boleh disemak dalam sistem (Senarai Permohonan).',
             'awaiting_payment' => 'Anda mempunyai tindakan yang perlu diselesaikan: sediakan baucar bagi permohonan {application_number} (RM {amount}).',
             'rejected' => 'Permohonan {application_number} telah ditolak.',
             'payment_voucher' => 'Baucar permohonan {application_number} telah disedia. Sila muat naik laporan aktiviti.',

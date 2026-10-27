@@ -246,12 +246,22 @@ class DashboardController extends Controller
             }
             if ($user->can('applications.approve')) {
                 $officerQueues[] = [
-                    'label' => 'Menunggu Peraku / Pelulus',
-                    'description' => 'Permohonan disyorkan JP — menunggu kelulusan Peraku / PEPU',
+                    'label' => 'Menunggu Kelulusan Pengarah JP',
+                    'description' => 'Permohonan disemak Admin JP — menunggu keputusan Pengarah JP',
                     'count' => $this->count($activeYear?->id, [ApplicationStatus::PENDING_APPROVAL->value]),
                     'route' => 'approvals.queue',
                     'icon' => 'shield-check',
                     'tone' => 'amber',
+                ];
+            }
+            if ($isPepuDashboard && $user->can('applications.view_all')) {
+                $officerQueues[] = [
+                    'label' => 'Kelulusan Pengarah JP',
+                    'description' => 'Permohonan diluluskan — semak status dalam senarai permohonan',
+                    'count' => $this->count($activeYear?->id, [ApplicationStatus::APPROVED->value]),
+                    'route' => 'applications.all',
+                    'icon' => 'shield-check',
+                    'tone' => 'green',
                 ];
             }
             if ($user->can('payments.view') && ! $isPepuDashboard) {

@@ -62,7 +62,7 @@ class NotificationRoutingTest extends TestCase
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->afterAdminJpReview($this->submitted($alp, $year, '2500.00'));
+        $app = $this->legacyAwaitingPegawaiJp($this->submitted($alp, $year, '2500.00'));
 
         $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
         $id = $this->notify($jp, $app, 'awaiting_pegawai_jp');

@@ -36,8 +36,8 @@ class ApprovalMatrixService
 
     /**
      * Aras yang diperlukan (berurutan) untuk meluluskan sesuatu jumlah.
-     * URS v1.2: Peraku (angkat ke PEPU) → PEPU (kelulusan akhir) untuk semua jumlah.
-     * Julat jumlah pada setiap aras adalah rujukan matriks sahaja.
+     * Kelulusan akhir: Pengarah JP (peranan pelulus). Satu aras aktif untuk semua jumlah.
+     * Julat jumlah pada aras adalah rujukan matriks sahaja.
      *
      * @return Collection<int, ApprovalLevel>
      *

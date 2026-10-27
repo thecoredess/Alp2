@@ -47,14 +47,7 @@ class ApprovalController extends Controller
                 fn ($q) => $q->withCount(['approvals as current_approved_count' => fn ($sub) => $sub
                     ->where('decision', ApprovalDecision::APPROVED->value)
                     ->whereColumn('application_approvals.revision_number', 'applications.revision_number')])
-                    ->when(
-                        $user->hasRole(RoleName::PELULUS->value) && ! $user->hasRole(RoleName::PENGURUSAN->value),
-                        fn ($q) => $q->having('current_approved_count', 0),
-                    )
-                    ->when(
-                        $user->hasRole(RoleName::PENGURUSAN->value) && ! $user->hasRole(RoleName::PELULUS->value),
-                        fn ($q) => $q->having('current_approved_count', '>=', 1),
-                    ),
+                    ->having('current_approved_count', 0),
             )
             ->with(['alp', 'financialYear', 'revisions:id,application_id,snapshot'])
             ->latest('submitted_at')

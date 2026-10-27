@@ -16,10 +16,7 @@ use Illuminate\Support\Facades\Notification;
 use Tests\Concerns\BuildsWorkflow;
 use Tests\TestCase;
 
-/**
- * Matriks URS v1.2 (ApprovalLevelSeeder):
- * Peraku (angkat ke PEPU) → PEPU (kelulusan akhir) untuk semua jumlah.
- */
+/** Kelulusan akhir: Pengarah JP (satu aras). PEPU makluman sahaja. */
 class FinalApprovalTest extends TestCase
 {
     use RefreshDatabase, BuildsWorkflow;
@@ -40,13 +37,13 @@ class FinalApprovalTest extends TestCase
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->submitted($alp, $year, '2500.00'); // masih SUBMITTED
+        $app = $this->submitted($alp, $year, '2500.00');
 
         $this->expectException(ApplicationException::class);
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
     }
 
-    public function test_peraku_only_keeps_pending_until_pepu_approves(): void
+    public function test_pengarah_approval_creates_exactly_one_commitment(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
@@ -54,21 +51,6 @@ class FinalApprovalTest extends TestCase
         $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
 
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-
-        $app->refresh();
-        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->status);
-        $this->assertSame(0, BudgetTransaction::where('application_id', $app->id)->where('type', BudgetTransactionType::COMMITMENT->value)->count());
-    }
-
-    public function test_two_level_final_approval_creates_exactly_one_commitment(): void
-    {
-        $alp = Alp::factory()->create();
-        $year = $this->makeYear();
-        $this->allocate($alp, $year, '500000.00');
-        $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
-
-        $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         $app->refresh();
         $this->assertSame(ApplicationStatus::APPROVED, $app->status);
@@ -89,7 +71,6 @@ class FinalApprovalTest extends TestCase
         $this->assertSame('2500.00', $appBudget->pendingRequest($alp->id, $year->id)->value());
 
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         $summary = $budget->summaryFor($alp->id, $year->id);
         $this->assertSame('2500.00', $summary->committed->value());
@@ -97,25 +78,18 @@ class FinalApprovalTest extends TestCase
         $this->assertSame('0.00', $appBudget->pendingRequest($alp->id, $year->id)->value());
     }
 
-    public function test_multi_level_sequence_enforced(): void
+    public function test_pepu_cannot_approve_pending_application(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->toPendingApproval($this->submitted($alp, $year, '5000.00')); // aras 1 & 2
+        $app = $this->toPendingApproval($this->submitted($alp, $year, '5000.00'));
 
-        $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-        $app->refresh();
-        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->status);
-        $this->assertSame(0, BudgetTransaction::where('application_id', $app->id)->count());
-
+        $this->expectException(ApplicationException::class);
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PENGURUSAN->value), null);
-        $app->refresh();
-        $this->assertSame(ApplicationStatus::APPROVED, $app->status);
-        $this->assertSame(1, BudgetTransaction::where('application_id', $app->id)->where('type', 'commitment')->count());
     }
 
-    public function test_unauthorized_role_cannot_approve_higher_level(): void
+    public function test_unauthorized_role_cannot_approve_twice(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
@@ -136,7 +110,6 @@ class FinalApprovalTest extends TestCase
         $app = $this->toPendingApproval($this->submitted($alp, $year, '1999.99'));
 
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         $this->assertSame('1999.99', BudgetTransaction::where('application_id', $app->id)->where('type', 'commitment')->value('amount'));
     }
@@ -147,11 +120,10 @@ class FinalApprovalTest extends TestCase
         $year = $this->makeYear();
         $this->allocate($alp, $year, '10000.00');
 
-        $this->submitted($alp, $year, '2000.00'); // pending lain
+        $this->submitted($alp, $year, '2000.00');
         $app = $this->toPendingApproval($this->submitted($alp, $year, '7000.00'));
 
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         $this->assertSame(ApplicationStatus::APPROVED, $app->fresh()->status);
         $this->assertDatabaseHas('budget_transactions', ['application_id' => $app->id, 'type' => 'commitment', 'amount' => '7000.00']);
@@ -165,7 +137,6 @@ class FinalApprovalTest extends TestCase
         $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
 
         $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-        $this->approvals()->approve($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), null);
 
         $this->assertDatabaseHas('application_approvals', ['application_id' => $app->id, 'decision' => 'approved']);
         $this->assertDatabaseHas('application_status_histories', ['application_id' => $app->id, 'to_status' => 'approved']);
@@ -173,7 +144,7 @@ class FinalApprovalTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'BUDGET_COMMITMENT_CREATED']);
     }
 
-    public function test_pepu_approval_notifies_kewangan_jp_for_payment(): void
+    public function test_pengarah_approval_notifies_pepu_and_kewangan(): void
     {
         Notification::fake();
 
@@ -184,28 +155,26 @@ class FinalApprovalTest extends TestCase
 
         $kewangan = $this->userWithRole(RoleName::PEGAWAI_KEWANGAN->value);
         $owner = $this->userWithRole(RoleName::ALP->value, $alp);
-        $peraku = $this->userWithRole(RoleName::PELULUS->value);
         $pepu = $this->userWithRole(RoleName::PENGURUSAN->value);
 
-        // Aras Peraku sahaja — belum sedia untuk kewangan.
-        $this->approvals()->approve($app, $peraku, null);
-        Notification::assertNotSentTo($kewangan, ApplicationWorkflowNotification::class);
+        $this->approvals()->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
 
-        // Aras akhir PEPU.
-        $this->approvals()->approve($app->fresh(), $pepu, null);
+        Notification::assertSentTo(
+            $pepu,
+            ApplicationWorkflowNotification::class,
+            fn (ApplicationWorkflowNotification $n) => $n->event === 'approved_pepu_informed',
+        );
 
         Notification::assertSentTo(
             $kewangan,
             ApplicationWorkflowNotification::class,
-            fn (ApplicationWorkflowNotification $n) => $n->event === 'awaiting_payment'
-                && $n->application->is($app),
+            fn (ApplicationWorkflowNotification $n) => $n->event === 'awaiting_payment',
         );
 
-        // Pemilik ALP hanya menerima makluman 'approved', bukan tugasan kewangan.
         Notification::assertSentTo(
             $owner,
             ApplicationWorkflowNotification::class,
-            fn (ApplicationWorkflowNotification $n) => $n->event !== 'awaiting_payment',
+            fn (ApplicationWorkflowNotification $n) => $n->event === 'approved',
         );
     }
 

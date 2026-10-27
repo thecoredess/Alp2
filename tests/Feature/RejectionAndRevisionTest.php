@@ -34,9 +34,7 @@ class RejectionAndRevisionTest extends TestCase
         $this->allocate($alp, $year, '500000.00');
         $app = $this->toPendingApproval($this->submitted($alp, $year, '5000.00'));
 
-        // Aras 1 (Peraku) lulus, kemudian tolak pada aras 2 (PEPU).
-        app(ApprovalService::class)->approve($app, $this->userWithRole(RoleName::PELULUS->value), null);
-        app(ApprovalService::class)->reject($app->fresh(), $this->userWithRole(RoleName::PENGURUSAN->value), 'Tidak wajar');
+        app(ApprovalService::class)->reject($app, $this->userWithRole(RoleName::PELULUS->value), 'Tidak wajar');
 
         $app->refresh();
         $this->assertSame(ApplicationStatus::REJECTED, $app->status);

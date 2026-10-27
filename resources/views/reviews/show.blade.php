@@ -134,7 +134,7 @@
 
                 <x-page-card
                     title="{{ $fullJpDecision ? 'Keputusan Semakan Admin JP' : 'Perakuan Pegawai JP' }}"
-                    description="{{ $fullJpDecision ? 'UR-M04-001 · Keputusan penuh, kemudian Pegawai JP' : 'Syor kepada Pengarah JP (Peraku)' }}"
+                    description="{{ $fullJpDecision ? 'UR-M04-001 · Hantar terus ke giliran kelulusan Pengarah JP' : 'Syor kepada Pengarah JP (legacy)' }}"
                 >
                     <div x-data="{ act: '{{ old('decision', $fullJpDecision ? '' : 'recommend') }}' }" class="space-y-5">
                         <form method="POST" action="{{ route('reviews.store', [$application, $reviewType->value]) }}" class="space-y-5">
@@ -213,7 +213,7 @@
                     </div>
                     @if ($fullJpDecision)
                         <p class="mt-3 text-xs text-gray-400">
-                            Selepas hantar, permohonan masuk giliran Pegawai JP untuk pengesyoran kepada Pengarah JP. Keputusan Admin JP bersifat nasihat — tidak mencipta komitmen bajet.
+                            Selepas hantar keputusan Disyorkan, permohonan masuk giliran kelulusan Pengarah JP. Tiada komitmen bajet sehingga Pengarah meluluskan.
                         </p>
                     @endif
                 </x-page-card>

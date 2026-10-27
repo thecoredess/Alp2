@@ -271,8 +271,9 @@ class Application extends Model
             'Menunggu Peraku (TP/Pengarah JP)',
             'Menunggu kelulusan PEPU',
             'Kelulusan PEPU',
+            'Menunggu kelulusan Pengarah JP',
         ], true)) {
-            return 'Kelulusan PEPU';
+            return 'Kelulusan Pengarah JP';
         }
 
         if (filled($purpose) && ! self::isWorkflowPurposePlaceholder($purpose)) {

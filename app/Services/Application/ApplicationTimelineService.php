@@ -48,7 +48,7 @@ class ApplicationTimelineService
         $isRejected = $application->status === ApplicationStatus::REJECTED;
 
         $perakuAt = $approvedRecords->first()?->decided_at;
-        $pepuAt = $approvedRecords->count() >= 2 ? $approvedRecords->last()?->decided_at : null;
+        $pepuAt = $application->status === ApplicationStatus::APPROVED ? $perakuAt : null;
 
         $voucherAt = $application->payment_status?->value === 'voucher_prepared'
             || $application->payment_status?->value === 'sent_to_jkew'
@@ -59,8 +59,8 @@ class ApplicationTimelineService
         $defs = [
             ['key' => 'submitted', 'label' => 'Permohonan dihantar', 'at' => $submittedAt, 'skipped' => false, 'hint' => null],
             ['key' => 'jp_review', 'label' => 'Semakan Jabatan', 'at' => $jpAt ? Carbon::parse($jpAt) : null, 'skipped' => false, 'hint' => null],
-            ['key' => 'peraku', 'label' => 'Pengesyoran TP/Pengarah JP', 'at' => $perakuAt ? Carbon::parse($perakuAt) : null, 'skipped' => false, 'hint' => null],
-            ['key' => 'pepu', 'label' => 'Kelulusan PEPU', 'at' => $pepuAt ? Carbon::parse($pepuAt) : null, 'skipped' => false, 'hint' => null],
+            ['key' => 'peraku', 'label' => 'Kelulusan Pengarah JP', 'at' => $perakuAt ? Carbon::parse($perakuAt) : null, 'skipped' => false, 'hint' => null],
+            ['key' => 'pepu', 'label' => 'Makluman PEPU', 'at' => $pepuAt ? Carbon::parse($pepuAt) : null, 'skipped' => false, 'hint' => null],
             ['key' => 'voucher', 'label' => 'Baucar disedia', 'at' => $voucherAt ? Carbon::parse($voucherAt) : null, 'skipped' => false, 'hint' => null],
         ];
 

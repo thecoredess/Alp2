@@ -274,8 +274,6 @@ final class Permissions
                 'allocations.view',
                 'budget.view_all',
                 'applications.view_all',
-                'applications.approve',
-                'applications.reject',
                 'projects.view_all',
                 'expenses.documents.view', 'refunds.view', 'projects.closure-documents.view',
                 'dashboard.finance',

@@ -17,7 +17,7 @@ use Tests\Concerns\BuildsWorkflow;
 use Tests\TestCase;
 
 /**
- * Aliran semakan: Admin JP → Pegawai JP → PENDING_APPROVAL (Pengarah/PEPU).
+ * Aliran semakan: Admin JP → PENDING_APPROVAL (Kelulusan Pengarah JP).
  */
 class ReviewWorkflowTest extends TestCase
 {
@@ -34,7 +34,7 @@ class ReviewWorkflowTest extends TestCase
         $this->seedWorkflow();
     }
 
-    public function test_admin_jp_recommend_goes_to_pegawai_jp_not_pengarah(): void
+    public function test_admin_jp_recommend_goes_to_pengarah_approval_queue(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
@@ -50,7 +50,7 @@ class ReviewWorkflowTest extends TestCase
             $this->lengkapChecklist(),
         );
 
-        $this->assertSame(ApplicationStatus::UNDER_SECRETARIAT_REVIEW, $app->fresh()->status);
+        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
         $this->assertDatabaseHas('application_reviews', [
             'application_id' => $app->id,
             'review_type' => 'secretariat',
@@ -63,7 +63,7 @@ class ReviewWorkflowTest extends TestCase
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->afterAdminJpReview($this->submitted($alp, $year, '85000.00'));
+        $app = $this->legacyAwaitingPegawaiJp($this->submitted($alp, $year, '85000.00'));
 
         $this->reviews()->review(
             $app,
@@ -178,7 +178,7 @@ class ReviewWorkflowTest extends TestCase
             ])
             ->assertRedirect(route('reviews.secretariat'));
 
-        $this->assertSame(ApplicationStatus::UNDER_SECRETARIAT_REVIEW, $app->fresh()->status);
+        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
     }
 
     public function test_finance_review_not_accepted_while_awaiting_secretariat(): void
@@ -245,7 +245,7 @@ class ReviewWorkflowTest extends TestCase
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->afterAdminJpReview($this->submitted($alp, $year, '2500.00'));
+        $app = $this->legacyAwaitingPegawaiJp($this->submitted($alp, $year, '2500.00'));
         $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
 
         $this->actingAs($jp)
@@ -271,7 +271,7 @@ class ReviewWorkflowTest extends TestCase
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->afterAdminJpReview($this->submitted($alp, $year, '2500.00'));
+        $app = $this->legacyAwaitingPegawaiJp($this->submitted($alp, $year, '2500.00'));
         $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
 
         $this->actingAs($jp)
@@ -291,7 +291,7 @@ class ReviewWorkflowTest extends TestCase
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
-        $app = $this->afterAdminJpReview($this->submitted($alp, $year, '2500.00'));
+        $app = $this->legacyAwaitingPegawaiJp($this->submitted($alp, $year, '2500.00'));
         $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
 
         $this->actingAs($jp)
@@ -304,7 +304,7 @@ class ReviewWorkflowTest extends TestCase
         $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
     }
 
-    public function test_admin_jp_sees_full_decision_and_not_recommended_goes_to_pegawai(): void
+    public function test_admin_jp_sees_full_decision_and_not_recommended_advances_to_pengarah_queue(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
@@ -328,20 +328,20 @@ class ReviewWorkflowTest extends TestCase
             ])
             ->assertRedirect(route('reviews.secretariat'));
 
-        $this->assertSame(ApplicationStatus::UNDER_SECRETARIAT_REVIEW, $app->fresh()->status);
+        $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
         $this->assertDatabaseHas('application_reviews', [
             'application_id' => $app->id,
             'decision' => ReviewDecision::NOT_RECOMMENDED->value,
         ]);
     }
 
-    public function test_admin_queue_only_submitted_pegawai_queue_only_after_admin(): void
+    public function test_admin_queue_only_submitted_pegawai_queue_only_legacy_under_secretariat(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
         $this->allocate($alp, $year, '500000.00');
         $submitted = $this->submitted($alp, $year, '1000.00');
-        $awaitingPegawai = $this->afterAdminJpReview($this->submitted($alp, $year, '1100.00'));
+        $awaitingPegawai = $this->legacyAwaitingPegawaiJp($this->submitted($alp, $year, '1100.00'));
 
         $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
         $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
@@ -365,10 +365,10 @@ class ReviewWorkflowTest extends TestCase
         $year = FinancialYear::factory()->active()->create(['year' => 2096]);
         $this->allocate($alp, $year, '500000.00');
 
-        $sukan = $this->afterAdminJpReview($this->submitted($alp, $year, '1200.00'));
+        $sukan = $this->legacyAwaitingPegawaiJp($this->submitted($alp, $year, '1200.00'));
         $sukan->forceFill(['program_category' => \App\Enums\ProgramCategory::SUKAN])->save();
 
-        $komuniti = $this->afterAdminJpReview($this->submitted($alp, $year, '1300.00'));
+        $komuniti = $this->legacyAwaitingPegawaiJp($this->submitted($alp, $year, '1300.00'));
         $komuniti->forceFill(['program_category' => \App\Enums\ProgramCategory::KOMUNITI])->save();
 
         $jp = $this->userWithRole(RoleName::PEGAWAI_URUSSETIA->value);
