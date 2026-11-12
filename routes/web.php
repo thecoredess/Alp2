@@ -192,6 +192,10 @@ Route::middleware(['auth', 'active', 'password.set'])->group(function () {
     Route::get('permohonan/{application}/laporan-aktiviti/semak', [ReportCardController::class, 'reviewShow'])->name('report-cards.review.show');
     Route::post('permohonan/{application}/laporan-aktiviti/semak', [ReportCardController::class, 'reviewStore'])->name('report-cards.review.store');
     Route::get('manual', [ManualController::class, 'show'])->name('manual.show');
+    Route::get('manual/screenshots/{name}', [ManualController::class, 'screenshot'])
+        ->where('name', '[a-z0-9\-]+\.png')
+        ->name('manual.screenshot');
+    Route::get('manual/docx', [ManualController::class, 'downloadDocx'])->name('manual.docx');
     Route::get('manual/pdf', [ManualController::class, 'download'])->name('manual.download');
     Route::get('panduan-dokumen-persatuan/pdf', [AssociationGuideController::class, 'download'])->name('association-guide.download');
     Route::post('manual/pdf', [ManualController::class, 'upload'])->name('manual.upload');

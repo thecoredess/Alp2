@@ -150,6 +150,16 @@
         @endif
 
         <div>
+            <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-navy-300">Bantuan</p>
+            <div class="space-y-1">
+                <a href="{{ route('manual.show') }}" class="{{ $link(request()->routeIs('manual.*')) }}">
+                    <x-icon name="document" class="h-5 w-5 shrink-0" />
+                    Manual Pengguna
+                </a>
+            </div>
+        </div>
+
+        <div>
             <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-navy-300">Tetapan</p>
             <div class="space-y-1">
                 <a href="{{ route('profile.edit') }}" class="{{ $link(request()->routeIs('profile.*') || request()->routeIs('password.change*')) }}">
@@ -162,10 +172,6 @@
                         Tetapan Sistem
                     </a>
                 @endif
-                <a href="{{ route('manual.show') }}" class="{{ $link(request()->routeIs('manual.*')) }}">
-                    <x-icon name="document" class="h-5 w-5 shrink-0" />
-                    Manual Pengguna
-                </a>
             </div>
         </div>
     </nav>

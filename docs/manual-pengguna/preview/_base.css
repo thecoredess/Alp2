@@ -1,0 +1,24 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Segoe UI, system-ui, sans-serif; background: #e5e7eb; color: #111827; }
+.shell { display: flex; min-height: 640px; max-width: 1100px; margin: 16px auto; box-shadow: 0 4px 24px rgba(0,0,0,.12); border-radius: 8px; overflow: hidden; }
+.sidebar { width: 240px; flex-shrink: 0; background: linear-gradient(180deg, #1e2a5a 0%, #152044 100%); color: #fff; padding: 16px 12px; }
+.sidebar .brand { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; line-height: 1.35; margin-bottom: 20px; padding: 0 8px; }
+.nav-label { font-size: 10px; font-weight: 600; text-transform: uppercase; color: #94a3b8; padding: 8px 12px 6px; }
+.nav a { display: block; font-size: 13px; padding: 8px 12px; border-radius: 8px; color: #e2e8f0; text-decoration: none; margin-bottom: 2px; }
+.nav a.active { background: rgba(255,255,255,.12); color: #fff; font-weight: 600; }
+.main { flex: 1; background: #f3f4f6; padding: 24px; overflow: auto; }
+.badge-demo { float: right; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; }
+h1.page-title { font-size: 1.35rem; margin: 0 0 4px; color: #1e2a5a; }
+p.sub { margin: 0 0 20px; font-size: 13px; color: #6b7280; }
+.card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 16px; }
+.card h2 { font-size: 14px; font-weight: 600; margin: 0 0 16px; }
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.data th { text-align: left; font-size: 11px; text-transform: uppercase; color: #6b7280; padding: 10px 12px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+table.data td { padding: 12px; border-bottom: 1px solid #f3f4f6; }
+.btn { display: inline-block; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; }
+.btn-primary { background: #2e5bff; color: #fff; }
+.btn-green { background: #15803d; color: #fff; }
+.check-item { border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; margin-bottom: 10px; font-size: 13px; }
+.check-item .ok { color: #15803d; font-size: 12px; }
+select.inp, .inp { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; font-size: 14px; }
+.banner-info { background: #eaf0ff; border: 1px solid #adc2ff; border-radius: 8px; padding: 12px; font-size: 13px; color: #1737ad; margin-bottom: 16px; }

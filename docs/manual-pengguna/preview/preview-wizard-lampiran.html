@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <title>Langkah 2 — Muat Naik Dokumen</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Segoe UI, system-ui, sans-serif; background: #f3f4f6; color: #111827; }
+    .wrap { max-width: 920px; margin: 20px auto; padding: 0 16px 32px; }
+    .badge-demo { float: right; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; }
+    h1.hdr { font-size: 1.25rem; margin: 0; font-weight: 600; }
+    p.sub { margin: 4px 0 16px; font-size: 13px; color: #6b7280; }
+    .wizard-card { background: #fff; border-radius: 12px; overflow: hidden; display: grid; grid-template-columns: 1fr 1fr 1fr; margin-bottom: 16px; border: 1px solid #f3f4f6; }
+    .wiz-step { display: flex; align-items: center; gap: 12px; padding: 16px; background: #fff; }
+    .wiz-step.done { background: #fff; }
+    .wiz-step.current { background: #1e3a5f; color: #fff; }
+    .wiz-step.pending { background: #f9fafb; color: #9ca3af; }
+    .wiz-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+    .done .wiz-num { background: #dcfce7; color: #15803d; }
+    .current .wiz-num { background: #fff; color: #1e3a5f; }
+    .pending .wiz-num { background: #e5e7eb; color: #6b7280; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #f3f4f6; margin-bottom: 12px; }
+    .prog { font-size: 28px; font-weight: 700; color: #1e3a5f; }
+    .bar { height: 8px; background: #f3f4f6; border-radius: 999px; margin-top: 12px; overflow: hidden; }
+    .bar-fill { height: 100%; width: 67%; background: #22c55e; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .doc { border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; font-size: 12px; }
+    .doc.ok { background: #f0fdf4; border-color: #bbf7d0; }
+    .tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #166534; background: #dcfce7; padding: 2px 8px; border-radius: 999px; display: inline-block; margin-top: 6px; }
+    .note { font-size: 13px; color: #4b5563; margin: 12px 0; }
+    .btn { display: inline-block; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; }
+    .btn-primary { background: #2e5bff; color: #fff; }
+    .btn-white { background: #fff; border: 1px solid #d1d5db; color: #374151; margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="badge-demo">Pratonton skrin sistem</span>
+    <h1 class="hdr">Permohonan — SUM/2026/000142</h1>
+    <p class="sub">Langkah 2 · Muat naik dokumen sokongan</p>
+
+    <div class="wizard-card">
+      <div class="wiz-step done">
+        <span class="wiz-num">✓</span>
+        <span><small style="font-size:10px;text-transform:uppercase;color:#6b7280">Langkah 1</small><strong style="display:block;font-size:14px;color:#1e3a5f">Borang Penyaluran</strong></span>
+      </div>
+      <div class="wiz-step current">
+        <span class="wiz-num">2</span>
+        <span><small style="font-size:10px;text-transform:uppercase;color:#cbd5e1">Langkah 2</small><strong style="display:block;font-size:14px">Muat Naik Dokumen</strong></span>
+      </div>
+      <div class="wiz-step pending">
+        <span class="wiz-num">3</span>
+        <span><small style="font-size:10px;text-transform:uppercase">Langkah 3</small><strong style="display:block;font-size:14px;color:#9ca3af">Hantar kepada JP</strong></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong style="font-size:14px">Kemajuan Muat Naik</strong>
+      <p class="prog">4/6</p>
+      <p style="font-size:13px;color:#6b7280;margin:4px 0 0">dokumen selesai</p>
+      <div class="bar"><div class="bar-fill"></div></div>
+      <p style="font-size:13px;color:#b45309;margin-top:10px">2 dokumen lagi diperlukan.</p>
+    </div>
+
+    <p class="note">Borang Penyaluran sudah diisi — tidak perlu muat naik semula.</p>
+
+    <div class="grid">
+      <div class="doc ok"><strong>Sijil Pendaftaran ROS</strong><br><span class="tag">Dimuat naik</span></div>
+      <div class="doc ok"><strong>Borang EFT</strong><br><span class="tag">Dimuat naik</span></div>
+      <div class="doc"><strong>Penyata Bank</strong><br><span style="color:#92400e;font-size:10px;font-weight:700">WAJIB</span></div>
+      <div class="doc"><strong>Surat Permohonan</strong><br><span style="color:#92400e;font-size:10px;font-weight:700">WAJIB</span></div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <span class="btn-white">← Kembali ke Borang</span>
+      <span class="btn-primary" style="opacity:.5">Seterusnya: Semak &amp; Hantar →</span>
+    </div>
+  </div>
+</body>
+</html>

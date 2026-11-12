@@ -100,7 +100,7 @@ class ManualAndRecipientTest extends TestCase
         $this->actingAs($admin)
             ->get(route('manual.show'))
             ->assertOk()
-            ->assertSee('Muat turun PDF rasmi');
+            ->assertSee('Manual PDF rasmi (M11)');
     }
 
     public function test_alp_cannot_upload_manual_pdf(): void
@@ -118,13 +118,94 @@ class ManualAndRecipientTest extends TestCase
     {
         $alp = User::factory()->create()->assignRole(RoleName::ALP->value);
 
-        $this->actingAs($alp)
+        $response = $this->actingAs($alp)
             ->get(route('manual.show'))
             ->assertOk()
-            ->assertSee('Tatacara ALP / Persatuan')
-            ->assertSee('ALP / Persatuan', false)
+            ->assertSee('Permohonan baharu')
+            ->assertSee('Muat turun Manual (Word)')
             ->assertDontSee('Tatacara Pegawai Dalaman')
             ->assertDontSee('Pegawai JP');
+
+        if (is_file(base_path('docs/manual-pengguna/assets/menu-alp.png'))) {
+            $response->assertSee('Log masuk &amp; menu', false)
+                ->assertSee(route('manual.screenshot', ['name' => 'menu-alp.png']), false);
+        }
+    }
+
+    public function test_alp_cannot_load_pengarah_manual_screenshot(): void
+    {
+        if (! is_file(base_path('docs/manual-pengguna/assets/kelulusan-pengarah.png'))) {
+            $this->markTestSkipped('Screenshot Pengarah tidak wujud pada pelayan ujian.');
+        }
+
+        $alp = User::factory()->create()->assignRole(RoleName::ALP->value);
+
+        $this->actingAs($alp)
+            ->get(route('manual.screenshot', ['name' => 'kelulusan-pengarah.png']))
+            ->assertNotFound();
+    }
+
+    public function test_alp_can_load_own_manual_screenshot_when_asset_exists(): void
+    {
+        if (! is_file(base_path('docs/manual-pengguna/assets/menu-alp.png'))) {
+            $this->markTestSkipped('Screenshot ALP tidak wujud pada pelayan ujian.');
+        }
+
+        $alp = User::factory()->create()->assignRole(RoleName::ALP->value);
+
+        $this->actingAs($alp)
+            ->get(route('manual.screenshot', ['name' => 'menu-alp.png']))
+            ->assertOk()
+            ->assertHeader('content-type', 'image/png');
+    }
+
+    public function test_alp_can_download_role_manual_docx_when_file_exists(): void
+    {
+        $manualPath = base_path('docs/manual-pengguna/Manual-Pengguna-ALP.docx');
+        if (! is_file($manualPath)) {
+            $this->markTestSkipped('Manual Word ALP tidak wujud pada pelayan ujian.');
+        }
+
+        $alp = User::factory()->create()->assignRole(RoleName::ALP->value);
+
+        $this->actingAs($alp)
+            ->get(route('manual.docx'))
+            ->assertOk()
+            ->assertHeader('content-disposition');
+    }
+
+    public function test_admin_jp_gets_admin_manual_docx_not_alp(): void
+    {
+        $admin = User::factory()->create()->assignRole(RoleName::SYSTEM_ADMIN->value);
+
+        $this->actingAs($admin)
+            ->get(route('manual.show'))
+            ->assertOk()
+            ->assertSee('Admin Jabatan Pentadbiran')
+            ->assertSee('Semakan Admin JP');
+    }
+
+    public function test_pengarah_gets_pengarah_manual_on_show(): void
+    {
+        $pengarah = User::factory()->create()->assignRole(RoleName::PELULUS->value);
+
+        $this->actingAs($pengarah)
+            ->get(route('manual.show'))
+            ->assertOk()
+            ->assertSee('Pengarah Jabatan Pentadbiran')
+            ->assertSee('Pengesyoran');
+    }
+
+    public function test_pepu_sees_informed_only_summary(): void
+    {
+        $pepu = User::factory()->create()->assignRole(RoleName::PENGURUSAN->value);
+
+        $this->actingAs($pepu)
+            ->get(route('manual.show'))
+            ->assertOk()
+            ->assertSee('Tatacara PEPU / Pengurusan')
+            ->assertDontSee('Menu kelulusan')
+            ->assertSee('e-mel makluman');
     }
 
     public function test_manual_shows_jp_content_only_for_secretariat_user(): void
@@ -136,7 +217,7 @@ class ManualAndRecipientTest extends TestCase
             ->assertOk()
             ->assertSee('Tatacara Pegawai Dalaman')
             ->assertSee('Pegawai JP')
-            ->assertSee('syor kepada Pengarah JP')
+            ->assertSee('Permohonan baharu')
             ->assertDontSee('Tatacara ALP / Persatuan');
     }
 }

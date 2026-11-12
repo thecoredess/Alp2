@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\RoleName;
 use App\Support\OfficialManual;
+use App\Support\RoleUserManual;
+use App\Support\RoleUserManualScreenshots;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /** M11 — Manual pengguna / kit tatacara (UR-M11). */
@@ -15,25 +17,48 @@ class ManualController extends Controller
 {
     public function show(Request $request): View
     {
-        $role = RoleName::tryFrom($request->user()->roles->first()?->name ?? '');
-
-        [$audience, $audienceLabel] = match ($role) {
-            RoleName::ALP, RoleName::URUSSETIA_ALP => ['alp', 'ALP / Persatuan'],
-            RoleName::PEGAWAI_URUSSETIA => ['jp', RoleName::PEGAWAI_URUSSETIA->label()],
-            RoleName::PELULUS => ['jp', RoleName::PELULUS->label()],
-            RoleName::PENGURUSAN => ['jp', RoleName::PENGURUSAN->label()],
-            RoleName::PEGAWAI_KEWANGAN => ['jp', RoleName::PEGAWAI_KEWANGAN->label()],
-            RoleName::PEGAWAI_JKEW => ['jp', RoleName::PEGAWAI_JKEW->label()],
-            RoleName::SYSTEM_ADMIN, RoleName::SUPER_ADMIN => ['jp', RoleName::SYSTEM_ADMIN->label()],
-            default => ['umum', 'Umum'],
-        };
+        $user = $request->user();
+        $roleManual = RoleUserManual::forUser($user);
 
         return view('manual.show', [
-            'audience' => $audience,
-            'audienceLabel' => $audienceLabel,
+            'audience' => RoleUserManual::audienceKey($user),
+            'audienceLabel' => RoleUserManual::audienceLabel($user),
+            'roleManual' => $roleManual,
+            'hasRoleManualDocx' => $roleManual !== null && $roleManual->exists(),
+            'manualFiguresByFile' => RoleUserManualScreenshots::visibleFiguresKeyedFor($roleManual),
             'hasOfficialPdf' => OfficialManual::exists(),
-            'canManageManual' => $request->user()->can('settings.manage'),
+            'canManageManual' => $user->can('settings.manage'),
         ]);
+    }
+
+    /** Tangkapan skrin manual pengguna (mengikut peranan). */
+    public function screenshot(Request $request, string $name): BinaryFileResponse
+    {
+        abort_unless($request->user()->can('dashboard.view'), 403);
+
+        $manual = RoleUserManual::forUser($request->user());
+        abort_if($manual === null, 404);
+        abort_unless(RoleUserManualScreenshots::isAllowedForManual($name, $manual), 404);
+
+        $path = RoleUserManualScreenshots::absolutePath($name);
+        abort_if($path === null, 404);
+
+        return response()->file($path, ['Content-Type' => 'image/png', 'Cache-Control' => 'private, max-age=3600']);
+    }
+
+    /** Muat turun Manual Pengguna Word mengikut peranan. */
+    public function downloadDocx(Request $request): BinaryFileResponse
+    {
+        abort_unless($request->user()->can('dashboard.view'), 403);
+
+        $manual = RoleUserManual::forUser($request->user());
+        abort_if($manual === null || ! $manual->exists(), 404, 'Manual Word untuk peranan anda tidak dijumpai.');
+
+        return response()->download(
+            $manual->absolutePath(),
+            $manual->downloadName,
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        );
     }
 
     public function download(Request $request): StreamedResponse
