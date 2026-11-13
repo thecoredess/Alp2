@@ -39,16 +39,15 @@ class ApplicationTimelineTest extends TestCase
         $app = $this->toPendingApproval($this->submitted($alp, $year, '2500.00'));
 
         $stages = collect($this->timeline()->stages($app->fresh()));
-        $pepu = $stages->firstWhere('key', 'pepu');
         $peraku = $stages->firstWhere('key', 'peraku');
 
+        $this->assertNull($stages->firstWhere('key', 'pepu'));
         $this->assertSame('Kelulusan Pengarah JP', $peraku['label']);
         $this->assertFalse($peraku['done']);
-        $this->assertFalse($pepu['done']);
         $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
     }
 
-    public function test_pengarah_approval_marks_pepu_informed_stage(): void
+    public function test_pengarah_approval_completes_peraku_stage_without_pepu_step(): void
     {
         $alp = Alp::factory()->create();
         $year = $this->makeYear();
@@ -60,7 +59,7 @@ class ApplicationTimelineTest extends TestCase
         $stages = collect($this->timeline()->stages($app->fresh()));
 
         $this->assertTrue($stages->firstWhere('key', 'peraku')['done']);
-        $this->assertTrue($stages->firstWhere('key', 'pepu')['done']);
+        $this->assertNull($stages->firstWhere('key', 'pepu'));
         $this->assertSame(ApplicationStatus::APPROVED, $app->fresh()->status);
     }
 
@@ -75,7 +74,7 @@ class ApplicationTimelineTest extends TestCase
         $alpStages = collect($this->timeline()->stages($app->fresh(), forAlpView: true));
 
         $this->assertNotNull($staffStages->firstWhere('key', 'peraku'));
-        $this->assertNotNull($staffStages->firstWhere('key', 'pepu'));
+        $this->assertNull($staffStages->firstWhere('key', 'pepu'));
         $this->assertNull($alpStages->firstWhere('key', 'peraku'));
         $this->assertNull($alpStages->firstWhere('key', 'pepu'));
         $this->assertSame(['submitted', 'jp_review', 'voucher', 'report'], $alpStages->pluck('key')->all());

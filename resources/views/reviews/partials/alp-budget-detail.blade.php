@@ -58,22 +58,52 @@
     </div>
 
     @if ($periodSummary)
+        @php
+            $periodUsedOther = $periodSummary['used_other'] ?? $periodSummary['used'];
+            $periodThisRequest = $periodSummary['this_request'] ?? $thisRequest;
+            $periodCountsThis = $periodSummary['counts_this_application'] ?? true;
+            $periodRemaining = $periodSummary['remaining'];
+            $periodOverQuota = $periodCountsThis
+                && $periodUsedOther->plus($periodThisRequest)->greaterThan($periodSummary['quota']);
+            $periodBakiClass = $periodOverQuota ? 'text-danger' : 'text-green-600';
+        @endphp
         <div>
             <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Kuota Tempoh · {{ $periodSummary['label'] }}</p>
-            <dl class="grid grid-cols-3 gap-2 text-center text-xs">
-                <div class="rounded-lg bg-gray-50 px-2 py-2">
-                    <dt class="text-gray-500">Kuota</dt>
-                    <dd class="mt-0.5 font-semibold text-navy-700"><x-money :value="$periodSummary['quota']" /></dd>
+            <dl class="space-y-2 text-sm">
+                <div class="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
+                    <dt class="text-gray-600">Kuota Tempoh</dt>
+                    <dd class="font-semibold text-navy-700"><x-money :value="$periodSummary['quota']" /></dd>
                 </div>
-                <div class="rounded-lg bg-amber-50 px-2 py-2">
-                    <dt class="text-gray-500">Digunakan</dt>
-                    <dd class="mt-0.5 font-semibold text-amber-700"><x-money :value="$periodSummary['used']" /></dd>
+                <div class="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2">
+                    <dt class="text-gray-600">Digunakan (permohonan lain)</dt>
+                    <dd class="font-semibold text-amber-700"><x-money :value="$periodUsedOther" /></dd>
                 </div>
-                <div class="rounded-lg bg-green-50 px-2 py-2">
-                    <dt class="text-gray-500">Baki</dt>
-                    <dd class="mt-0.5 font-semibold text-green-700"><x-money :value="$periodSummary['remaining']" /></dd>
-                </div>
+                @if ($periodCountsThis)
+                    <div class="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
+                        <dt class="text-gray-600">Permohonan Ini</dt>
+                        <dd class="font-semibold text-navy-700"><x-money :value="$periodThisRequest" /></dd>
+                    </div>
+                    <div class="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2.5">
+                        <dt class="font-medium text-gray-600">Baki Kuota Tempoh</dt>
+                        <dd class="font-semibold {{ $periodBakiClass }}">
+                            <x-money :value="$periodRemaining" />
+                        </dd>
+                    </div>
+                @else
+                    <p class="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                        Permohonan ini tidak dikira dalam tempoh semasa (ikut tarikh dihantar). Jumlah di atas tidak ditolak daripada kuota tempoh ini.
+                    </p>
+                    <div class="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2.5">
+                        <dt class="font-medium text-gray-600">Baki Kuota Tempoh</dt>
+                        <dd class="font-semibold text-green-600"><x-money :value="$periodRemaining" /></dd>
+                    </div>
+                @endif
             </dl>
+            @if (($periodSummary['ends_at'] ?? null) && $periodCountsThis)
+                <p class="mt-2 text-[11px] text-gray-400">
+                    Luput {{ $periodSummary['ends_at']->format('d/m/Y') }} · baki selepas tolak permohonan ini
+                </p>
+            @endif
         </div>
     @endif
 

@@ -202,13 +202,53 @@ class AssociationInviteTest extends TestCase
         ]);
     }
 
-    public function test_association_form_does_not_offer_kertas_kerja_file_upload(): void
+    public function test_document_upload_autosaves_borang_without_final_submit(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-01-15'));
+        $alp = Alp::factory()->create();
+        $year = FinancialYear::first();
+        $user = \App\Models\User::factory()->create(['alp_id' => $alp->id])
+            ->assignRole(RoleName::ALP->value);
+        $app = Application::factory()->create([
+            'alp_id' => $alp->id,
+            'financial_year_id' => $year->id,
+            'status' => ApplicationStatus::DRAFT,
+        ]);
+
+        $url = app(ApplicationAssociationInviteService::class)->issue($app, $user);
+        preg_match('#borang-persatuan/([A-Za-z0-9]+)#', $url, $m);
+        $token = $m[1];
+
+        $file = UploadedFile::fake()->create('ros.pdf', 200, 'application/pdf');
+
+        $this->post(route('association-form.documents.store', $token), [
+            'autosave_borang' => '1',
+            'document_type' => 'sijil_ros',
+            'file' => $file,
+            ...KertasKerjaGuide::samplePayload(),
+            'recipient_name' => 'Persatuan Autosave Lampiran',
+            'recipient_ros_number' => 'PPM-060-01-77777777',
+            'program_date' => '2026-04-01',
+            'program_category' => 'komuniti',
+            'requested_amount' => '2500.00',
+            'recipient_bank_account' => '9988776655',
+            'recipient_address' => 'No. 3, Jalan Raja Laut, 50350 Kuala Lumpur',
+        ])->assertRedirect(route('association-form.show', $token));
+
+        $app->refresh();
+        $this->assertSame('Persatuan Autosave Lampiran', $app->recipient_name);
+        $this->assertNull($app->association_invite_filled_at);
+        $this->assertDatabaseHas('application_documents', [
+            'application_id' => $app->id,
+            'document_type' => 'sijil_ros',
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_association_can_upload_kertas_kerja_pdf(): void
     {
         $this->seed(\Database\Seeders\DocumentRequirementSeeder::class);
-        DocumentRequirement::query()->updateOrCreate(
-            ['document_type' => DocumentType::KERTAS_KERJA->value],
-            ['is_required' => true, 'active' => true],
-        );
 
         $alp = Alp::factory()->create();
         $year = FinancialYear::first();
@@ -226,15 +266,19 @@ class AssociationInviteTest extends TestCase
 
         $this->get(route('association-form.show', $token))
             ->assertOk()
-            ->assertSee('Kertas Kerja', false)
-            ->assertDontSee('value="kertas_kerja"', false);
+            ->assertSee('value="kertas_kerja"', false);
 
-        $file = UploadedFile::fake()->create('kk.pdf', 200, 'application/pdf');
+        $file = UploadedFile::fake()->create('kertas-kerja.pdf', 200, 'application/pdf');
 
         $this->post(route('association-form.documents.store', $token), [
             'document_type' => 'kertas_kerja',
             'file' => $file,
-        ])->assertSessionHasErrors('document_type');
+        ])->assertRedirect(route('association-form.show', $token));
+
+        $this->assertDatabaseHas('application_documents', [
+            'application_id' => $app->id,
+            'document_type' => 'kertas_kerja',
+        ]);
     }
 
     public function test_expired_link_shows_unavailable_page(): void

@@ -54,9 +54,30 @@
                 <a href="{{ route('applications.letter.pdf', $application) }}" target="_blank" class="btn-navy">Surat Pemakluman (Lulus)</a>
             @elseif ($application->status === \App\Enums\ApplicationStatus::REJECTED)
                 <a href="{{ route('applications.letter.pdf', $application) }}" target="_blank" class="btn-navy">Surat Pemakluman (Tidak Lulus)</a>
+            @elseif ($canOpenSecretariatReview ?? false)
+                <a href="{{ route('reviews.show', [$application, 'secretariat']) }}" class="btn-navy">
+                    {{ $user->canMakeFullJpReviewDecision() ? 'Hantar kepada Pengarah JP' : 'Syor kepada Pengarah JP' }}
+                </a>
             @endif
         </div>
     </div>
+
+    @if ($canOpenSecretariatReview ?? false)
+        <div class="mb-6 flex flex-col gap-3 rounded-xl border border-navy-200 bg-gradient-to-r from-navy-50 to-sky-50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div class="text-sm text-navy-900">
+                <p class="font-semibold">
+                    {{ $user->canMakeFullJpReviewDecision() ? 'Menunggu keputusan semakan Admin JP' : 'Menunggu perakuan Pegawai JP' }}
+                </p>
+                <p class="mt-1 text-navy-800">
+                    Lengkapkan senarai semak, muat naik borang ulasan JKEW (jika perlu), kemudian
+                    {{ $user->canMakeFullJpReviewDecision() ? 'hantar keputusan Disyorkan kepada Pengarah JP.' : 'buat pengesyoran kepada Pengarah JP.' }}
+                </p>
+            </div>
+            <a href="{{ route('reviews.show', [$application, 'secretariat']) }}" class="btn-navy shrink-0 text-sm">
+                {{ $user->canMakeFullJpReviewDecision() ? 'Hantar kepada Pengarah JP' : 'Syor kepada Pengarah JP' }}
+            </a>
+        </div>
+    @endif
 
     @if ($activeRevision && $user->can('update', $application))
         <div class="mb-6 flex gap-4 rounded-xl border border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 p-4 shadow-sm">

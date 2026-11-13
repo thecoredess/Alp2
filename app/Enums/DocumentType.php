@@ -82,13 +82,25 @@ enum DocumentType: string
         return [self::SEMAKAN_SILANG_JKEW];
     }
 
-    /** Lampiran wajib Senarai Semak Penyaluran Sumbangan ALP (Kertas Kerja diisi dalam borang dalam talian). */
+    /** Lampiran wajib Senarai Semak Penyaluran Sumbangan ALP (tanpa fail Kertas Kerja). */
     public static function contributionAttachments(): array
     {
         return [
             self::PENDAFTARAN_PERTUBUHAN,
             self::BORANG_EFT,
             self::PENYATA_BANK,
+            self::SIJIL_ROS,
+        ];
+    }
+
+    /** Jenis fail yang boleh dimuat naik pada Langkah 2 / borang persatuan (termasuk salinan Kertas Kerja). */
+    public static function contributionUploadTypes(): array
+    {
+        return [
+            self::PENDAFTARAN_PERTUBUHAN,
+            self::BORANG_EFT,
+            self::PENYATA_BANK,
+            self::KERTAS_KERJA,
             self::SIJIL_ROS,
         ];
     }

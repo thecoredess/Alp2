@@ -82,6 +82,7 @@
             'documentDestroyUrl' => fn ($doc) => route('association-form.documents.destroy', [$token, $doc]),
             'confirmDestroy' => false,
             'showProgress' => true,
+            'borangFormId' => 'association-borang-form',
         ])
     </div>
 
@@ -97,4 +98,49 @@
             </button>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            window.associationSubmitDocUpload = function (fileInput) {
+                if (!fileInput?.files?.length) {
+                    return;
+                }
+                const form = fileInput.form;
+                if (!form) {
+                    return;
+                }
+                const borangId = form.dataset.borangFormId;
+                if (borangId) {
+                    form.querySelectorAll('[data-borang-field]').forEach((node) => node.remove());
+                    const borang = document.getElementById(borangId);
+                    if (borang) {
+                        const marker = document.createElement('input');
+                        marker.type = 'hidden';
+                        marker.name = 'autosave_borang';
+                        marker.value = '1';
+                        marker.dataset.borangField = '1';
+                        form.appendChild(marker);
+                        for (const el of borang.elements) {
+                            if (!el.name || el.name === '_token' || el.name === '_method') {
+                                continue;
+                            }
+                            if ((el.type === 'radio' || el.type === 'checkbox') && !el.checked) {
+                                continue;
+                            }
+                            if (el.type === 'file') {
+                                continue;
+                            }
+                            const hidden = document.createElement('input');
+                            hidden.type = 'hidden';
+                            hidden.name = el.name;
+                            hidden.value = el.value;
+                            hidden.dataset.borangField = '1';
+                            form.appendChild(hidden);
+                        }
+                    }
+                }
+                form.requestSubmit();
+            };
+        </script>
+    @endpush
 @endsection

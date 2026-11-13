@@ -24,5 +24,6 @@
     <footer class="border-t border-gray-200 py-4 text-center text-xs text-gray-500">
         Sistem Sumbangan ALP &copy; {{ date('Y') }} DBKL
     </footer>
+    @stack('scripts')
 </body>
 </html>
