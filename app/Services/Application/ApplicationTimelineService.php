@@ -48,7 +48,6 @@ class ApplicationTimelineService
         $isRejected = $application->status === ApplicationStatus::REJECTED;
 
         $perakuAt = $approvedRecords->first()?->decided_at;
-        $pepuAt = $application->status === ApplicationStatus::APPROVED ? $perakuAt : null;
 
         $voucherAt = $application->payment_status?->value === 'voucher_prepared'
             || $application->payment_status?->value === 'sent_to_jkew'
@@ -59,8 +58,7 @@ class ApplicationTimelineService
         $defs = [
             ['key' => 'submitted', 'label' => 'Permohonan dihantar', 'at' => $submittedAt, 'skipped' => false, 'hint' => null],
             ['key' => 'jp_review', 'label' => 'Semakan Jabatan', 'at' => $jpAt ? Carbon::parse($jpAt) : null, 'skipped' => false, 'hint' => null],
-            ['key' => 'peraku', 'label' => 'Kelulusan Pengarah JP', 'at' => $perakuAt ? Carbon::parse($perakuAt) : null, 'skipped' => false, 'hint' => null],
-            ['key' => 'pepu', 'label' => 'Makluman PEPU', 'at' => $pepuAt ? Carbon::parse($pepuAt) : null, 'skipped' => false, 'hint' => null],
+            ['key' => 'peraku', 'label' => 'Pengesyoran Pengarah JP', 'at' => $perakuAt ? Carbon::parse($perakuAt) : null, 'skipped' => false, 'hint' => null],
             ['key' => 'voucher', 'label' => 'Baucar disedia', 'at' => $voucherAt ? Carbon::parse($voucherAt) : null, 'skipped' => false, 'hint' => null],
         ];
 
@@ -83,10 +81,10 @@ class ApplicationTimelineService
         if ($forAlpView) {
             $stages = array_values(array_filter(
                 $stages,
-                fn (array $stage) => ! in_array($stage['key'], ['peraku', 'pepu'], true),
+                fn (array $stage) => $stage['key'] !== 'peraku',
             ));
 
-            $fullyApproved = $pepuAt !== null || $application->status === ApplicationStatus::APPROVED;
+            $fullyApproved = $application->status === ApplicationStatus::APPROVED;
 
             $stages = array_map(function (array $stage) use ($jpAt, $voucherAt, $submittedAt, $fullyApproved, $isRejected) {
                 if ($stage['key'] !== 'jp_review' || ! $jpAt) {

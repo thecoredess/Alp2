@@ -136,7 +136,7 @@ class ApprovalProcessSimulationTest extends TestCase
         $alpView = collect($timeline->stages($app, forAlpView: true));
 
         $this->assertTrue($staff->firstWhere('key', 'peraku')['done']);
-        $this->assertTrue($staff->firstWhere('key', 'pepu')['done']);
+        $this->assertNull($staff->firstWhere('key', 'pepu'));
         $this->assertNull($alpView->firstWhere('key', 'peraku'));
         $this->assertNull($alpView->firstWhere('key', 'pepu'));
         $this->assertSame(
