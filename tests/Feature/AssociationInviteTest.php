@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Enums\ApplicationStatus;
+use App\Enums\DocumentType;
 use App\Enums\RoleName;
+use App\Models\DocumentRequirement;
 use App\Models\Alp;
 use App\Models\Application;
 use App\Models\FinancialYear;
@@ -198,6 +200,41 @@ class AssociationInviteTest extends TestCase
             'document_type' => 'sijil_ros',
             'uploaded_by' => null,
         ]);
+    }
+
+    public function test_association_form_does_not_offer_kertas_kerja_file_upload(): void
+    {
+        $this->seed(\Database\Seeders\DocumentRequirementSeeder::class);
+        DocumentRequirement::query()->updateOrCreate(
+            ['document_type' => DocumentType::KERTAS_KERJA->value],
+            ['is_required' => true, 'active' => true],
+        );
+
+        $alp = Alp::factory()->create();
+        $year = FinancialYear::first();
+        $user = \App\Models\User::factory()->create(['alp_id' => $alp->id])
+            ->assignRole(RoleName::ALP->value);
+        $app = Application::factory()->create([
+            'alp_id' => $alp->id,
+            'financial_year_id' => $year->id,
+            'status' => ApplicationStatus::DRAFT,
+        ]);
+
+        $url = app(ApplicationAssociationInviteService::class)->issue($app, $user);
+        preg_match('#borang-persatuan/([A-Za-z0-9]+)#', $url, $m);
+        $token = $m[1];
+
+        $this->get(route('association-form.show', $token))
+            ->assertOk()
+            ->assertSee('Kertas Kerja', false)
+            ->assertDontSee('value="kertas_kerja"', false);
+
+        $file = UploadedFile::fake()->create('kk.pdf', 200, 'application/pdf');
+
+        $this->post(route('association-form.documents.store', $token), [
+            'document_type' => 'kertas_kerja',
+            'file' => $file,
+        ])->assertSessionHasErrors('document_type');
     }
 
     public function test_expired_link_shows_unavailable_page(): void
