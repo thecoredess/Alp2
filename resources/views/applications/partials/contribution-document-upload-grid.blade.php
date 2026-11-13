@@ -10,7 +10,7 @@
 
 <div class="rounded-lg border border-navy-100 bg-navy-50 px-4 py-3 text-sm text-navy-800">
     Tekan <strong>Pilih Fail</strong> pada setiap item. Format: PDF atau gambar (maksimum 10 MB).
-    <strong>Kertas Kerja</strong> diisi dalam borang — tidak perlu muat naik fail kertas kerja melainkan JP minta salinan.
+    <strong>Kertas Kerja</strong> diisi dalam borang (medan g); anda juga boleh muat naik salinan PDF jika perlu.
     <x-association-guide-links class="mt-2" />
 </div>
 

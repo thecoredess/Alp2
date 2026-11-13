@@ -12,7 +12,7 @@ trait ValidatesContributionDocumentUpload
     {
         $allowedTypes = array_map(
             fn (DocumentType $type) => $type->value,
-            DocumentType::contributionAttachments(),
+            DocumentType::contributionUploadTypes(),
         );
 
         return [
@@ -43,7 +43,7 @@ trait ValidatesContributionDocumentUpload
     public function messages(): array
     {
         return [
-            'document_type.in' => 'Jenis dokumen ini tidak boleh dimuat naik. Kertas Kerja diisi dalam borang; hanya 4 lampiran senarai semak (pendaftaran, EFT, penyata bank, sijil ROS).',
+            'document_type.in' => 'Jenis dokumen yang dipilih tidak sah untuk lampiran permohonan.',
             'file.mimes' => 'Jenis fail tidak dibenarkan. Hanya PDF, imej, Word dan Excel diterima.',
             'file.max' => 'Saiz fail tidak boleh melebihi 10 MB.',
         ];

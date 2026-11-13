@@ -39,7 +39,7 @@ class AssociationPublicFormController extends Controller
 
         $application->load(['alp', 'financialYear', 'documents']);
 
-        $order = collect(DocumentType::contributionAttachments())
+        $order = collect(DocumentType::contributionUploadTypes())
             ->map(fn (DocumentType $t) => $t->value)
             ->flip();
 
@@ -122,7 +122,7 @@ class AssociationPublicFormController extends Controller
         abort_if($application === null, 404);
         abort_unless($document->application_id === $application->id, 404);
         abort_unless(
-            in_array($document->document_type, DocumentType::contributionAttachments(), true),
+            in_array($document->document_type, DocumentType::contributionUploadTypes(), true),
             403,
         );
 

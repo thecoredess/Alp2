@@ -202,13 +202,9 @@ class AssociationInviteTest extends TestCase
         ]);
     }
 
-    public function test_association_form_does_not_offer_kertas_kerja_file_upload(): void
+    public function test_association_can_upload_kertas_kerja_pdf(): void
     {
         $this->seed(\Database\Seeders\DocumentRequirementSeeder::class);
-        DocumentRequirement::query()->updateOrCreate(
-            ['document_type' => DocumentType::KERTAS_KERJA->value],
-            ['is_required' => true, 'active' => true],
-        );
 
         $alp = Alp::factory()->create();
         $year = FinancialYear::first();
@@ -226,15 +222,19 @@ class AssociationInviteTest extends TestCase
 
         $this->get(route('association-form.show', $token))
             ->assertOk()
-            ->assertSee('Kertas Kerja', false)
-            ->assertDontSee('value="kertas_kerja"', false);
+            ->assertSee('value="kertas_kerja"', false);
 
-        $file = UploadedFile::fake()->create('kk.pdf', 200, 'application/pdf');
+        $file = UploadedFile::fake()->create('kertas-kerja.pdf', 200, 'application/pdf');
 
         $this->post(route('association-form.documents.store', $token), [
             'document_type' => 'kertas_kerja',
             'file' => $file,
-        ])->assertSessionHasErrors('document_type');
+        ])->assertRedirect(route('association-form.show', $token));
+
+        $this->assertDatabaseHas('application_documents', [
+            'application_id' => $app->id,
+            'document_type' => 'kertas_kerja',
+        ]);
     }
 
     public function test_expired_link_shows_unavailable_page(): void

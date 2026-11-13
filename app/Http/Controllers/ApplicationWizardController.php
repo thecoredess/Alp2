@@ -82,7 +82,7 @@ class ApplicationWizardController extends Controller
 
         $application->load('documents.uploader');
 
-        $order = collect(DocumentType::contributionAttachments())
+        $order = collect(DocumentType::contributionUploadTypes())
             ->map(fn (DocumentType $t) => $t->value)
             ->flip();
 
