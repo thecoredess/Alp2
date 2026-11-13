@@ -1,29 +1,46 @@
 @extends('layouts.app')
 @section('title', 'Manual Pengguna')
-@section('heading', 'Manual Pengguna / Kit Tatacara')
-@section('subheading', 'URS M11 — tatacara mengikut peranan anda')
+@section('heading', 'Manual Pengguna')
+@section('subheading', 'Panduan mengikut peranan: '.$audienceLabel)
 
 @section('content')
     <div class="mb-4 flex flex-wrap items-center gap-2 no-print">
         <button type="button" onclick="window.print()" class="btn-white">Cetak ringkasan</button>
+        @if ($hasRoleManualDocx && $roleManual)
+            <a href="{{ route('manual.docx') }}" class="btn-primary">
+                Muat turun Manual (Word)
+            </a>
+        @endif
         @if ($audience === 'alp')
             @can('applications.create')
-                <a href="{{ route('association-guide.download') }}?v=3" class="btn-primary">Panduan Dokumen Persatuan (PDF)</a>
+                <a href="{{ route('association-guide.download') }}?v=3" class="btn-white">Panduan Dokumen Persatuan (PDF)</a>
             @endcan
         @endif
         @if ($hasOfficialPdf)
-            <a href="{{ route('manual.download') }}" class="btn-primary">Muat turun PDF rasmi</a>
+            <a href="{{ route('manual.download') }}" class="btn-white">Manual PDF rasmi (M11)</a>
         @endif
     </div>
 
+    @if ($hasRoleManualDocx && $roleManual)
+        <div class="mb-4 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-4 text-sm text-indigo-950 no-print">
+            <p class="font-semibold text-indigo-900">{{ $roleManual->title }}</p>
+            <p class="mt-1 text-indigo-800/90">
+                Dokumen Word lengkap dengan tangkapan skrin sistem untuk peranan <strong>{{ $audienceLabel }}</strong>.
+            </p>
+            <a href="{{ route('manual.docx') }}" class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-indigo-700 underline hover:text-indigo-900">
+                Muat turun {{ $roleManual->downloadName }}
+            </a>
+        </div>
+    @elseif ($roleManual !== null)
+        <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 no-print">
+            Fail manual Word untuk peranan ini belum dipasang pada pelayan. Gunakan ringkasan di bawah atau hubungi pentadbir sistem.
+        </div>
+    @endif
+
     @if ($hasOfficialPdf)
         <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900 no-print">
-            Manual PDF rasmi tersedia.
+            Manual PDF rasmi (M11) tersedia.
             <a href="{{ route('manual.download') }}" class="font-medium underline">Muat turun</a>
-        </div>
-    @else
-        <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 no-print">
-            Manual PDF rasmi belum dimuat naik. Ringkasan dalam sistem di bawah masih boleh digunakan / dicetak.
         </div>
     @endif
 
@@ -46,33 +63,41 @@
                     <button type="submit" class="text-xs font-medium text-danger hover:underline">Buang PDF rasmi</button>
                 </form>
             @endif
+            <p class="text-xs text-gray-500">
+                Manual Word peranan (ALP / Admin JP / Pengarah) dihoskan dalam <code class="rounded bg-gray-100 px-1">docs/manual-pengguna/</code> — kemas kini fail <code class="rounded bg-gray-100 px-1">.docx</code> melalui deploy.
+            </p>
         </div>
     @endif
 
     <div class="mb-4 rounded-lg border border-royal-200 bg-royal-50 px-4 py-3 text-sm text-royal-900">
-        Dokumen ini merumuskan aliran sistem untuk peranan anda.
-        Kandungan penuh boleh disahkan/dikemas kini oleh pemilik proses.
-        Peranan semasa: <strong>{{ $audienceLabel }}</strong>.
+        Ringkasan dalam sistem untuk: <strong>{{ $audienceLabel }}</strong>.
+        @if (! empty($manualFiguresByFile))
+            Rajah di bawah setiap bahagian; klik imej untuk paparan lebih besar. Muat turun Word untuk versi cetak.
+        @else
+            Sila muat turun manual Word untuk langkah terperinci dan paparan skrin.
+        @endif
     </div>
 
-    @if ($audience === 'alp')
-        <div class="card p-6 space-y-3">
-            <h3 class="text-sm font-semibold text-gray-900">Tatacara ALP / Persatuan</h3>
+    @if ($roleManual?->key === 'alp')
+        @include('manual.sections.alp', ['manualFiguresByFile' => $manualFiguresByFile ?? []])
+    @elseif ($roleManual?->key === 'admin_jp')
+        @include('manual.sections.admin-jp', ['manualFiguresByFile' => $manualFiguresByFile ?? []])
+    @elseif ($roleManual?->key === 'pengarah_jp')
+        @include('manual.sections.pengarah-jp', ['manualFiguresByFile' => $manualFiguresByFile ?? []])
+    @elseif ($audience === 'pepu')
+        <div class="card space-y-3 p-6">
+            <h3 class="text-sm font-semibold text-gray-900">Tatacara PEPU / Pengurusan</h3>
             <p class="text-sm text-gray-600">
-                Kongsi <a href="{{ route('association-guide.download') }}?v=3" class="font-medium text-royal-600 underline hover:text-royal-700">Panduan Dokumen Persatuan (PDF)</a>
-                kepada persatuan penerima — termasuk senarai semak 4 dokumen wajib (Kertas Kerja diisi dalam borang Langkah 1), <strong>Format Laporan Program ALP</strong> (report card) dan <strong>Borang EFT rasmi DBKL 2026</strong>.
+                Selepas kelulusan Pengarah JP, PEPU menerima <strong>e-mel makluman</strong> dan boleh semak status permohonan diluluskan dalam sistem.
+                Tiada menu kelulusan dalam sistem untuk PEPU.
             </p>
             <ol class="list-decimal space-y-2 pl-5 text-sm text-gray-700">
-                <li>Log masuk → semak <strong>Bajet Saya</strong> &amp; kuota penggal.</li>
-                <li>Cipta permohonan → lengkapkan borang penyaluran (penerima, ROS, akaun, alamat KL).</li>
-                <li>Muat naik dokumen wajib senarai semak (ROS, EFT, bank, kertas kerja).</li>
-                <li>Hantar → pantau status permohonan.</li>
-                <li>Selepas baucar disedia → lengkapkan <strong>Format Laporan Program ALP</strong> dan muat naik dalam 1 bulan.</li>
-                <li>Cetak <strong>Borang Penyaluran</strong> / surat kelulusan bila perlu.</li>
+                <li>Log masuk → <strong>Semua Permohonan</strong> / <strong>Laporan</strong> untuk pemantauan.</li>
+                <li>Notifikasi <em>approved_pepu_informed</em> apabila Pengarah meluluskan.</li>
             </ol>
         </div>
     @elseif ($audience === 'jp')
-        <div class="card p-6 space-y-4">
+        <div class="card space-y-4 p-6">
             <h3 class="text-sm font-semibold text-gray-900">Tatacara Pegawai Dalaman</h3>
 
             @can('applications.review.secretariat')
@@ -82,24 +107,27 @@
                     </p>
                     <ol class="mt-2 list-decimal space-y-2 pl-5 text-sm text-gray-700">
                         @if (auth()->user()->canMakeFullJpReviewDecision())
-                            <li>Semak permohonan di <strong>Semakan Admin JP</strong>.</li>
-                            <li>Lengkapkan senarai semak UR-M04-001 → buat keputusan (Disyorkan / Tidak Disyorkan / Kembalikan).</li>
+                            <li>Semak permohonan di <strong>Semakan Admin JP</strong> (status Dihantar).</li>
+                            <li>Lengkapkan senarai semak UR-M04-001 + ulasan JKEW → keputusan Disyorkan / Tidak Disyorkan / Kembalikan.</li>
+                            <li>Selepas syor → giliran <strong>Kelulusan Pengarah JP</strong> (bukan Pegawai JP untuk permohonan baharu).</li>
                         @else
-                            <li>Semak permohonan di <strong>Semakan Pegawai JP</strong>.</li>
-                            <li>Isikan <strong>ulasan</strong> dan <strong>syor kepada Pengarah JP</strong> (perakuan), atau kembalikan untuk pembetulan.</li>
+                            <li>Hanya rekod legacy: semakan <strong>Pegawai JP</strong> untuk permohonan lama dalam sistem.</li>
+                            <li>Permohonan baharu: Admin JP → terus Pengarah JP.</li>
                         @endif
                     </ol>
                 </div>
             @endcan
 
             @can('applications.approve')
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Peraku / PEPU</p>
-                    <ol class="mt-2 list-decimal space-y-2 pl-5 text-sm text-gray-700">
-                        <li><strong>Peraku</strong> (≤ RM3,000) / <strong>PEPU</strong> (&gt; RM3,000): lulus atau tolak permohonan.</li>
-                        <li>Pastikan baki peruntukan ALP mencukupi sebelum kelulusan akhir.</li>
-                    </ol>
-                </div>
+                @if (auth()->user()->hasRole(\App\Enums\RoleName::PELULUS->value))
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Pengarah JP</p>
+                        <ol class="mt-2 list-decimal space-y-2 pl-5 text-sm text-gray-700">
+                            <li>Menu <strong>Pengesyoran</strong> — lulus / tolak / kembalikan (satu aras kelulusan akhir).</li>
+                            <li>Pastikan baki peruntukan ALP mencukupi sebelum lulus.</li>
+                        </ol>
+                    </div>
+                @endif
             @endcan
 
             @can('payments.view')
@@ -107,7 +135,6 @@
                     <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Kerani Kewangan / JKEW</p>
                     <ol class="mt-2 list-decimal space-y-2 pl-5 text-sm text-gray-700">
                         <li>Kemas kini baucar, tarikh hantar JKEW, semakan silang, dan status bayaran.</li>
-                        <li>Pantau dashboard KPI <strong>14 hari</strong> hingga JKEW.</li>
                     </ol>
                 </div>
             @endcan
@@ -115,7 +142,7 @@
             @if (auth()->user()->can('applications.view_all') || auth()->user()->can('applications.review.secretariat'))
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Laporan Aktiviti</p>
-                    <p class="mt-2 text-sm text-gray-700">Semak senarai <strong>Laporan Aktiviti</strong> untuk report card tertunggak.</p>
+                    <p class="mt-2 text-sm text-gray-700">Semak <strong>Laporan Aktiviti</strong> untuk report card tertunggak.</p>
                 </div>
             @endif
 
@@ -123,12 +150,12 @@
                 && ! auth()->user()->can('applications.approve')
                 && ! auth()->user()->can('payments.view')
                 && ! auth()->user()->can('applications.view_all'))
-                <p class="text-sm text-gray-600">Tiada tatacara khusus untuk peranan anda. Sila rujuk pentadbir sistem.</p>
+                <p class="text-sm text-gray-600">Tiada tatacara khusus. Muat turun manual Word jika tersedia atau hubungi pentadbir.</p>
             @endif
         </div>
     @else
         <div class="card p-6">
-            <p class="text-sm text-gray-600">Manual khusus peranan tidak tersedia. Sila hubungi pentadbir sistem untuk bantuan.</p>
+            <p class="text-sm text-gray-600">Manual khusus peranan tidak tersedia. Sila hubungi pentadbir sistem.</p>
         </div>
     @endif
 
