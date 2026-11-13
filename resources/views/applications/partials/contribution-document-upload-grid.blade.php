@@ -11,6 +11,9 @@
 <div class="rounded-lg border border-navy-100 bg-navy-50 px-4 py-3 text-sm text-navy-800">
     Tekan <strong>Pilih Fail</strong> pada setiap item. Format: PDF atau gambar (maksimum 10 MB).
     <strong>Kertas Kerja</strong> diisi dalam borang (medan g); anda juga boleh muat naik salinan PDF jika perlu.
+    @if (! empty($borangFormId))
+        Maklumat borang di atas disimpan secara automatik apabila anda memilih fail lampiran.
+    @endif
     <x-association-guide-links class="mt-2" />
 </div>
 
@@ -47,13 +50,14 @@
                     @if ($done)
                         <p class="mt-2 truncate text-sm font-medium text-gray-800" title="{{ $doc->original_filename }}">{{ $doc->original_filename }}</p>
                         <div class="mt-3 flex flex-wrap gap-2">
-                            <form method="POST" action="{{ $documentStoreUrl }}" enctype="multipart/form-data" class="inline">
+                            <form method="POST" action="{{ $documentStoreUrl }}" enctype="multipart/form-data" class="inline association-doc-upload-form"
+                                  @if (! empty($borangFormId)) data-borang-form-id="{{ $borangFormId }}" @endif>
                                 @csrf
                                 <input type="hidden" name="document_type" value="{{ $type->value }}">
                                 <label class="btn-white cursor-pointer !px-3 !py-2 text-xs">
                                     Tukar Fail
                                     <input type="file" name="file" class="sr-only" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
-                                           onchange="if(this.files.length) this.form.requestSubmit()">
+                                           onchange="window.associationSubmitDocUpload?.(this)">
                                 </label>
                             </form>
                             @if ($documentDestroyUrl)
@@ -72,13 +76,14 @@
                             @endif
                         </div>
                     @else
-                        <form method="POST" action="{{ $documentStoreUrl }}" enctype="multipart/form-data" class="mt-3">
+                        <form method="POST" action="{{ $documentStoreUrl }}" enctype="multipart/form-data" class="mt-3 association-doc-upload-form"
+                              @if (! empty($borangFormId)) data-borang-form-id="{{ $borangFormId }}" @endif>
                             @csrf
                             <input type="hidden" name="document_type" value="{{ $type->value }}">
                             <label class="btn-primary inline-flex cursor-pointer !px-4 !py-2 text-sm">
                                 Pilih Fail
                                 <input type="file" name="file" class="sr-only" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
-                                       onchange="if(this.files.length) this.form.requestSubmit()">
+                                       onchange="window.associationSubmitDocUpload?.(this)">
                             </label>
                         </form>
                         @error('file')

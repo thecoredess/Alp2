@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\DocumentType;
+use App\Http\Requests\AssociationAutosaveRequest;
 use App\Http\Requests\AssociationFillRequest;
 use App\Http\Requests\AssociationPublicDocumentRequest;
+use App\Support\AssociationBorangPersistence;
 use App\Models\ApplicationDocument;
 use App\Models\DocumentRequirement;
 use App\Services\Application\ApplicationAssociationInviteService;
@@ -68,18 +70,9 @@ class AssociationPublicFormController extends Controller
 
         $data = $request->validated();
 
-        $application->update([
-            ...\App\Support\KertasKerjaGuide::normalizedAttributes($data),
-            'recipient_name' => $data['recipient_name'],
-            'recipient_ros_number' => $data['recipient_ros_number'],
-            'program_date' => $data['program_date'],
-            'program_category' => $data['program_category'],
-            'recipient_bank_account' => $data['recipient_bank_account'],
-            'recipient_address' => $data['recipient_address'],
-            'requested_amount' => number_format((float) $data['requested_amount'], 2, '.', ''),
-            'association_invite_filled_at' => now(),
-            'association_pdpa_consented_at' => now(),
-        ]);
+        $application->update(
+            AssociationBorangPersistence::attributesFromValidated($data, markSubmittedToAlp: true),
+        );
 
         $this->recipients->syncFromApplication($application->fresh());
 
@@ -98,6 +91,18 @@ class AssociationPublicFormController extends Controller
     {
         $application = $request->inviteApplication();
         abort_if($application === null, 404);
+
+        if (AssociationBorangPersistence::shouldAutosaveFromRequest($request)) {
+            $autosave = AssociationAutosaveRequest::createFrom($request);
+            $autosave->setContainer(app())->setRedirector(app('redirect'));
+            $autosave->validateResolved();
+
+            $application->update(
+                AssociationBorangPersistence::attributesFromValidated($autosave->validated(), markSubmittedToAlp: false),
+            );
+            $this->recipients->syncFromApplication($application->fresh());
+            $application->refresh();
+        }
 
         $file = $request->file('file');
         $type = DocumentType::from($request->validated('document_type'));
