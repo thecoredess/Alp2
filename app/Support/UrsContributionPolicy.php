@@ -302,6 +302,88 @@ final class UrsContributionPolicy
         return $remaining->isNegative() ? Money::zero() : $remaining;
     }
 
+    /** Sama kriteria `periodUsage()` — untuk satu permohonan semasa. */
+    public static function applicationCountsInPeriodUsage(
+        Application $application,
+        CarbonInterface $periodStart,
+        CarbonInterface $periodEnd,
+    ): bool {
+        if (! $application->isOfficialSumbangan()) {
+            return false;
+        }
+
+        $statuses = array_merge(
+            ApplicationStatus::pendingRequestValues(),
+            [ApplicationStatus::APPROVED->value],
+        );
+
+        if (! in_array($application->status->value, $statuses, true)) {
+            return false;
+        }
+
+        $at = $application->submitted_at ?? $application->created_at;
+        if ($at === null) {
+            return false;
+        }
+
+        return $at->between($periodStart, $periodEnd);
+    }
+
+    /**
+     * Kuota tempoh dengan pecahan permohonan semasa (skrin semakan / kelulusan).
+     *
+     * @return null|array{
+     *     label: string,
+     *     ends_at: CarbonInterface,
+     *     quota: Money,
+     *     used: Money,
+     *     used_other: Money,
+     *     this_request: Money,
+     *     counts_this_application: bool,
+     *     remaining: Money
+     * }
+     */
+    public static function periodSummaryForApplication(
+        Application $application,
+        ?CarbonInterface $at = null,
+    ): ?array {
+        if (! self::enabled() || ! $application->financialYear) {
+            return null;
+        }
+
+        $calendarYear = (int) $application->financialYear->year;
+        $period = self::periodFor($at ?? now(), $calendarYear);
+        $quota = self::maxPeriodQuota();
+        $thisRequest = $application->requestedAmountMoney();
+
+        $usedOther = self::periodUsage(
+            $application->alp_id,
+            $application->financial_year_id,
+            $period['start'],
+            $period['end'],
+            $application->id,
+        );
+
+        $countsThis = self::applicationCountsInPeriodUsage($application, $period['start'], $period['end']);
+        $usedTotal = $countsThis ? $usedOther->plus($thisRequest) : $usedOther;
+
+        $remaining = $quota->minus($usedTotal);
+        if ($remaining->isNegative()) {
+            $remaining = Money::zero();
+        }
+
+        return [
+            'label' => $period['label'],
+            'ends_at' => $period['end'],
+            'quota' => $quota,
+            'used' => $usedTotal,
+            'used_other' => $usedOther,
+            'this_request' => $thisRequest,
+            'counts_this_application' => $countsThis,
+            'remaining' => $remaining,
+        ];
+    }
+
     /**
      * @return list<string> mesej ralat (kosong jika lulus)
      */

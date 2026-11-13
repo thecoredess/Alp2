@@ -194,7 +194,14 @@
                                     <textarea name="comments" rows="4" class="inp">{{ old('comments') }}</textarea>
                                 </x-field>
 
-                                <button type="submit" class="btn-navy w-full">Hantar Keputusan</button>
+                                <button type="submit" class="btn-navy w-full"
+                                        x-text="act === 'recommend'
+                                            ? 'Hantar kepada Pengarah JP'
+                                            : (act === 'return_for_revision'
+                                                ? 'Kembalikan Untuk Pembetulan'
+                                                : (act === 'not_recommended' ? 'Hantar Keputusan (Tidak Disyorkan)' : 'Hantar Keputusan'))">
+                                    Hantar Keputusan
+                                </button>
                             @else
                                 <input type="hidden" name="decision" :value="act">
 

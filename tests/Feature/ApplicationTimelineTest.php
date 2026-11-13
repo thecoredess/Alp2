@@ -42,7 +42,7 @@ class ApplicationTimelineTest extends TestCase
         $peraku = $stages->firstWhere('key', 'peraku');
 
         $this->assertNull($stages->firstWhere('key', 'pepu'));
-        $this->assertSame('Pengesyoran Pengarah JP', $peraku['label']);
+        $this->assertSame('Kelulusan Pengarah JP', $peraku['label']);
         $this->assertFalse($peraku['done']);
         $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->fresh()->status);
     }

@@ -58,7 +58,7 @@ class ApplicationTimelineService
         $defs = [
             ['key' => 'submitted', 'label' => 'Permohonan dihantar', 'at' => $submittedAt, 'skipped' => false, 'hint' => null],
             ['key' => 'jp_review', 'label' => 'Semakan Jabatan', 'at' => $jpAt ? Carbon::parse($jpAt) : null, 'skipped' => false, 'hint' => null],
-            ['key' => 'peraku', 'label' => 'Pengesyoran Pengarah JP', 'at' => $perakuAt ? Carbon::parse($perakuAt) : null, 'skipped' => false, 'hint' => null],
+            ['key' => 'peraku', 'label' => 'Kelulusan Pengarah JP', 'at' => $perakuAt ? Carbon::parse($perakuAt) : null, 'skipped' => false, 'hint' => null],
             ['key' => 'voucher', 'label' => 'Baucar disedia', 'at' => $voucherAt ? Carbon::parse($voucherAt) : null, 'skipped' => false, 'hint' => null],
         ];
 

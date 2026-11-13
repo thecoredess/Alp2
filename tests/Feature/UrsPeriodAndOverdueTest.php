@@ -97,6 +97,37 @@ class UrsPeriodAndOverdueTest extends TestCase
         $this->assertSame(ApplicationStatus::DRAFT, $blocked->fresh()->status);
     }
 
+    public function test_period_summary_for_application_subtracts_this_request_from_quota(): void
+    {
+        SystemSetting::set(UrsContributionPolicy::KEY_ENABLED, true);
+        SystemSetting::set(UrsContributionPolicy::KEY_PERIOD_QUOTA, '10000.00');
+        $this->allocate('30000.00');
+
+        $other = Application::factory()->submitted()->create([
+            'alp_id' => $this->alp->id,
+            'financial_year_id' => $this->year->id,
+            'requested_amount' => '2000.00',
+            'submitted_at' => now(),
+        ]);
+
+        $current = Application::factory()->submitted()->create([
+            'alp_id' => $this->alp->id,
+            'financial_year_id' => $this->year->id,
+            'requested_amount' => '100.00',
+            'submitted_at' => now(),
+        ]);
+
+        $summary = UrsContributionPolicy::periodSummaryForApplication($current);
+
+        $this->assertNotNull($summary);
+        $this->assertSame('2000.00', $summary['used_other']->value());
+        $this->assertSame('100.00', $summary['this_request']->value());
+        $this->assertTrue($summary['counts_this_application']);
+        $this->assertSame('2100.00', $summary['used']->value());
+        $this->assertSame('7900.00', $summary['remaining']->value());
+        $this->assertSame($other->id, $other->fresh()->id);
+    }
+
     public function test_legacy_application_numbers_do_not_count_toward_period_quota(): void
     {
         SystemSetting::set(UrsContributionPolicy::KEY_ENABLED, true);

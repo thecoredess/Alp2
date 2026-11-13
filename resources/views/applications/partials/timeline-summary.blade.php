@@ -13,7 +13,7 @@
     $shortLabels = [
         'submitted' => 'Permohonan dihantar',
         'jp_review' => 'Semakan Jabatan',
-        'peraku' => 'Pengesyoran Pengarah JP',
+        'peraku' => 'Kelulusan Pengarah JP',
         'voucher' => 'Baucar disedia',
         'report' => 'Laporan aktiviti',
         'rejected' => 'Permohonan ditolak',

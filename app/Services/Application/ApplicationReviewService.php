@@ -40,6 +40,24 @@ class ApplicationReviewService
         };
     }
 
+    /** Boleh buka borang semakan JP untuk permohonan ini (giliran pengguna semasa). */
+    public function userMayOpenSecretariatReview(User $user, Application $application): bool
+    {
+        if (! $user->can('applications.review.secretariat')) {
+            return false;
+        }
+
+        if ($this->expectedReviewType($application) !== ReviewType::SECRETARIAT) {
+            return false;
+        }
+
+        $queueStatus = $user->canMakeFullJpReviewDecision()
+            ? ApplicationStatus::SUBMITTED
+            : ApplicationStatus::UNDER_SECRETARIAT_REVIEW;
+
+        return $application->status === $queueStatus;
+    }
+
     /**
      * Rekod satu semakan dan majukan aliran kerja (atau kembalikan untuk pembetulan).
      * Atomik.

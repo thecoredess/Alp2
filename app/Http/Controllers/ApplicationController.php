@@ -13,6 +13,7 @@ use App\Models\FinancialYear;
 use App\Services\Application\ApplicationBudgetService;
 use App\Services\Application\ApplicationNumberGenerator;
 use App\Services\Application\ApplicationReportCardService;
+use App\Services\Application\ApplicationReviewService;
 use App\Services\Application\ApplicationTimelineService;
 use App\Services\Application\RecipientRegistry;
 use App\Services\Audit\AuditService;
@@ -45,6 +46,7 @@ class ApplicationController extends Controller
         private readonly ApplicationReportService $applicationReports,
         private readonly BorangPenyaluranPdfService $borangPdf,
         private readonly ApplicationAssociationInviteService $associationInvites,
+        private readonly ApplicationReviewService $reviews,
     ) {}
 
     /** Permohonan Saya (permohonan ALP pengguna). */
@@ -316,6 +318,7 @@ class ApplicationController extends Controller
             'reportCardOverdue' => $this->reportCards->isOverdue($application),
             'hasReportCard' => $this->reportCards->hasReportCard($application),
             'reportCardDraft' => $this->reportCards->draftDocument($application),
+            'canOpenSecretariatReview' => $this->reviews->userMayOpenSecretariatReview($user, $application),
         ]);
     }
 
