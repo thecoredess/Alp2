@@ -18,22 +18,13 @@ class SecurityHardeningTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
     }
 
-    public function test_uat_login_helper_hidden_in_production(): void
+    public function test_login_page_has_no_uat_account_helper(): void
     {
-        config(['app.env' => 'production', 'app.show_uat_login_helper' => false]);
-
         $this->get(route('login'))
             ->assertOk()
-            ->assertDontSee('UAT ·');
-    }
-
-    public function test_uat_login_helper_can_show_in_local_when_enabled(): void
-    {
-        config(['app.env' => 'local', 'app.show_uat_login_helper' => true]);
-
-        $this->get(route('login'))
-            ->assertOk()
-            ->assertSee('UAT ·');
+            ->assertDontSee('UAT ·')
+            ->assertDontSee('dev-account')
+            ->assertDontSee('superadmin@dbkl.test');
     }
 
     public function test_super_admin_accesses_settings_without_gate_before_bypass(): void

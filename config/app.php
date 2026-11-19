@@ -123,20 +123,4 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | UAT Login Helper (halaman log masuk)
-    |--------------------------------------------------------------------------
-    |
-    | Papar dropdown akaun ujian pada halaman log masuk.
-    | Untuk staging/UAT: SHOW_UAT_LOGIN_HELPER=true (walaupun APP_ENV=production).
-    | Lalai: hidup jika bukan production.
-    |
-    */
-
-    'show_uat_login_helper' => filter_var(
-        env('SHOW_UAT_LOGIN_HELPER', env('APP_ENV') !== 'production'),
-        FILTER_VALIDATE_BOOL
-    ),
-
 ];
