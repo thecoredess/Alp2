@@ -176,15 +176,13 @@ class ApplicationWizardController extends Controller
         ];
     }
 
-    /** @return array{programDateMin: string, programDateSubmitErrors: list<string>, waiveProgramLeadTime: bool} */
+    /** @return array{programDateMin: ?string, programDateSubmitErrors: list<string>, waiveProgramLeadTime: bool} */
     private function programDateContext(Application $application): array
     {
         $waive = request()->user()?->canWaiveProgramLeadTime() ?? false;
 
         return [
-            'programDateMin' => $waive
-                ? now()->toDateString()
-                : UrsContributionPolicy::minimumProgramDate()->format('Y-m-d'),
+            'programDateMin' => UrsContributionPolicy::programDateInputMin($waive),
             'programDateSubmitErrors' => $waive
                 ? []
                 : UrsContributionPolicy::programDateSubmitErrors($application->program_date),

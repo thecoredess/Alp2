@@ -69,6 +69,14 @@
                             Semua Permohonan
                         </a>
                     @endif
+                    @if($canAllApplications && ! $hasAlp)
+                        @can('create', \App\Models\Application::class)
+                            <a href="{{ route('applications.create') }}" class="{{ $link(request()->routeIs('applications.create')) }}">
+                                <x-icon name="plus" class="h-5 w-5 shrink-0" />
+                                Permohonan Baharu (Admin JP)
+                            </a>
+                        @endcan
+                    @endif
                     @if($canReviewJp)
                         <a href="{{ route('reviews.secretariat') }}" class="{{ $link(request()->routeIs('reviews.secretariat')) }}">
                             <x-icon name="search" class="h-5 w-5 shrink-0" />

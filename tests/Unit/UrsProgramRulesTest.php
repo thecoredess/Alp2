@@ -84,6 +84,14 @@ class UrsProgramRulesTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_admin_jp_program_date_input_has_no_html_min(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-06-15'));
+        $this->assertNull(UrsContributionPolicy::programDateInputMin(true));
+        $this->assertSame('2026-08-15', UrsContributionPolicy::programDateInputMin(false));
+        Carbon::setTestNow();
+    }
+
     public function test_overdue_default_is_fourteen_days(): void
     {
         $this->assertSame(14, UrsContributionPolicy::overdueDays());

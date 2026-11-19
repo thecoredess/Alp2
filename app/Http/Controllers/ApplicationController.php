@@ -109,9 +109,7 @@ class ApplicationController extends Controller
                 : null)
             : $user->alp;
 
-        $programDateMin = $user->canWaiveProgramLeadTime()
-            ? now()->toDateString()
-            : UrsContributionPolicy::minimumProgramDate()->format('Y-m-d');
+        $programDateMin = UrsContributionPolicy::programDateInputMin($user->canWaiveProgramLeadTime());
 
         $amountLimits = null;
         if ($activeYear) {

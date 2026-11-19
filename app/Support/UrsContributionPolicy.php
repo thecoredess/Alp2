@@ -173,6 +173,19 @@ final class UrsContributionPolicy
     }
 
     /**
+     * Had HTML `min` pada input tarikh program.
+     * Admin JP (notis pendek): null — tiada had bawah supaya backdate dibenarkan.
+     */
+    public static function programDateInputMin(bool $waiveProgramLeadTime): ?string
+    {
+        if ($waiveProgramLeadTime) {
+            return null;
+        }
+
+        return self::minimumProgramDate()->format('Y-m-d');
+    }
+
+    /**
      * @return list<string>
      */
     public static function validateProgramLeadTime(?CarbonInterface $programDate, ?CarbonInterface $appliedAt = null): array

@@ -220,15 +220,13 @@ class ReviewController extends Controller
             ->with('status', 'Semakan direkodkan.');
     }
 
-    /** @return array{programDateMin: string, waiveProgramLeadTime: bool} */
+    /** @return array{programDateMin: ?string, waiveProgramLeadTime: bool} */
     private function programDateContext(Request $request): array
     {
         $waive = $request->user()?->canWaiveProgramLeadTime() ?? false;
 
         return [
-            'programDateMin' => $waive
-                ? now()->toDateString()
-                : UrsContributionPolicy::minimumProgramDate()->format('Y-m-d'),
+            'programDateMin' => UrsContributionPolicy::programDateInputMin($waive),
             'waiveProgramLeadTime' => $waive,
         ];
     }
