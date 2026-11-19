@@ -9,6 +9,7 @@ use App\Models\Alp;
 use App\Models\Application;
 use App\Models\FinancialYear;
 use App\Models\User;
+use App\Services\Budget\BudgetService;
 use App\Services\Reports\ApplicationReportService;
 use App\Support\KertasKerjaGuide;
 use Carbon\Carbon;
@@ -48,6 +49,32 @@ class ApplicationTest extends TestCase
             'recipient_address' => 'No. 12, Jalan Ampang, 50450 Kuala Lumpur',
             ...KertasKerjaGuide::samplePayload(),
         ], $overrides);
+    }
+
+    public function test_admin_jp_can_create_draft_with_backdated_program_date(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-06-15 10:00:00'));
+        $alp = Alp::factory()->create();
+        $year = FinancialYear::where('year', 2026)->first();
+        app(BudgetService::class)->allocate($alp, $year, '30000.00', 'REF');
+        $admin = User::factory()->create()->assignRole(RoleName::SYSTEM_ADMIN->value);
+
+        $pastDate = '2026-01-10';
+        $this->actingAs($admin)
+            ->post(route('applications.store'), $this->borangPayload([
+                'alp_id' => $alp->id,
+                'program_date' => $pastDate,
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('applications', [
+            'alp_id' => $alp->id,
+            'program_date' => $pastDate,
+            'created_by' => $admin->id,
+        ]);
+
+        Carbon::setTestNow();
     }
 
     public function test_alp_can_create_sumbangan_draft(): void

@@ -82,7 +82,7 @@ class ApplicationWizardController extends Controller
 
         $application->load('documents.uploader');
 
-        $order = collect(DocumentType::contributionAttachments())
+        $order = collect(DocumentType::contributionUploadTypes())
             ->map(fn (DocumentType $t) => $t->value)
             ->flip();
 
@@ -176,15 +176,13 @@ class ApplicationWizardController extends Controller
         ];
     }
 
-    /** @return array{programDateMin: string, programDateSubmitErrors: list<string>, waiveProgramLeadTime: bool} */
+    /** @return array{programDateMin: ?string, programDateSubmitErrors: list<string>, waiveProgramLeadTime: bool} */
     private function programDateContext(Application $application): array
     {
         $waive = request()->user()?->canWaiveProgramLeadTime() ?? false;
 
         return [
-            'programDateMin' => $waive
-                ? now()->toDateString()
-                : UrsContributionPolicy::minimumProgramDate()->format('Y-m-d'),
+            'programDateMin' => UrsContributionPolicy::programDateInputMin($waive),
             'programDateSubmitErrors' => $waive
                 ? []
                 : UrsContributionPolicy::programDateSubmitErrors($application->program_date),

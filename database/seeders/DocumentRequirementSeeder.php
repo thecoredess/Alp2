@@ -18,8 +18,13 @@ class DocumentRequirementSeeder extends Seeder
             );
         }
 
+        DocumentRequirement::updateOrCreate(
+            ['document_type' => DocumentType::KERTAS_KERJA->value],
+            ['is_required' => false, 'active' => true],
+        );
+
         DocumentRequirement::query()
-            ->whereNotIn('document_type', array_map(fn (DocumentType $t) => $t->value, DocumentType::contributionAttachments()))
+            ->whereNotIn('document_type', array_map(fn (DocumentType $t) => $t->value, DocumentType::contributionUploadTypes()))
             ->update(['is_required' => false, 'active' => false]);
     }
 }

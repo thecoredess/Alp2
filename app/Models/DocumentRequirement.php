@@ -23,11 +23,11 @@ class DocumentRequirement extends Model
     }
 
     /** @return list<string> */
-    public static function contributionTypeValues(): array
+    public static function uploadTypeValues(): array
     {
         return array_map(
             fn (DocumentType $t) => $t->value,
-            DocumentType::contributionAttachments(),
+            DocumentType::contributionUploadTypes(),
         );
     }
 
@@ -39,21 +39,19 @@ class DocumentRequirement extends Model
         return static::query()
             ->where('is_required', true)
             ->where('active', true)
-            ->whereIn('document_type', self::contributionTypeValues())
+            ->whereIn('document_type', self::uploadTypeValues())
             ->get()
             ->map(fn (self $r) => $r->document_type);
     }
 
     /**
-     * Lampiran aktif untuk muat naik (4 dokumen senarai semak; Kertas Kerja dalam borang).
-     *
      * @return \Illuminate\Support\Collection<int, DocumentRequirement>
      */
     public static function activeFor(): \Illuminate\Support\Collection
     {
         return static::query()
             ->where('active', true)
-            ->whereIn('document_type', self::contributionTypeValues())
+            ->whereIn('document_type', self::uploadTypeValues())
             ->orderBy('id')
             ->get();
     }

@@ -24,7 +24,7 @@
 
         @if ($waiveProgramLeadTime ?? false)
             <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                <strong>Notis pendek dibenarkan:</strong> Admin JP boleh isi tarikh program kurang daripada 2 bulan dari hari ini.
+                <strong>Admin JP:</strong> tarikh program terbuka (backdate / notis pendek dibenarkan — tiada sekatan 2 bulan).
             </div>
         @endif
 
@@ -72,11 +72,12 @@
                         name="program_date"
                         :required="true"
                         :hint="($waiveProgramLeadTime ?? false)
-                            ? 'Admin JP: tarikh program boleh kurang dari 2 bulan (notis pendek).'
+                            ? 'Pilih tarikh program (masa lalu atau akan datang) mengikut rekod sebenar.'
                             : 'Sekurang-kurangnya 2 bulan dari hari ini untuk hantar permohonan (dari '.\Carbon\Carbon::parse($programDateMin)->format('d/m/Y').')'"
                     >
                         <input id="program_date" name="program_date" type="date" value="{{ old('program_date') }}"
-                               min="{{ $programDateMin }}" required class="inp">
+                               @if (filled($programDateMin)) min="{{ $programDateMin }}" @endif
+                               required class="inp">
                     </x-field>
 
                     <x-program-category-field :selected="old('program_category')" />

@@ -49,12 +49,13 @@
                             name="program_date"
                             :required="true"
                             :hint="($waiveProgramLeadTime ?? false)
-                                ? 'Admin JP: tarikh program boleh kurang dari 2 bulan (notis pendek).'
+                                ? 'Pilih tarikh program (masa lalu atau akan datang) mengikut rekod sebenar.'
                                 : 'Sekurang-kurangnya 2 bulan dari hari ini untuk hantar permohonan (dari '.\Carbon\Carbon::parse($programDateMin)->format('d/m/Y').')'"
                         >
                             <input id="program_date" name="program_date" type="date"
                                    value="{{ old('program_date', $application->program_date?->format('Y-m-d')) }}"
-                                   min="{{ $programDateMin }}" required class="inp">
+                                   @if (filled($programDateMin)) min="{{ $programDateMin }}" @endif
+                                   required class="inp">
                         </x-field>
                     </div>
 

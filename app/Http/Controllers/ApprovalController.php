@@ -77,27 +77,7 @@ class ApprovalController extends Controller
         $approvedApplications = $this->appBudget->approvedApplications($application->alp_id, $application->financial_year_id);
         $pendingApplications = $this->appBudget->pendingApplications($application->alp_id, $application->financial_year_id, $application->id);
 
-        $periodSummary = null;
-        if (UrsContributionPolicy::enabled() && $application->financialYear) {
-            $period = UrsContributionPolicy::periodFor(now(), (int) $application->financialYear->year);
-            $used = UrsContributionPolicy::periodUsage(
-                $application->alp_id,
-                $application->financial_year_id,
-                $period['start'],
-                $period['end'],
-            );
-            $quota = UrsContributionPolicy::maxPeriodQuota();
-            $remaining = $quota->minus($used);
-            if ($remaining->isNegative()) {
-                $remaining = \App\Support\Money::zero();
-            }
-            $periodSummary = [
-                'label' => $period['label'],
-                'quota' => $quota,
-                'used' => $used,
-                'remaining' => $remaining,
-            ];
-        }
+        $periodSummary = UrsContributionPolicy::periodSummaryForApplication($application);
 
         return view('approvals.show', [
             'application' => $application,

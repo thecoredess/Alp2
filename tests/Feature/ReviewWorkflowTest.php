@@ -208,6 +208,21 @@ class ReviewWorkflowTest extends TestCase
         $this->assertSame(ApplicationStatus::PENDING_APPROVAL, $app->status);
     }
 
+    public function test_admin_jp_sees_forward_cta_on_application_show_when_submitted(): void
+    {
+        $alp = Alp::factory()->create();
+        $year = $this->makeYear();
+        $this->allocate($alp, $year, '500000.00');
+        $app = $this->submitted($alp, $year, '2500.00');
+        $admin = $this->userWithRole(RoleName::SYSTEM_ADMIN->value);
+
+        $this->actingAs($admin)
+            ->get(route('applications.show', $app))
+            ->assertOk()
+            ->assertSee('Hantar kepada Pengarah JP')
+            ->assertSee(route('reviews.show', [$app, 'secretariat']), false);
+    }
+
     public function test_admin_jp_can_update_borang_during_secretariat_review(): void
     {
         $alp = Alp::factory()->create();
